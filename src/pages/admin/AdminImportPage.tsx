@@ -45,12 +45,13 @@ interface CommitState {
   message: string;
 }
 
-interface CommitApiResponse {
-  batch_id: string;
-  imported: number;
-  commit_failed?: number;
-  not_imported: number;
-  message: string;
+function normalizeCommitResponse(raw: Record<string, unknown>): CommitState {
+  return {
+    imported: Number(raw.imported ?? 0),
+    commitFailed: Number(raw.commit_failed ?? 0),
+    notImported: Number(raw.not_imported ?? 0),
+    message: String(raw.message ?? ""),
+  };
 }
 
 type PreviewTab = "all" | "will_import" | "skipped";
@@ -243,16 +244,12 @@ export function AdminImportPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await invokeFunction<CommitApiResponse>("import-commit", {
+      const data = await invokeFunction<Record<string, unknown>>("import-commit", {
         batch_id: preview.batchId,
       });
-      setCommitted({
-        imported: data.imported,
-        commitFailed: data.commit_failed ?? 0,
-        notImported: data.not_imported,
-        message: data.message,
-      });
-      setInfo(data.message);
+      const committedResult = normalizeCommitResponse(data);
+      setCommitted(committedResult);
+      setInfo(committedResult.message);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import failed");
     } finally {
