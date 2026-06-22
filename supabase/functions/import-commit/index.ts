@@ -373,6 +373,49 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const PAGE_SIZE = 1000;
+
+async function countRows(
+  adminClient: ReturnType<typeof createClient>,
+  batchId: string,
+  status: string
+) {
+  const { count, error } = await adminClient
+    .from("imported_records")
+    .select("*", { count: "exact", head: true })
+    .eq("import_batch_id", batchId)
+    .eq("row_status", status);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function fetchAllValidRows(
+  adminClient: ReturnType<typeof createClient>,
+  batchId: string
+) {
+  const all: Record<string, unknown>[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await adminClient
+      .from("imported_records")
+      .select("*")
+      .eq("import_batch_id", batchId)
+      .eq("row_status", "valid")
+      .order("row_number", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data?.length) break;
+
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return all;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -419,23 +462,22 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Batch not found" }), { status: 404, headers: corsHeaders });
     }
 
-    if (batch.committed_at) {
+    const remainingValid = await countRows(adminClient, batch_id, "valid");
+
+    if (batch.committed_at && remainingValid === 0) {
       return new Response(JSON.stringify({ error: "Batch already committed" }), { status: 409, headers: corsHeaders });
     }
 
-    const { data: validRows, error: rowsError } = await adminClient
-      .from("imported_records")
-      .select("*")
-      .eq("import_batch_id", batch_id)
-      .eq("row_status", "valid")
-      .order("row_number", { ascending: true });
+    const validRows = await fetchAllValidRows(adminClient, batch_id);
 
-    if (rowsError) throw rowsError;
+    if (validRows.length === 0) {
+      return new Response(JSON.stringify({ error: "No valid rows left to import" }), { status: 400, headers: corsHeaders });
+    }
 
     let imported = 0;
     let commitFailed = 0;
 
-    for (const row of validRows ?? []) {
+    for (const row of validRows) {
       const payload = row.raw_payload as {
         mapped?: Record<string, unknown>;
         roll_number?: unknown;
@@ -483,37 +525,42 @@ Deno.serve(async (req) => {
         .eq("id", row.id);
     }
 
-    const { data: finalRecords } = await adminClient
-      .from("imported_records")
-      .select("row_status, validation_errors")
-      .eq("import_batch_id", batch_id);
-
-    const notImported = (finalRecords ?? []).filter((r) => r.row_status !== "imported").length;
+    const importedTotal = await countRows(adminClient, batch_id, "imported");
+    const invalidTotal = await countRows(adminClient, batch_id, "invalid");
+    const duplicateTotal = await countRows(adminClient, batch_id, "duplicate");
+    const remainingAfter = await countRows(adminClient, batch_id, "valid");
+    const notImported = invalidTotal + duplicateTotal + remainingAfter;
+    const fullyComplete = remainingAfter === 0;
 
     await adminClient
       .from("import_batches")
       .update({
-        committed_at: new Date().toISOString(),
-        valid_rows: imported,
-        invalid_rows: (finalRecords ?? []).filter((r) => r.row_status === "invalid").length,
-        duplicate_rows: (finalRecords ?? []).filter((r) => r.row_status === "duplicate").length,
+        committed_at: fullyComplete ? new Date().toISOString() : batch.committed_at ?? new Date().toISOString(),
+        valid_rows: importedTotal,
+        invalid_rows: invalidTotal,
+        duplicate_rows: duplicateTotal,
       })
       .eq("id", batch_id);
 
     await adminClient.from("admin_audit_log").insert({
       actor_id: user.id,
-      action: "import_commit",
+      action: remainingValid < validRows.length ? "import_commit_resume" : "import_commit",
       entity_type: "import_batches",
       entity_id: batch_id,
-      details: { imported, commit_failed: commitFailed, not_imported: notImported },
+      details: { imported, commit_failed: commitFailed, remaining_valid: remainingAfter, imported_total: importedTotal },
     });
 
     return new Response(JSON.stringify({
       batch_id,
       imported,
+      imported_total: importedTotal,
       commit_failed: commitFailed,
       not_imported: notImported,
-      message: `Imported ${imported} alumni records. ${notImported} rows were not imported.`,
+      remaining_valid: remainingAfter,
+      fully_complete: fullyComplete,
+      message: fullyComplete
+        ? `Imported ${importedTotal} alumni records. ${notImported} rows were not imported.`
+        : `Imported ${imported} more records (${importedTotal} total). ${remainingAfter} still waiting — run Import remaining.`,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

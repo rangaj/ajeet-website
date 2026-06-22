@@ -40,16 +40,37 @@ interface PreviewState {
 
 interface CommitState {
   imported: number;
+  importedTotal: number;
   commitFailed: number;
   notImported: number;
+  remainingValid: number;
+  fullyComplete: boolean;
   message: string;
 }
 
-function normalizeCommitResponse(raw: Record<string, unknown>): CommitState {
+function normalizeCommitResponse(
+  raw: Record<string, unknown>,
+  expectedImport?: number
+): CommitState {
+  const imported = Number(raw.imported ?? 0);
+  const importedTotal = Number(raw.imported_total ?? raw.imported ?? 0);
+  const remainingValid = Number(raw.remaining_valid ?? 0);
+  const hasRemainingField = raw.remaining_valid !== undefined || raw.fully_complete !== undefined;
+  const fullyComplete = hasRemainingField
+    ? Boolean(raw.fully_complete ?? remainingValid === 0)
+    : expectedImport !== undefined
+      ? importedTotal >= expectedImport
+      : remainingValid === 0;
+
   return {
-    imported: Number(raw.imported ?? 0),
+    imported,
+    importedTotal,
     commitFailed: Number(raw.commit_failed ?? 0),
     notImported: Number(raw.not_imported ?? 0),
+    remainingValid: hasRemainingField
+      ? remainingValid
+      : Math.max(0, (expectedImport ?? importedTotal) - importedTotal),
+    fullyComplete,
     message: String(raw.message ?? ""),
   };
 }
@@ -192,6 +213,14 @@ export function AdminImportPage() {
 
   const currentStep: 1 | 2 | 3 = committed ? 3 : preview ? 2 : 1;
 
+  const remainingToImport =
+    committed?.remainingValid ??
+    Math.max(0, (preview?.summary.willImport ?? 0) - (committed?.importedTotal ?? 0));
+
+  const importIncomplete = Boolean(
+    committed && (!committed.fullyComplete || remainingToImport > 0)
+  );
+
   const filteredRows = useMemo(() => {
     if (!preview) return [];
     if (tab === "will_import") return preview.rows.filter((r) => r.rowStatus === "valid");
@@ -247,7 +276,7 @@ export function AdminImportPage() {
       const data = await invokeFunction<Record<string, unknown>>("import-commit", {
         batch_id: preview.batchId,
       });
-      const committedResult = normalizeCommitResponse(data);
+      const committedResult = normalizeCommitResponse(data, preview.summary.willImport);
       setCommitted(committedResult);
       setInfo(committedResult.message);
     } catch (err) {
@@ -528,7 +557,9 @@ export function AdminImportPage() {
                 variant="accent"
                 onClick={handleCommit}
                 disabled={
-                  loading || preview.summary.willImport === 0 || Boolean(committed)
+                  loading ||
+                  preview.summary.willImport === 0 ||
+                  (Boolean(committed?.fullyComplete) && !importIncomplete)
                 }
               >
                 {loading && preview ? (
@@ -536,8 +567,10 @@ export function AdminImportPage() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Importing…
                   </>
-                ) : committed ? (
+                ) : committed?.fullyComplete && !importIncomplete ? (
                   "Import complete"
+                ) : importIncomplete && remainingToImport > 0 ? (
+                  `Import remaining ${remainingToImport.toLocaleString()} records`
                 ) : (
                   `Commit ${preview.summary.willImport.toLocaleString()} records`
                 )}
@@ -545,16 +578,34 @@ export function AdminImportPage() {
             </div>
 
             {committed && (
-              <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-                <p className="font-semibold">Import finished</p>
+              <div
+                className={`rounded-xl border p-4 text-sm ${
+                  committed.fullyComplete
+                    ? "border-green-200 bg-green-50 text-green-900"
+                    : "border-amber-200 bg-amber-50 text-amber-900"
+                }`}
+              >
+                <p className="font-semibold">
+                  {committed.fullyComplete ? "Import finished" : "Import partially complete"}
+                </p>
                 <ul className="mt-2 list-inside list-disc space-y-1">
-                  <li>{committed.imported.toLocaleString()} alumni records imported</li>
+                  <li>{committed.importedTotal.toLocaleString()} alumni records imported in total</li>
+                  {committed.imported > 0 && !committed.fullyComplete && (
+                    <li>{committed.imported.toLocaleString()} imported in the last run</li>
+                  )}
                   {committed.commitFailed > 0 && (
                     <li>{committed.commitFailed} failed at commit — check not-imported export</li>
                   )}
+                  {remainingToImport > 0 && (
+                    <li>
+                      <strong>{remainingToImport.toLocaleString()}</strong> records still waiting
+                      — click <strong>Import remaining</strong> (after redeploying import-commit in
+                      Supabase)
+                    </li>
+                  )}
                   <li>{committed.notImported.toLocaleString()} rows not imported (see CSV)</li>
                 </ul>
-                <p className="mt-3 text-xs text-green-800">
+                <p className="mt-3 text-xs opacity-80">
                   Members are <strong>imported_unclaimed</strong> until they use Claim My Ajeet ID.
                 </p>
               </div>
