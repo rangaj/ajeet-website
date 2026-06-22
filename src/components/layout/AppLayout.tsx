@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
-import { BrandLockup, BrandLogo } from "@/components/brand/BrandLogo";
+import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -95,15 +95,8 @@ export function AppLayout() {
       <header className={headerClass}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div onClick={closeMobile}>
-            {isHome ? (
-              <Link to="/" className="flex items-center gap-3 rounded-lg">
-                <BrandLogo size="sm" />
-                <div className="leading-tight">
-                  <p className="font-display text-sm font-bold text-white sm:text-base">
-                    Ajeet Alumni Association
-                  </p>
-                </div>
-              </Link>
+            {!user ? (
+              <MarketingNavBrand inverse={isHome} />
             ) : (
               <BrandLockup size="header" asLink />
             )}

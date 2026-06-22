@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Handshake, Heart, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { SSBJ_BUILDING_SRC } from "@/components/brand/assets";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -59,7 +60,7 @@ function HeroCtas() {
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
       <Link to="/claim">
         <Button size="lg" variant="accent" className="w-full sm:w-auto">
           Claim My Ajeet ID
@@ -90,21 +91,22 @@ export function HomePage() {
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="relative flex min-h-[min(88vh,52rem)] items-end sm:items-center">
+      <section className="relative flex min-h-[min(88vh,52rem)] items-center">
         <img
           src={SSBJ_BUILDING_SRC}
           alt="Sainik School Bijapur campus"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-brand-900/58" aria-hidden />
-        <div className="relative mx-auto w-full max-w-6xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16 sm:pt-32">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">
+        <div className="relative mx-auto w-full max-w-3xl px-4 pb-14 pt-28 text-center sm:px-6 sm:pb-16 sm:pt-36">
+          <BrandLogo size="hero" className="mx-auto" />
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">
             Since 1963
           </p>
-          <h1 className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
             The Global Home of Ajeets
           </h1>
-          <div className="mt-5 max-w-2xl space-y-3 text-base leading-relaxed text-brand-100 sm:text-lg">
+          <div className="mx-auto mt-5 max-w-2xl space-y-3 text-base leading-relaxed text-brand-100 sm:text-lg">
             <p>
               Connect with classmates, discover fellow Ajeets across generations, and strengthen a
               lifelong connection built at Sainik School Bijapur.
@@ -114,7 +116,7 @@ export function HomePage() {
               experiences, enduring friendships, and a commitment to helping one another succeed.
             </p>
           </div>
-          <div className="mt-8">
+          <div className="mt-8 flex justify-center">
             <HeroCtas />
           </div>
         </div>

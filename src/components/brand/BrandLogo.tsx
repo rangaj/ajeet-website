@@ -15,14 +15,19 @@ export function BrandLogo({
   size = "md",
   className,
 }: {
-  size?: keyof typeof sizes;
+  size?: keyof typeof sizes | "hero";
   className?: string;
 }) {
+  const sizeClass =
+    size === "hero"
+      ? "h-auto w-[88px] max-w-[100px] sm:w-[132px] sm:max-w-[140px]"
+      : sizes[size as keyof typeof sizes];
+
   return (
     <img
       src={AAA_LOGO_SRC}
       alt="Ajeet Alumni Association — Sainik School Bijapur"
-      className={cn("bg-transparent object-contain object-left", sizes[size], className)}
+      className={cn("bg-transparent object-contain", sizeClass, className)}
     />
   );
 }
@@ -55,19 +60,19 @@ export function BrandLockup({
 }) {
   const schoolClass =
     variant === "inverse"
-      ? "font-display text-base font-bold text-white sm:text-lg"
-      : "font-display text-base font-bold text-brand-900 sm:text-lg";
+      ? "text-xs font-medium text-gold-200 sm:text-sm"
+      : "text-xs font-medium text-brand-600 sm:text-sm";
   const networkClass =
     variant === "inverse"
-      ? "text-sm font-medium text-gold-200"
-      : "text-sm font-medium text-brand-600";
+      ? "font-display text-sm font-bold text-white sm:text-base"
+      : "font-display text-sm font-bold text-brand-900 sm:text-base";
 
   const content = (
     <div className="flex items-center gap-3">
       <BrandLogo size={size === "auth" ? "md" : "sm"} />
       <div className="leading-tight">
-        <p className={schoolClass}>Sainik School Bijapur</p>
         <p className={networkClass}>Ajeet Alumni Association</p>
+        <p className={schoolClass}>Sainik School Bijapur</p>
       </div>
     </div>
   );
@@ -81,6 +86,10 @@ export function BrandLockup({
   }
 
   return content;
+}
+
+export function MarketingNavBrand({ inverse = false }: { inverse?: boolean }) {
+  return <BrandLockup variant={inverse ? "inverse" : "default"} size="header" asLink />;
 }
 
 export function PageHeader({
