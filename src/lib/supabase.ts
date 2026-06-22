@@ -20,19 +20,32 @@ export async function invokeFunction<T>(
   body?: Record<string, unknown> | FormData
 ): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
-  const headers: Record<string, string> = {};
-  if (session?.access_token) {
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
+  const anonKey = supabaseAnonKey ?? "";
 
   if (body instanceof FormData) {
+    const headers: Record<string, string> = {
+      apikey: anonKey,
+    };
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
       method: "POST",
       headers,
       body,
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error ?? "Function call failed");
+
+    let json: Record<string, unknown> = {};
+    try {
+      json = await res.json();
+    } catch {
+      throw new Error(`Function ${name} returned a non-JSON response (${res.status})`);
+    }
+
+    if (!res.ok) {
+      throw new Error(String(json.error ?? json.message ?? `Function call failed (${res.status})`));
+    }
     return json as T;
   }
 

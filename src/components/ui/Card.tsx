@@ -8,27 +8,38 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-slate-200 bg-white p-6 shadow-sm", className)}>
+    <div
+      className={cn(
+        "rounded-2xl border border-surface-border bg-white p-6 shadow-card",
+        className
+      )}
+    >
       {children}
     </div>
   );
 }
 
+import { cn } from "@/lib/utils";
+
 export function Badge({
   children,
   variant = "default",
+  className,
 }: {
   children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "danger";
+  variant?: "default" | "success" | "warning" | "danger" | "gold";
+  className?: string;
 }) {
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-        variant === "default" && "bg-slate-100 text-slate-700",
+        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold",
+        variant === "default" && "bg-brand-50 text-brand-700",
+        variant === "gold" && "bg-gold-100 text-gold-700",
         variant === "success" && "bg-green-100 text-green-800",
         variant === "warning" && "bg-amber-100 text-amber-800",
-        variant === "danger" && "bg-red-100 text-red-800"
+        variant === "danger" && "bg-red-100 text-red-800",
+        className
       )}
     >
       {children}
@@ -46,11 +57,11 @@ export function Alert({
   return (
     <div
       className={cn(
-        "rounded-lg px-4 py-3 text-sm",
-        variant === "info" && "bg-brand-50 text-brand-900 border border-brand-100",
-        variant === "success" && "bg-green-50 text-green-900 border border-green-100",
-        variant === "warning" && "bg-amber-50 text-amber-900 border border-amber-100",
-        variant === "error" && "bg-red-50 text-red-900 border border-red-100"
+        "rounded-xl px-4 py-3 text-sm",
+        variant === "info" && "border border-brand-100 bg-brand-50 text-brand-900",
+        variant === "success" && "border border-green-100 bg-green-50 text-green-900",
+        variant === "warning" && "border border-amber-100 bg-amber-50 text-amber-900",
+        variant === "error" && "border border-red-100 bg-red-50 text-red-900"
       )}
     >
       {children}

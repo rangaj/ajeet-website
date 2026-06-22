@@ -1,0 +1,213 @@
+================================================================================
+REPLIT AGENT PROMPT — Sainik School Bijapur Ajeet Network (Phase 1)
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+1. This file lives in the repo root. After "Import from GitHub", Replit Agent
+   can read it from the project — you do NOT need to upload it separately each time.
+
+2. In Replit Agent chat, start every UI task with:
+     Read and follow REPLIT_UI_PROMPT.txt. Do Slice N only.
+
+3. Always pull latest from GitHub in Replit before asking Agent to work.
+
+4. For small follow-ups, paste the SAFETY LINE at the bottom of this file.
+
+ALTERNATIVE (recommended if UI is built locally):
+  Skip Replit Agent for UI. Use Replit only to host the frontend (Secrets +
+  npm run dev / Deploy). See REPLIT_SETUP.txt.
+
+
+================================================================================
+TASK FOR REPLIT AGENT
+================================================================================
+Premium UI/UX polish + SSBJ branding for an EXISTING working app.
+BACKEND IS LIVE IN SUPABASE — DO NOT REBUILD IT.
+
+
+================================================================================
+CRITICAL — EXISTING SUPABASE (non-negotiable)
+================================================================================
+Connect to my EXISTING Supabase project. Backend is already deployed and tested.
+DO NOT invent new tables, columns, enums, Edge Functions, or auth flows.
+DO NOT use service_role key in the frontend.
+
+Env vars (Replit Secrets — names must NOT change):
+  VITE_SUPABASE_URL
+  VITE_SUPABASE_ANON_KEY
+
+Use ONLY these tables:
+  profiles, alumni_members, approval_requests,
+  import_batches, imported_records, import_field_mappings, admin_audit_log
+
+Column: job_position (NOT "position" — PostgreSQL reserved word).
+
+Edge Functions — call by EXACT slug via invokeFunction() in src/lib/supabase.ts:
+  start-claim
+  start-registration
+  import-preview   (multipart FormData, field name "file"; keep apikey header)
+  import-commit    (JSON: { batch_id })
+  notify-registrant (JSON: { request_id, event, note? })
+  Events: submitted | approved | rejected | more_info
+
+RPCs — exact names, existing parameters:
+  search_alumni(p_query, p_course, p_stream, p_year_from, p_year_to, p_location,
+    p_company, p_industry, p_skills, p_house, p_page, p_page_size, p_admin_mode)
+  lookup_roll_number(p_roll_number)
+  approve_registration(p_request_id, p_note)
+  reject_registration(p_request_id, p_note)
+
+Access control (preserve exactly):
+  - Ajeet Directory only when profiles.member_status = 'approved'
+    OR user is admin / super_admin
+  - Pending users → /pending only, NOT /directory
+  - roll_number is IMMUTABLE for Ajeets in profile UI (admin/super_admin only)
+
+Product rules (already implemented — do not change behavior):
+  - Email OTP / magic link (+ optional password, forgot password)
+  - Ajeets can hide from directory (alumni_members.is_directory_visible)
+  - Privacy via visibility_settings JSONB
+  - Premium membership fields = display metadata only (no payments)
+  - CSV import only (not XLSX)
+  - Directory search: server-side paginated (page_size 24), debounce 300ms
+  - NEVER load 5000+ rows client-side
+
+DO NOT modify:
+  src/lib/supabase.ts
+  src/hooks/useAuth.ts
+  src/components/auth/ProtectedRoute.tsx
+  supabase/   (migrations and functions — deployed via Supabase Dashboard)
+
+You MAY edit:
+  src/pages/**, src/components/**, tailwind.config.js, index.css, index.html
+
+Preserve ALL route paths:
+  /  /login  /forgot-password  /claim  /register  /pending
+  /directory  /profile  /admin  /admin/import
+
+Replit config — do not break:
+  vite.config.ts → allowedHosts: [".replit.dev", ".repl.co", "localhost"]
+  vite.config.ts → HMR settings for Replit
+  .replit → port 5173 mapped to 80, deploy: npm run build && npm run start
+
+After every slice: npm run build must pass. List all files changed.
+
+
+================================================================================
+BRAND — Sainik School Bijapur / Ajeet
+================================================================================
+School:     Sainik School Bijapur
+Users:      Ajeet (singular), Ajeets (plural) — ALL user-facing text
+App name:   Sainik School Bijapur — Ajeet Network
+Short nav:  SSBJ Ajeet Network
+
+Replace generic "School Alumni Directory" / "alumni" in UI copy.
+Code/table names (alumni_members, etc.) stay unchanged — UI copy only.
+
+Visual identity:
+  - Dignified Sainik-school heritage — trustworthy, disciplined, proud
+  - Deep navy primary + warm gold/amber accent
+  - Soft off-white backgrounds, white cards, hairline borders, soft shadows
+  - Typography: DM Sans or Plus Jakarta Sans (Google Fonts)
+  - lucide-react icons, consistent stroke weight
+  - Mobile-first; sticky header; hamburger nav on small screens
+  - Skeleton loaders, focus rings, smooth transitions, WCAG-friendly contrast
+  - NOT generic purple-on-white AI/SaaS template
+
+Logo: use SSBJ monogram or shield placeholder if no logo file provided.
+
+
+================================================================================
+USER FLOWS — landing must make this obvious
+================================================================================
+PATH A — EXISTING Ajeet (previous system / imported record) — PRIMARY
+  Who:    Already in school/association records from the old system
+  Steps:  Roll number + email on file → Claim → email verify → access when approved
+  CTA:    "Claim My Ajeet ID" → /claim (PRIMARY on home page)
+  Copy:   "Use the roll number and email address we have on file."
+
+PATH B — NEW Ajeet (not yet on this platform) — SECONDARY
+  Who:    Not registered on this platform yet
+  Steps:  Register → admin reviews in background → /pending → approved → directory
+  CTA:    "Register as a New Ajeet" → /register (SECONDARY on home page)
+  Copy:   "Admin approval is required before you can access the Ajeet Directory."
+
+Home page: "Which path am I?" — two cards side by side; Claim is visually primary.
+
+Nav labels:
+  Claim ID | New Ajeet Registration | Ajeet Directory | My Profile | Pending Approval | Admin
+
+
+================================================================================
+ROUTES & FEATURES (already built — polish UI only)
+================================================================================
+/login             Magic link + password tabs
+/forgot-password   Password reset link
+/claim             Flow A → POST start-claim
+/register          Flow B → POST start-registration (+ evidence-uploads bucket)
+/pending           Status for users awaiting approval
+/directory         search_alumni RPC + filters + paginated cards
+/profile           Edit fields, photo (profile-photos/{alumni_member_id}/avatar.webp),
+                   privacy toggles, is_directory_visible
+/admin             Review queue tabs
+/admin/import      CSV upload → import-preview → import-commit
+
+Admin queue tabs:
+  All Pending | Claims | New Registrations | Conflicts | Approved | Rejected
+
+Admin import preview:
+  Stat pills: total / valid / invalid / duplicates + scrollable preview table
+
+
+================================================================================
+DESIGN DETAILS BY PAGE
+================================================================================
+Landing (/):
+  Full-width hero, subtle navy gradient, gold accent on primary CTA
+  Two-path cards (Claim primary, Register secondary with approval note)
+  Three feature cards: Secure activation | Searchable Ajeet directory | Admin verified
+
+Claim (/claim):
+  Clear form: roll number + email (+ optional phone/DOB if already in form)
+  Link to Register for users who are not in existing records
+
+Register (/register):
+  Multi-section or stepped form; evidence upload area
+  Prominent note about approval timeline
+
+Pending (/pending):
+  Friendly "under review" state; no directory link until approved
+
+Directory (/directory):
+  Sticky search bar; filter chips (course, stream, year, location, company, house)
+  Ajeet cards: avatar/initials, name, batch, company, location
+  Detail drawer/modal on click; load-more pagination (not client-side full fetch)
+  Mobile: filters in slide-over drawer
+
+Profile (/profile):
+  Photo upload, privacy toggles, hide-from-directory checkbox
+
+Admin:
+  Clean data-dense tables; semantic status badges; type badges on queue items
+
+
+================================================================================
+BUILD SLICES (one per Agent session — confirm before next slice)
+================================================================================
+Slice 1: Design tokens (tailwind + CSS vars) + AppLayout + HomePage + Login/ForgotPassword
+Slice 2: ClaimPage + RegisterPage + PendingPage
+Slice 3: DirectoryPage
+Slice 4: ProfilePage
+Slice 5: AdminLayout + AdminImportPage + AdminQueuePage
+Slice 6: Final responsive + accessibility pass on all screens
+
+Start each session with:
+  "Read REPLIT_UI_PROMPT.txt. Complete Slice N only. npm run build must pass."
+
+
+================================================================================
+SAFETY LINE (paste on every follow-up prompt)
+================================================================================
+UI and copy only. Do not change Supabase schema, Edge Functions, RPCs, env var
+names, auth gating, route paths, or src/lib/supabase.ts.

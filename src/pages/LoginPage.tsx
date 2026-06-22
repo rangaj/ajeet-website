@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Card";
+import { AuthCard, AuthLink, AuthShell } from "@/components/layout/AuthShell";
+import { cn } from "@/lib/utils";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -40,30 +41,42 @@ export function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md">
-      <Card>
-        <h1 className="text-2xl font-bold text-slate-900">Sign In</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Use email magic link or password if you have set one.
-        </p>
-
-        <div className="mt-4 flex gap-2">
-          <Button
+    <AuthShell
+      title="Sign In"
+      subtitle="Access your Ajeet Network account with email verification or password."
+      footer={
+        <>
+          New here? <AuthLink to="/claim">Claim your ID</AuthLink> or{" "}
+          <AuthLink to="/register">register as a new Ajeet</AuthLink>.
+        </>
+      }
+    >
+      <AuthCard>
+        <div className="flex rounded-xl bg-surface-muted p-1">
+          <button
             type="button"
-            variant={mode === "magic" ? "primary" : "secondary"}
-            size="sm"
+            className={cn(
+              "flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+              mode === "magic"
+                ? "bg-white text-brand-800 shadow-sm"
+                : "text-brand-600 hover:text-brand-800"
+            )}
             onClick={() => setMode("magic")}
           >
             Magic Link / OTP
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant={mode === "password" ? "primary" : "secondary"}
-            size="sm"
+            className={cn(
+              "flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+              mode === "password"
+                ? "bg-white text-brand-800 shadow-sm"
+                : "text-brand-600 hover:text-brand-800"
+            )}
             onClick={() => setMode("password")}
           >
             Password
-          </Button>
+          </button>
         </div>
 
         <form
@@ -74,6 +87,7 @@ export function LoginPage() {
             label="Email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -82,6 +96,7 @@ export function LoginPage() {
               label="Password"
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -93,12 +108,10 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-600">
-          <Link to="/forgot-password" className="text-brand-600 hover:underline">
-            Forgot password?
-          </Link>
+        <p className="mt-4 text-center text-sm text-brand-600">
+          <AuthLink to="/forgot-password">Forgot password?</AuthLink>
         </p>
-      </Card>
-    </div>
+      </AuthCard>
+    </AuthShell>
   );
 }

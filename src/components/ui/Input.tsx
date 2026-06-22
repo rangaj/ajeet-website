@@ -10,14 +10,15 @@ export function Input({ label, error, className, id, ...props }: InputProps) {
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-slate-700">
+        <label htmlFor={inputId} className="block text-sm font-medium text-brand-800">
           {label}
         </label>
       )}
       <input
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           error && "border-red-300",
           className
         )}
@@ -37,14 +38,15 @@ export function Textarea({ label, className, id, ...props }: TextareaProps) {
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-slate-700">
+        <label htmlFor={inputId} className="block text-sm font-medium text-brand-800">
           {label}
         </label>
       )}
       <textarea
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           className
         )}
         {...props}
@@ -63,14 +65,15 @@ export function Select({ label, options, className, id, ...props }: SelectProps)
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-slate-700">
+        <label htmlFor={inputId} className="block text-sm font-medium text-brand-800">
           {label}
         </label>
       )}
       <select
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           className
         )}
         {...props}

@@ -13,6 +13,8 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: false,
+    // Replit preview uses *.replit.dev / *.repl.co hosts
+    allowedHosts: [".replit.dev", ".repl.co", "localhost"],
     hmr: process.env.REPL_ID
       ? {
           protocol: "wss",
