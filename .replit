@@ -1,6 +1,9 @@
 # HOSTING ONLY — do not edit app code in this Repl.
 # Develop in Cursor → push to GitHub → Pull here → Run/Deploy.
 # See replit.md and REPLIT_SETUP.txt.
+#
+# Replit Publishing has no type picker for this Repl — it uses Autoscale.
+# Config below is Autoscale-only: build dist, then serve on PORT 5000.
 
 modules = ["nodejs-20", "web"]
 
@@ -11,16 +14,11 @@ entrypoint = "index.html"
 hidden = [".config", "package-lock.json"]
 
 [deployment]
+deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm install && npm run build"]
 run = ["sh", "-c", "node scripts/serve-dist.mjs"]
-deploymentTarget = "static"
-publicDir = "dist"
 
-[[deployment.rewrites]]
-from = "/*"
-to = "/index.html"
-
-# Replit Autoscale healthcheck expects port 5000 (must match serve-dist.mjs / PORT)
+# Healthcheck expects this port (must match scripts/serve-dist.mjs)
 [[ports]]
 localPort = 5000
 externalPort = 80
