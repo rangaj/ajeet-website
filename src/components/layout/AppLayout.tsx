@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
-import { BrandLockup, BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
+import { BrandLockup, BrandLogo } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -13,6 +13,45 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       ? "bg-brand-50 font-semibold text-brand-700"
       : "text-brand-800/80 hover:bg-brand-50 hover:text-brand-700"
   );
+
+const marketingNavOnDark =
+  "rounded-lg px-2.5 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:px-3";
+
+const marketingNavOnLight =
+  "rounded-lg px-2.5 py-2 text-sm font-medium text-brand-800/80 transition-colors hover:bg-brand-50 hover:text-brand-700 lg:px-3";
+
+function marketingNavClass(isHome: boolean) {
+  return isHome ? marketingNavOnDark : marketingNavOnLight;
+}
+
+function MarketingNavLink({
+  href,
+  children,
+  onClick,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const { pathname } = useLocation();
+  const to = pathname === "/" ? href.replace("/#", "#") : href.startsWith("/") ? href : `/#${href}`;
+
+  if (to.startsWith("#") || to.includes("#")) {
+    return (
+      <a href={to} className={className} onClick={onClick}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link to={to} className={className} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
 
 export function AppLayout() {
   const { user, isAdmin, canAccessDirectory, signOut, profile } = useAuth();
@@ -34,26 +73,75 @@ export function AppLayout() {
 
   const closeMobile = () => setMobileOpen(false);
 
+  const headerClass = cn(
+    "sticky top-0 z-50",
+    isHome
+      ? "fixed inset-x-0 border-b border-white/10 bg-brand-900/30 backdrop-blur-sm"
+      : "sticky top-0 border-b border-surface-border bg-white/95 backdrop-blur-md"
+  );
+
+  const footerLinks = [
+    { label: "About", href: "/#about" },
+    { label: "Directory", to: "/directory" },
+    { label: "Events", href: "/#why-join" },
+    { label: "Stories", href: "/#legacy" },
+    { label: "Privacy Policy", href: "/#heritage" },
+    { label: "Terms of Use", href: "/#heritage" },
+    { label: "Contact Us", href: "/#heritage" },
+  ] as const;
+
   return (
-    <div className="flex min-h-screen flex-col bg-surface-muted">
-      <header className="sticky top-0 z-50 border-b border-surface-border bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
+    <div className={cn("flex min-h-screen flex-col", isHome ? "bg-white" : "bg-surface-muted")}>
+      <header className={headerClass}>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div onClick={closeMobile}>
-            <BrandLockup size="header" asLink />
+            {isHome ? (
+              <Link to="/" className="flex items-center gap-3 rounded-lg">
+                <BrandLogo size="sm" />
+                <div className="leading-tight">
+                  <p className="font-display text-sm font-bold text-white sm:text-base">
+                    Ajeet Alumni Association
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <BrandLockup size="header" asLink />
+            )}
           </div>
 
-          <nav className="hidden items-center gap-1 text-sm md:flex">
+          <nav className="hidden items-center gap-0.5 text-sm lg:flex">
             {!user && (
               <>
-                <NavLink to="/claim" className={navLinkClass}>
+                <MarketingNavLink href="/#about" className={marketingNavClass(isHome)}>
+                  About
+                </MarketingNavLink>
+                <Link to="/directory" className={marketingNavClass(isHome)}>
+                  Directory
+                </Link>
+                <MarketingNavLink href="/#why-join" className={marketingNavClass(isHome)}>
+                  Events
+                </MarketingNavLink>
+                <MarketingNavLink href="/#legacy" className={marketingNavClass(isHome)}>
+                  Stories
+                </MarketingNavLink>
+                <Link
+                  to="/claim"
+                  className={cn(
+                    marketingNavClass(isHome),
+                    isHome && "font-semibold text-gold-300"
+                  )}
+                >
                   Claim ID
-                </NavLink>
-                <NavLink to="/register" className={navLinkClass}>
-                  Register
-                </NavLink>
-                <NavLink to="/login" className={navLinkClass}>
+                </Link>
+                <Link
+                  to="/login"
+                  className={cn(
+                    marketingNavClass(isHome),
+                    isHome && "ml-1 rounded-lg bg-white/15 px-3 hover:bg-white/25"
+                  )}
+                >
                   Sign In
-                </NavLink>
+                </Link>
               </>
             )}
             {user && canAccessDirectory && (
@@ -90,7 +178,10 @@ export function AppLayout() {
 
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-brand-700 hover:bg-brand-50 md:hidden"
+            className={cn(
+              "inline-flex items-center justify-center rounded-lg p-2 lg:hidden",
+              isHome ? "text-white hover:bg-white/10" : "text-brand-700 hover:bg-brand-50"
+            )}
             onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -100,19 +191,57 @@ export function AppLayout() {
         </div>
 
         {mobileOpen && (
-          <nav className="border-t border-surface-border bg-white px-4 py-3 md:hidden">
+          <nav
+            className={cn(
+              "border-t px-4 py-3 lg:hidden",
+              isHome ? "border-white/10 bg-brand-900/95" : "border-surface-border bg-white"
+            )}
+          >
             <div className="flex flex-col gap-1 text-sm">
               {!user && (
                 <>
-                  <NavLink to="/claim" className={navLinkClass} onClick={closeMobile}>
+                  <MarketingNavLink
+                    href="/#about"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
+                    About
+                  </MarketingNavLink>
+                  <Link
+                    to="/directory"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
+                    Directory
+                  </Link>
+                  <MarketingNavLink
+                    href="/#why-join"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
+                    Events
+                  </MarketingNavLink>
+                  <MarketingNavLink
+                    href="/#legacy"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
+                    Stories
+                  </MarketingNavLink>
+                  <Link
+                    to="/claim"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
                     Claim ID
-                  </NavLink>
-                  <NavLink to="/register" className={navLinkClass} onClick={closeMobile}>
-                    Register
-                  </NavLink>
-                  <NavLink to="/login" className={navLinkClass} onClick={closeMobile}>
+                  </Link>
+                  <Link
+                    to="/login"
+                    className={marketingNavClass(isHome)}
+                    onClick={closeMobile}
+                  >
                     Sign In
-                  </NavLink>
+                  </Link>
                 </>
               )}
               {user && canAccessDirectory && (
@@ -160,19 +289,43 @@ export function AppLayout() {
         )}
       </main>
 
-      <footer className="mt-auto border-t border-surface-border bg-brand-900 text-brand-100">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <BrandLogo size="sm" />
-            <div>
-              <p className="font-display text-base font-semibold text-white">
-                Sainik School Bijapur
-              </p>
-              <p className="text-sm text-brand-200">Ajeet Alumni Association</p>
-              <BrandMotto variant="footer" className="mt-1" />
+      <footer className="mt-auto border-t border-brand-800 bg-brand-900 text-brand-100">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <BrandLogo size="sm" />
+              <div>
+                <p className="font-display text-base font-semibold text-white">
+                  Ajeet Alumni Association
+                </p>
+                <p className="text-sm text-brand-200">Sainik School Bijapur</p>
+              </div>
             </div>
+            <nav className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
+              {footerLinks.map((link) =>
+                "to" in link ? (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className="text-brand-200 transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <MarketingNavLink
+                    key={link.label}
+                    href={link.href}
+                    className="text-brand-200 transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </MarketingNavLink>
+                )
+              )}
+            </nav>
           </div>
-          <p className="text-sm text-brand-300">© {new Date().getFullYear()} AAA</p>
+          <p className="mt-8 border-t border-brand-800 pt-6 text-center text-sm text-brand-300 sm:text-left">
+            © Ajeet Alumni Association. All Rights Reserved.
+          </p>
         </div>
       </footer>
     </div>
