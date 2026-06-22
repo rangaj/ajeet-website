@@ -1,3 +1,7 @@
+# HOSTING ONLY — do not edit app code in this Repl.
+# Develop in Cursor → push to GitHub → Pull here → Run/Deploy.
+# See replit.md and REPLIT_SETUP.txt.
+
 modules = ["nodejs-20", "web"]
 
 run = "npm run dev"
@@ -17,6 +21,3 @@ externalPort = 80
 
 [nix]
 channel = "stable-24_05"
-
-[agent]
-expertMode = true

@@ -19,8 +19,6 @@ export function Card({
   );
 }
 
-import { cn } from "@/lib/utils";
-
 export function Badge({
   children,
   variant = "default",

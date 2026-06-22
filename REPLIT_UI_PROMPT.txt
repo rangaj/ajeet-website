@@ -1,4 +1,11 @@
 ================================================================================
+REPLIT UI PROMPT — ARCHIVED (do not use in Replit Agent)
+================================================================================
+Development and UI work happen in Cursor, not Replit.
+Replit is hosting-only: Pull → Run → Deploy. See replit.md and REPLIT_SETUP.txt.
+The content below is kept for reference only.
+
+================================================================================
 REPLIT AGENT PROMPT — Sainik School Bijapur Ajeet Network (Phase 1)
 ================================================================================
 

@@ -125,3 +125,62 @@ Same app, same Supabase backend. Replit only hosts the React frontend.
 Database, auth, storage, edge functions stay in Supabase.
 
 ================================================================================
+HOSTING-ONLY WORKFLOW (required)
+================================================================================
+Goal: ALL code changes happen in Cursor (local). Replit only pulls and runs.
+
+SOURCE OF TRUTH
+  GitHub repo main branch: https://github.com/rangaj/ajeet-website
+  Never treat Replit as the editor of record.
+
+IN CURSOR (always)
+  1. Edit code, fix errors, run: npm run build
+  2. git commit && git push origin main
+  3. Wait for GitHub Actions CI (green check on commit)
+
+IN REPLIT (only)
+  1. Git pane → Pull   (or Shell: git pull origin main)
+  2. Run               (npm run dev — started by .replit)
+  3. Deployments → Redeploy   (only when you want the public URL updated)
+
+DO NOT USE IN REPLIT
+  - Replit Agent / AI chat (replit.md blocks code changes — do not override)
+  - Git pane → Commit / Push (creates drift; GitHub and Replit diverge)
+  - Editing source files directly in Replit (emergency only — revert via git pull)
+  - REPLIT_UI_PROMPT.txt (archived — for Cursor reference only)
+
+IF REPLIT SHOWS A BUILD ERROR
+  Do NOT ask Replit to fix it.
+  1. Note the error message
+  2. Fix in Cursor
+  3. npm run build locally to confirm
+  4. git push origin main
+  5. Confirm GitHub Actions CI passes
+  6. Replit → Pull → Run
+
+SECRETS (Replit-only — not in GitHub)
+  VITE_SUPABASE_URL
+  VITE_SUPABASE_ANON_KEY
+  Set once in Replit → Secrets. git pull does not overwrite these.
+
+CONNECT REPL TO GITHUB (one-time)
+  Tools → Git → Connect to GitHub → select rangaj/ajeet-website
+  After every Cursor push: Pull in Replit before Run.
+
+SUPABASE (outside Replit)
+  Auth redirect URLs must include your .replit.dev and deployment URLs.
+  Edge Functions and database stay in Supabase Dashboard — not Replit.
+
+GITHUB HARDENING (recommended — do once on github.com)
+  1. Repo → Settings → Branches → Add rule for `main`
+  2. Enable: Require status checks to pass before merging
+  3. Select check: CI / build
+  4. Optional: Do not allow bypassing (even for admins)
+  This ensures broken builds never reach Replit via pull.
+
+FILES THAT ENFORCE HOSTING-ONLY
+  replit.md               — Replit Agent reads this; forbids code edits
+  .github/workflows/ci.yml  — Build runs on every push to main
+  README.md               — Documents Cursor → GitHub → Replit flow
+
+================================================================================
