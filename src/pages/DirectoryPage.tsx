@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Input, Select } from "@/components/ui/Input";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, Badge } from "@/components/ui/Card";
 import type { SearchResult } from "@/types/database";
