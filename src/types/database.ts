@@ -77,7 +77,7 @@ export interface ApprovalRequest {
   submitted_name: string | null;
   submitted_phone: string | null;
   submitted_dob: string | null;
-  submitted_payload: Record<string, unknown>;
+  submitted_payload: Json;
   evidence_path: string | null;
   alumni_member_id: string | null;
   user_id: string | null;
