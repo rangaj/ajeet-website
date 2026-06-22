@@ -3,15 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
+const indexPath = path.join(root, "index.html");
 const port = Number(process.env.PORT) || 5000;
+const host = "0.0.0.0";
 
-if (!fs.existsSync(path.join(root, "index.html"))) {
-  console.error(`ERROR: ${root}/index.html not found. Run npm run build first.`);
+if (!fs.existsSync(indexPath)) {
+  console.error(`ERROR: ${indexPath} not found. Run npm run build first.`);
   process.exit(1);
 }
 
-console.log(`Starting static server on port ${port}...`);
+console.log(`Starting static server on ${host}:${port} (PORT=${process.env.PORT ?? "unset"})`);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -29,13 +31,34 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url || "/", `http://${req.headers.host ?? "localhost"}`);
-  let reqPath = decodeURIComponent(url.pathname);
-  if (reqPath === "/") reqPath = "/index.html";
+function resolveFilePath(pathname) {
+  const relative =
+    pathname === "/" || pathname === "" ? "index.html" : pathname.replace(/^\/+/, "");
+  const filePath = path.resolve(root, relative);
+  if (filePath !== root && !filePath.startsWith(root + path.sep)) {
+    return null;
+  }
+  return filePath;
+}
 
-  let filePath = path.normalize(path.join(root, reqPath));
-  if (!filePath.startsWith(root)) {
+const server = http.createServer((req, res) => {
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url || "/", "http://localhost").pathname);
+  } catch {
+    res.writeHead(400);
+    res.end("Bad request");
+    return;
+  }
+
+  if (pathname === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("ok");
+    return;
+  }
+
+  let filePath = resolveFilePath(pathname);
+  if (!filePath) {
     res.writeHead(403);
     res.end("Forbidden");
     return;
@@ -43,22 +66,28 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
-      filePath = path.join(root, "index.html");
+      filePath = indexPath;
     }
 
     fs.readFile(filePath, (readErr, data) => {
       if (readErr) {
+        console.error(`Failed to read ${filePath}:`, readErr.message);
         res.writeHead(404);
         res.end("Not found");
         return;
       }
-      const ext = path.extname(filePath);
+      const ext = path.extname(filePath).toLowerCase();
       res.writeHead(200, { "Content-Type": MIME[ext] ?? "application/octet-stream" });
       res.end(data);
     });
   });
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`Serving ${root} on http://0.0.0.0:${port}`);
+server.on("error", (err) => {
+  console.error("Server error:", err);
+  process.exit(1);
+});
+
+server.listen(port, host, () => {
+  console.log(`Serving ${root} on http://${host}:${port}`);
 });
