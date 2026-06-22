@@ -6,15 +6,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function parseCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      values.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  values.push(current.trim());
+  return values;
+}
+
 function parseCsv(text: string): { headers: string[]; rows: Record<string, string>[] } {
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length === 0) return { headers: [], rows: [] };
 
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headers = parseCsvLine(lines[0]).map((h) =>
+    h.replace(/^\uFEFF/, "").replace(/^"|"$/g, "")
+  );
   const rows = lines.slice(1).map((line, idx) => {
-    const values = line.match(/("([^"]|"")*"|[^,]*)/g)?.map((v) =>
-      v.trim().replace(/^"|"$/g, "").replace(/""/g, '"')
-    ) ?? [];
+    const values = parseCsvLine(line).map((v) => v.replace(/^"|"$/g, "").replace(/""/g, '"'));
     const row: Record<string, string> = { __row_number: String(idx + 2) };
     headers.forEach((h, i) => {
       row[h] = values[i] ?? "";
