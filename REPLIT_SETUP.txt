@@ -85,35 +85,33 @@ STEP 6 — Smoke test
 6. Admin → approve claim → log in as alumni → Directory
 
 ================================================================================
-DEPLOYMENT (optional — always-on public URL)
+DEPLOYMENT (Publishing — Replit uses Autoscale, no UI picker)
 ================================================================================
-Replit → Publishing → choose **Static** (recommended for this Vite SPA)
-  Build: npm install && npm run build  (configured in .replit)
-  Output: dist/
-  SPA routing: .replit rewrites /* → /index.html
+Replit does not offer Static vs Autoscale for this Repl. It auto-uses Autoscale.
+All deploy behaviour is controlled by .replit in the repo (pull after every push).
 
-CRITICAL — Deployment Secrets (not the same as workspace Secrets!)
-  Vite bakes env vars into the build at publish time. In Publishing pane:
-  Add deployment secrets with the SAME names:
-    VITE_SUPABASE_URL
-    VITE_SUPABASE_ANON_KEY
-  Without these, publish may fail or the built app will not connect to Supabase.
+Autoscale flow (.replit):
+  1. npm install && npm run build  → dist/
+  2. node scripts/serve-dist.mjs   → serves dist/ on port 5000
 
-After deploy, update Supabase Auth Site URL + Redirect URLs to the
-DEPLOYMENT URL (may differ from dev webview URL).
+Deployment secrets (Publishing pane, if shown — not the same as workspace Secrets):
+  VITE_SUPABASE_URL
+  VITE_SUPABASE_ANON_KEY
 
-If publish works but live URL shows error / blank page:
-  → Often Autoscale ran "vite preview" which blocks *.replit.app hosts.
-  → Fix: Pull latest (serve dist on PORT) and Redeploy.
-  → Prefer Publishing → Static (serves dist/ directly, no Node server).
+After every Cursor push:
+  1. Git → Pull (latest: 1a28b25+)
+  2. Shell: npm run build && node scripts/serve-dist.mjs
+     → must print "Serving .../dist on http://0.0.0.0:5000"
+  3. Publishing → Publish / Redeploy
+  4. Logs after build must show serve-dist, NOT "vite preview"
 
-================================================================================
+After deploy, add published .replit.app URL to Supabase Auth redirect URLs.
+
+If publish fails:
   1. Do NOT use Agent — fix in Cursor
-  2. Replit → Pull latest from GitHub
-  3. Shell: npm install && npm run build — read the error
-  4. Add Deployment Secrets (VITE_* above)
-  5. Publishing → Static → Redeploy
-  6. Check Publishing → Logs for the exact failure
+  2. Pull latest from GitHub
+  3. Shell test above
+  4. Check Publishing → Logs
 
 ================================================================================
 TROUBLESHOOTING
