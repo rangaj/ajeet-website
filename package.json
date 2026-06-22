@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "start": "serve -s dist -l tcp://0.0.0.0:${PORT:-5000}",
+    "start": "node scripts/serve-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "seed:synthetic": "tsx scripts/seed-synthetic.ts",
@@ -17,8 +17,7 @@
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.1.5",
-    "serve": "^14.2.4"
+    "react-router-dom": "^7.1.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",

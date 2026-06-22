@@ -11,8 +11,11 @@ entrypoint = "index.html"
 hidden = [".config", "package-lock.json"]
 
 [deployment]
-deploymentTarget = "static"
 build = ["sh", "-c", "npm install && npm run build"]
+# Autoscale: serve dist on PORT (no vite preview — it blocks *.replit.app)
+run = ["sh", "-c", "node scripts/serve-dist.mjs"]
+# Static publish (preferred): set deploymentTarget + publicDir in Publishing UI
+deploymentTarget = "static"
 publicDir = "dist"
 
 [[deployment.rewrites]]
