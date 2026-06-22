@@ -64,19 +64,18 @@ function ClaimCtas({
     );
   }
 
-  const heroSecondaryClass =
-    "w-full min-w-[13.5rem] border-2 border-gold-500 bg-transparent text-white shadow-none hover:border-gold-400 hover:bg-gold-500/10 sm:w-auto";
+  const ctaButtonWidth = "w-full min-w-[13.5rem] sm:w-auto";
 
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
         <Link to="/claim" className="sm:inline-flex">
-          <Button size="lg" variant="accent" className="w-full min-w-[13.5rem] sm:w-auto">
+          <Button size="lg" variant="accent" className={ctaButtonWidth}>
             Claim My Ajeet ID
           </Button>
         </Link>
         <Link to="/register" className="sm:inline-flex">
-          <Button size="lg" variant="secondary" className={heroSecondaryClass}>
+          <Button size="lg" variant="outline" className={ctaButtonWidth}>
             Register as an Ajeet
           </Button>
         </Link>
