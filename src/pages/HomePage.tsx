@@ -1,166 +1,132 @@
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  IdCard,
-  Search,
-  Shield,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card, Badge } from "@/components/ui/Card";
+import { BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+
+function PathOption({
+  to,
+  title,
+  description,
+  primary = false,
+}: {
+  to: string;
+  title: string;
+  description: string;
+  primary?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "group flex items-center justify-between gap-4 rounded-2xl border p-5 transition-all",
+        primary
+          ? "border-gold-300 bg-white shadow-elevated hover:border-gold-400 hover:shadow-lg"
+          : "border-surface-border bg-white hover:border-brand-200 hover:bg-brand-50/50"
+      )}
+    >
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "font-display text-lg font-bold",
+            primary ? "text-brand-900" : "text-brand-800"
+          )}
+        >
+          {title}
+        </p>
+        <p className="mt-1 text-sm text-brand-600">{description}</p>
+      </div>
+      <ChevronRight
+        className={cn(
+          "h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5",
+          primary ? "text-gold-600" : "text-brand-400"
+        )}
+      />
+    </Link>
+  );
+}
 
 export function HomePage() {
   const { user, canAccessDirectory } = useAuth();
 
   return (
     <div>
-      {/* Full-width hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-700 to-brand-600 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-gold-500/20 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-24">
-          <Badge variant="gold" className="mb-4 bg-gold-500/20 text-gold-100">
-            Sainik School Bijapur
-          </Badge>
-          <h1 className="font-display text-balance text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-            Welcome to the Ajeet Network
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg text-brand-100 sm:text-xl">
-            Reconnect with fellow Ajeets from Sainik School Bijapur. Claim your existing
-            profile or register as a new member — directory access is granted after verification.
-          </p>
+      <section className="border-b border-surface-border bg-white">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 lg:grid-cols-[1fr_22rem] lg:items-center lg:py-20">
+          <div className="max-w-xl">
+            <BrandLogo size="xl" className="h-28 w-28 sm:h-32 sm:w-32" />
 
-          {user && canAccessDirectory && (
-            <div className="mt-8">
-              <Link to="/directory">
+            <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-brand-900 sm:text-4xl">
+              Sainik School Bijapur
+            </h1>
+            <p className="mt-2 text-lg font-medium text-brand-600">
+              Ajeet Alumni Association
+            </p>
+            <BrandMotto variant="hero" className="mt-4" />
+            <p className="mt-5 text-lg text-brand-600 text-balance">
+              Find and connect with fellow Ajeets across batches and borders.
+            </p>
+
+            {user && canAccessDirectory && (
+              <Link to="/directory" className="mt-8 inline-block">
                 <Button size="lg" variant="accent">
-                  Browse Ajeet Directory
+                  Open Directory
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-            </div>
-          )}
-          {user && !canAccessDirectory && (
-            <div className="mt-8">
-              <Link to="/pending">
+            )}
+            {user && !canAccessDirectory && (
+              <Link to="/pending" className="mt-8 inline-block">
                 <Button size="lg" variant="accent">
-                  Check Approval Status
+                  View Approval Status
                 </Button>
               </Link>
+            )}
+          </div>
+
+          {!user && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold uppercase tracking-wide text-brand-500">
+                Get started
+              </p>
+              <PathOption
+                to="/claim"
+                primary
+                title="Claim my Ajeet ID"
+                description="Already in the alumni database"
+              />
+              <PathOption
+                to="/register"
+                title="Register as an Ajeet"
+                description="New to this platform"
+              />
+              <p className="pt-2 text-center text-sm text-brand-600">
+                Already activated?{" "}
+                <Link
+                  to="/login"
+                  className="font-semibold text-brand-700 underline-offset-2 hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Two-path cards — guest only */}
-      {!user && (
-        <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-          <div className="text-center">
-            <h2 className="font-display text-2xl font-bold text-brand-900 sm:text-3xl">
-              Which path is right for you?
-            </h2>
-            <p className="mx-auto mt-2 max-w-xl text-brand-600">
-              Most Ajeets from our previous system should start with Claim. New members
-              who are not yet on the platform should register.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            <Card className="relative overflow-hidden border-2 border-gold-300 shadow-elevated lg:scale-[1.02]">
-              <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-gold-100" />
-              <Badge variant="gold" className="relative">
-                Recommended — existing Ajeets
-              </Badge>
-              <div className="relative mt-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600">
-                <IdCard className="h-6 w-6 text-gold-400" />
-              </div>
-              <h3 className="relative mt-4 font-display text-xl font-bold text-brand-900">
-                Already an Ajeet?
-              </h3>
-              <p className="relative mt-2 text-sm leading-relaxed text-brand-600">
-                If you were on our previous system, claim your profile using your roll number
-                and the email address we have on file. You will verify via email before access
-                is granted.
-              </p>
-              <Link to="/claim" className="relative mt-6 inline-block">
-                <Button size="lg" variant="accent" className="w-full sm:w-auto">
-                  Claim My Ajeet ID
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </Card>
-
-            <Card className="border-surface-border">
-              <Badge variant="default">New to this platform</Badge>
-              <div className="mt-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50">
-                <UserPlus className="h-6 w-6 text-brand-600" />
-              </div>
-              <h3 className="mt-4 font-display text-xl font-bold text-brand-900">
-                Register as a New Ajeet
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-brand-600">
-                Not yet registered on the Ajeet Network? Submit your details for admin review.
-                You will not have directory access until your registration is approved.
-              </p>
-              <Link to="/register" className="mt-6 inline-block">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                  Start Registration
-                </Button>
-              </Link>
-              <p className="mt-3 text-xs text-brand-500">
-                Approval is required before you can use the platform.
-              </p>
-            </Card>
-          </div>
-
-          <p className="mt-8 text-center text-sm text-brand-600">
-            Already activated your account?{" "}
-            <Link to="/login" className="font-semibold text-brand-700 underline-offset-2 hover:underline">
-              Sign in here
-            </Link>
-          </p>
-        </section>
-      )}
-
-      {/* Feature cards */}
-      <section className="border-t border-surface-border bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-          <h2 className="text-center font-display text-2xl font-bold text-brand-900">
-            Built for the Ajeet community
-          </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            <Card className="border-surface-border transition-shadow hover:shadow-elevated">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
-                <Shield className="h-5 w-5 text-brand-600" />
-              </div>
-              <h3 className="mt-4 font-display font-semibold text-brand-900">Secure Activation</h3>
-              <p className="mt-2 text-sm leading-relaxed text-brand-600">
-                Email verification and magic links — no admin-issued passwords. Your roll number
-                is your permanent identity on the network.
-              </p>
-            </Card>
-            <Card className="border-surface-border transition-shadow hover:shadow-elevated">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
-                <Search className="h-5 w-5 text-brand-600" />
-              </div>
-              <h3 className="mt-4 font-display font-semibold text-brand-900">Searchable Directory</h3>
-              <p className="mt-2 text-sm leading-relaxed text-brand-600">
-                Find fellow Ajeets by batch, course, company, skills, and more — with privacy
-                controls you manage yourself.
-              </p>
-            </Card>
-            <Card className="border-surface-border transition-shadow hover:shadow-elevated">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
-                <Users className="h-5 w-5 text-brand-600" />
-              </div>
-              <h3 className="mt-4 font-display font-semibold text-brand-900">Admin Verified</h3>
-              <p className="mt-2 text-sm leading-relaxed text-brand-600">
-                New registrations and claim exceptions are reviewed before directory access
-                is granted, keeping the network trustworthy.
-              </p>
-            </Card>
-          </div>
+      <section className="bg-surface-muted py-10">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-3">
+          {[
+            { value: "1963", label: "Established" },
+            { value: "Verified", label: "Member directory" },
+            { value: "Secure", label: "Email-verified access" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="font-display text-2xl font-bold text-brand-900">{stat.value}</p>
+              <p className="mt-1 text-sm text-brand-600">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </section>
     </div>

@@ -4,6 +4,7 @@ import { invokeFunction, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
+import { PageHeader } from "@/components/brand/BrandLogo";
 
 export function RegisterPage() {
   const [form, setForm] = useState({
@@ -79,13 +80,9 @@ export function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <PageHeader title="Register as an Ajeet" subtitle="Admin approval required" />
       <Card>
-        <h1 className="text-2xl font-bold">New Alumni Registration</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          For alumni whose roll number is not yet in the imported database. Admin approval required.
-        </p>
-
-        <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
+        <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
           <Input label="Roll Number *" required value={form.roll_number} onChange={(e) => update("roll_number", e.target.value)} />
           <Input label="Email *" type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} />
           <Input label="Full Name *" required className="sm:col-span-2" value={form.name} onChange={(e) => update("name", e.target.value)} />
@@ -100,8 +97,8 @@ export function RegisterPage() {
           <Input label="Current Location" className="sm:col-span-2" value={form.current_location} onChange={(e) => update("current_location", e.target.value)} />
 
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-slate-700">
-              Proof upload (optional — school ID, report card)
+            <label className="block text-sm font-medium text-brand-800">
+              Proof of enrollment (optional)
             </label>
             <input
               type="file"
@@ -127,9 +124,9 @@ export function RegisterPage() {
           </div>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-600">
+        <p className="mt-4 text-center text-sm text-brand-600">
           Already imported?{" "}
-          <Link to="/claim" className="text-brand-600 hover:underline">Claim your profile</Link>
+          <Link to="/claim" className="font-semibold text-brand-700 hover:underline">Claim your ID</Link>
         </p>
       </Card>
     </div>

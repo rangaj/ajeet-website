@@ -26,7 +26,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthShell
       title="Reset Password"
-      subtitle="Enter your verified email to receive a time-limited reset link."
+      subtitle="We will email you a reset link"
       footer={
         <>
           Remember your password? <AuthLink to="/login">Back to sign in</AuthLink>

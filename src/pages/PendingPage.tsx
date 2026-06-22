@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, Alert, Badge } from "@/components/ui/Card";
+import { PageHeader } from "@/components/brand/BrandLogo";
 import type { ApprovalRequest } from "@/types/database";
 
 export function PendingPage() {
@@ -33,14 +34,14 @@ export function PendingPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
+      <PageHeader title="Approval pending" subtitle="We will notify you when access is granted" />
       <Card>
-        <h1 className="text-2xl font-bold">Approval Pending</h1>
-        <p className="mt-2 text-slate-600">
-          You do not have directory access yet. Status:{" "}
+        <p className="text-brand-700">
+          Status:{" "}
           <Badge variant="warning">{profile?.member_status ?? "pending"}</Badge>
         </p>
-        <p className="mt-4 text-sm text-slate-600">
-          Verify your email if you have not already. An admin will review your claim or registration.
+        <p className="mt-3 text-sm text-brand-600">
+          Check your email for verification. An admin is reviewing your request.
         </p>
       </Card>
 

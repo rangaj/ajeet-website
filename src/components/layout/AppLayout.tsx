@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { GraduationCap, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
+import { BrandLockup, BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -36,21 +37,9 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col bg-surface-muted">
       <header className="sticky top-0 z-50 border-b border-surface-border bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link
-            to="/"
-            className="flex items-center gap-3"
-            onClick={closeMobile}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 shadow-sm">
-              <GraduationCap className="h-5 w-5 text-gold-400" />
-            </div>
-            <div className="leading-tight">
-              <span className="font-display text-sm font-bold tracking-tight text-brand-900 sm:text-base">
-                SSBJ Ajeet Network
-              </span>
-              <span className="block text-xs text-brand-600/70">Sainik School Bijapur</span>
-            </div>
-          </Link>
+          <div onClick={closeMobile}>
+            <BrandLockup size="header" asLink />
+          </div>
 
           <nav className="hidden items-center gap-1 text-sm md:flex">
             {!user && (
@@ -59,7 +48,7 @@ export function AppLayout() {
                   Claim ID
                 </NavLink>
                 <NavLink to="/register" className={navLinkClass}>
-                  New Ajeet Registration
+                  Register
                 </NavLink>
                 <NavLink to="/login" className={navLinkClass}>
                   Sign In
@@ -68,17 +57,17 @@ export function AppLayout() {
             )}
             {user && canAccessDirectory && (
               <NavLink to="/directory" className={navLinkClass}>
-                Ajeet Directory
+                Directory
               </NavLink>
             )}
             {user && (
               <NavLink to="/profile" className={navLinkClass}>
-                My Profile
+                Profile
               </NavLink>
             )}
             {user && !canAccessDirectory && (
               <NavLink to="/pending" className={navLinkClass}>
-                Pending Approval
+                Pending
               </NavLink>
             )}
             {isAdmin && (
@@ -118,7 +107,7 @@ export function AppLayout() {
                     Claim ID
                   </NavLink>
                   <NavLink to="/register" className={navLinkClass} onClick={closeMobile}>
-                    New Ajeet Registration
+                    Register
                   </NavLink>
                   <NavLink to="/login" className={navLinkClass} onClick={closeMobile}>
                     Sign In
@@ -127,17 +116,17 @@ export function AppLayout() {
               )}
               {user && canAccessDirectory && (
                 <NavLink to="/directory" className={navLinkClass} onClick={closeMobile}>
-                  Ajeet Directory
+                  Directory
                 </NavLink>
               )}
               {user && (
                 <NavLink to="/profile" className={navLinkClass} onClick={closeMobile}>
-                  My Profile
+                  Profile
                 </NavLink>
               )}
               {user && !canAccessDirectory && (
                 <NavLink to="/pending" className={navLinkClass} onClick={closeMobile}>
-                  Pending Approval
+                  Pending
                 </NavLink>
               )}
               {isAdmin && (
@@ -171,14 +160,18 @@ export function AppLayout() {
       </main>
 
       <footer className="mt-auto border-t border-surface-border bg-brand-900 text-brand-100">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-display font-semibold text-white">Sainik School Bijapur</p>
-            <p className="text-sm text-brand-200">Ajeet Network — Phase 1</p>
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <BrandLogo size="sm" />
+            <div>
+              <p className="font-display text-base font-semibold text-white">
+                Sainik School Bijapur
+              </p>
+              <p className="text-sm text-brand-200">Ajeet Alumni Association</p>
+              <BrandMotto variant="footer" className="mt-1" />
+            </div>
           </div>
-          <p className="text-sm text-brand-300">
-            Serving the Ajeet community with verified profiles and privacy-first directory access.
-          </p>
+          <p className="text-sm text-brand-300">© {new Date().getFullYear()} AAA</p>
         </div>
       </footer>
     </div>

@@ -43,11 +43,11 @@ export function LoginPage() {
   return (
     <AuthShell
       title="Sign In"
-      subtitle="Access your Ajeet Network account with email verification or password."
+      subtitle="Magic link or password"
       footer={
         <>
-          New here? <AuthLink to="/claim">Claim your ID</AuthLink> or{" "}
-          <AuthLink to="/register">register as a new Ajeet</AuthLink>.
+          New here? <AuthLink to="/claim">Claim ID</AuthLink> or{" "}
+          <AuthLink to="/register">Register</AuthLink>.
         </>
       }
     >

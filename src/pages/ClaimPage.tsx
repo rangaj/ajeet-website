@@ -4,6 +4,7 @@ import { invokeFunction, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
+import { PageHeader } from "@/components/brand/BrandLogo";
 
 export function ClaimPage() {
   const [rollNumber, setRollNumber] = useState("");
@@ -47,13 +48,9 @@ export function ClaimPage() {
 
   return (
     <div className="mx-auto max-w-lg">
+      <PageHeader title="Claim your Ajeet ID" subtitle="Roll number and email on file" />
       <Card>
-        <h1 className="text-2xl font-bold text-slate-900">Claim Imported Profile</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          If your record was imported by the school, enter your roll number and email to claim it.
-        </p>
-
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
             label="Roll Number"
             required
@@ -69,12 +66,12 @@ export function ClaimPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Input
-            label="Mobile Phone (optional verification)"
+            label="Mobile (optional)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
           <Input
-            label="Date of Birth (optional verification)"
+            label="Date of birth (optional)"
             type="date"
             value={dob}
             onChange={(e) => setDob(e.target.value)}
@@ -90,9 +87,9 @@ export function ClaimPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-600">
-          Not in the database?{" "}
-          <Link to="/register" className="text-brand-600 hover:underline">Register as new alumni</Link>
+        <p className="mt-4 text-center text-sm text-brand-600">
+          Not in the system?{" "}
+          <Link to="/register" className="font-semibold text-brand-700 hover:underline">Register</Link>
         </p>
       </Card>
     </div>
