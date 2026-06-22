@@ -11,9 +11,13 @@ entrypoint = "index.html"
 hidden = [".config", "package-lock.json"]
 
 [deployment]
-run = ["sh", "-c", "npm run build && npm run start"]
+deploymentTarget = "static"
 build = ["sh", "-c", "npm install && npm run build"]
 publicDir = "dist"
+
+[[deployment.rewrites]]
+from = "/*"
+to = "/index.html"
 
 [[ports]]
 localPort = 5173

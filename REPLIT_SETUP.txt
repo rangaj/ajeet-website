@@ -87,11 +87,28 @@ STEP 6 — Smoke test
 ================================================================================
 DEPLOYMENT (optional — always-on public URL)
 ================================================================================
-Replit → Deployments → Deploy
-Uses: npm run build && npm run start (port 5000, serves dist/)
+Replit → Publishing → choose **Static** (recommended for this Vite SPA)
+  Build: npm install && npm run build  (configured in .replit)
+  Output: dist/
+  SPA routing: .replit rewrites /* → /index.html
+
+CRITICAL — Deployment Secrets (not the same as workspace Secrets!)
+  Vite bakes env vars into the build at publish time. In Publishing pane:
+  Add deployment secrets with the SAME names:
+    VITE_SUPABASE_URL
+    VITE_SUPABASE_ANON_KEY
+  Without these, publish may fail or the built app will not connect to Supabase.
 
 After deploy, update Supabase Auth Site URL + Redirect URLs to the
 DEPLOYMENT URL (may differ from dev webview URL).
+
+If publish says "issue publishing your artifact":
+  1. Do NOT use Agent — fix in Cursor
+  2. Replit → Pull latest from GitHub
+  3. Shell: npm install && npm run build — read the error
+  4. Add Deployment Secrets (VITE_* above)
+  5. Publishing → Static → Redeploy
+  6. Check Publishing → Logs for the exact failure
 
 ================================================================================
 TROUBLESHOOTING
