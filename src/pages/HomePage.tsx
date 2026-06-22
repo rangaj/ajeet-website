@@ -64,26 +64,27 @@ function ClaimCtas({
     );
   }
 
-  const secondaryClass = isHero
-    ? "w-full border-white/35 bg-transparent text-white hover:bg-white/10 sm:w-auto"
-    : "w-full border-white/35 bg-transparent text-white hover:bg-white/10 sm:w-auto";
+  const heroSecondaryClass =
+    "w-full min-w-[13.5rem] border-2 border-gold-500 bg-transparent text-white shadow-none hover:border-gold-400 hover:bg-gold-500/10 sm:w-auto";
 
   return (
-    <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-      <Link to="/claim">
-        <Button size="lg" variant="accent" className="w-full sm:w-auto">
-          Claim My Ajeet ID
-        </Button>
-      </Link>
-      <Link to="/register">
-        <Button size="lg" variant="secondary" className={secondaryClass}>
-          Register as an Ajeet
-        </Button>
-      </Link>
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
+        <Link to="/claim" className="sm:inline-flex">
+          <Button size="lg" variant="accent" className="w-full min-w-[13.5rem] sm:w-auto">
+            Claim My Ajeet ID
+          </Button>
+        </Link>
+        <Link to="/register" className="sm:inline-flex">
+          <Button size="lg" variant="secondary" className={heroSecondaryClass}>
+            Register as an Ajeet
+          </Button>
+        </Link>
+      </div>
       {isHero && (
         <Link
           to="/login"
-          className="text-sm font-medium text-gold-200 underline-offset-2 hover:text-white hover:underline"
+          className="text-sm font-medium text-gold-200/90 underline-offset-2 hover:text-white hover:underline"
         >
           Already registered? Sign In
         </Link>
@@ -96,9 +97,9 @@ export function HomePage() {
   return (
     <div className="bg-warm-white">
       {/* Hero — identity first, no building photo */}
-      <section className="relative overflow-hidden bg-brand-900 pb-16 pt-28 sm:pb-20 sm:pt-32">
+      <section className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-brand-900 pb-10 pt-[4.75rem] sm:pb-12 sm:pt-20">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(201,162,39,0.07),transparent_55%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(201,162,39,0.05),transparent_55%)]"
           aria-hidden
         />
         <div
@@ -107,33 +108,29 @@ export function HomePage() {
         >
           <BrandLogo
             size="hero"
-            className="w-[min(90vw,22rem)] max-w-none opacity-[0.04] sm:w-[28rem]"
+            className="w-[min(80vw,18rem)] max-w-none opacity-[0.02] sm:w-[24rem]"
           />
         </div>
 
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <BrandLogo size="hero" className="mx-auto w-[92px] sm:w-[140px]" />
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-gold-400">
+        <div className="relative mx-auto max-w-2xl px-4 text-center sm:px-6">
+          <BrandLogo size="hero" className="mx-auto w-[88px] sm:w-[128px]" />
+          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold-400">
             Since 1963
           </p>
-          <h1 className="mt-4 font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
+          <h1 className="mt-2 font-display text-[1.65rem] font-bold leading-snug text-white sm:text-[2rem] lg:text-[2.15rem]">
             One School.
             <br />
             Many Generations.
             <br />
             A Lifelong Connection.
           </h1>
-          <div className="mx-auto mt-6 max-w-2xl space-y-4 text-base leading-relaxed text-brand-100">
-            <p>
-              The Ajeet Alumni Association brings together a global community connected by shared
-              experiences, enduring friendships, and the values forged at Sainik School Bijapur.
-            </p>
-            <p className="text-brand-200/90">
-              Reconnect with classmates, discover fellow Ajeets across generations, and strengthen a
-              network that continues to grow across professions, industries, and borders.
-            </p>
-          </div>
-          <div className="mt-9">
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-brand-100 sm:text-base">
+            The Ajeet Alumni Association brings together a global community connected by shared
+            experiences, enduring friendships, and the values forged at Sainik School Bijapur.
+            Reconnect with classmates, discover fellow Ajeets across generations, and strengthen a
+            network that continues to grow across professions, industries, and borders.
+          </p>
+          <div className="mt-6">
             <ClaimCtas variant="hero" />
           </div>
         </div>
@@ -158,12 +155,16 @@ export function HomePage() {
 
       {/* What makes an Ajeet — building belongs here */}
       <section id="about" className="scroll-mt-24 py-14 sm:py-16">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-14">
-          <div className="overflow-hidden rounded-2xl border border-surface-border shadow-card">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[2fr_3fr] lg:gap-12">
+          <div className="relative overflow-hidden rounded-2xl border border-surface-border shadow-card lg:max-w-md">
             <img
               src={SSBJ_BUILDING_SRC}
               alt="Sainik School Bijapur campus"
-              className="aspect-[4/3] h-full w-full object-cover"
+              className="aspect-[4/3] w-full object-cover saturate-[0.72] contrast-[0.88] brightness-[0.94]"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-brand-900/25 mix-blend-multiply"
+              aria-hidden
             />
           </div>
           <div>
