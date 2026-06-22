@@ -20,7 +20,7 @@ export function BrandLogo({
 }) {
   const sizeClass =
     size === "hero"
-      ? "h-auto w-[88px] max-w-[100px] sm:w-[132px] sm:max-w-[140px]"
+      ? "h-auto w-[92px] max-w-[100px] sm:w-[140px] sm:max-w-[150px]"
       : sizes[size as keyof typeof sizes];
 
   return (

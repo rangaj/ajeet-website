@@ -28,6 +28,7 @@ export default {
           muted: "#f4f6f9",
           border: "#e2e8f0",
         },
+        "warm-white": "#faf9f7",
       },
       fontFamily: {
         sans: ['"DM Sans"', "system-ui", "sans-serif"],

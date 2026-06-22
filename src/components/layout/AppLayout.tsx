@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,8 +20,10 @@ const marketingNavOnDark =
 const marketingNavOnLight =
   "rounded-lg px-2.5 py-2 text-sm font-medium text-brand-800/80 transition-colors hover:bg-brand-50 hover:text-brand-700 lg:px-3";
 
-function marketingNavClass(isHome: boolean) {
-  return isHome ? marketingNavOnDark : marketingNavOnLight;
+function marketingNavClass(isHome: boolean, homeScrolled: boolean) {
+  if (isHome && !homeScrolled) return marketingNavOnDark;
+  if (isHome && homeScrolled) return marketingNavOnDark;
+  return marketingNavOnLight;
 }
 
 function MarketingNavLink({
@@ -58,12 +60,24 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [homeScrolled, setHomeScrolled] = useState(false);
 
   const isHome = location.pathname === "/";
   const isFullBleed =
     location.pathname === "/" ||
     location.pathname === "/login" ||
     location.pathname === "/forgot-password";
+
+  useEffect(() => {
+    if (!isHome) {
+      setHomeScrolled(false);
+      return;
+    }
+    const onScroll = () => setHomeScrolled(window.scrollY > 32);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isHome]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,10 +88,15 @@ export function AppLayout() {
   const closeMobile = () => setMobileOpen(false);
 
   const headerClass = cn(
-    "sticky top-0 z-50",
+    "top-0 z-50 transition-all duration-300",
     isHome
-      ? "fixed inset-x-0 border-b border-white/10 bg-brand-900/30 backdrop-blur-sm"
-      : "sticky top-0 border-b border-surface-border bg-white/95 backdrop-blur-md"
+      ? cn(
+          "fixed inset-x-0",
+          homeScrolled
+            ? "border-b border-white/10 bg-brand-900/95 shadow-sm backdrop-blur-md"
+            : "border-b border-transparent bg-transparent"
+        )
+      : "sticky border-b border-surface-border bg-white/95 backdrop-blur-md"
   );
 
   const footerLinks = [
@@ -85,13 +104,15 @@ export function AppLayout() {
     { label: "Directory", to: "/directory" },
     { label: "Events", href: "/#why-join" },
     { label: "Stories", href: "/#legacy" },
+    { label: "Contact Us", href: "/#heritage" },
     { label: "Privacy Policy", href: "/#heritage" },
     { label: "Terms of Use", href: "/#heritage" },
-    { label: "Contact Us", href: "/#heritage" },
   ] as const;
 
+  const navClass = marketingNavClass(isHome, homeScrolled);
+
   return (
-    <div className={cn("flex min-h-screen flex-col", isHome ? "bg-white" : "bg-surface-muted")}>
+    <div className={cn("flex min-h-screen flex-col", isHome ? "bg-warm-white" : "bg-surface-muted")}>
       <header className={headerClass}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div onClick={closeMobile}>
@@ -105,34 +126,25 @@ export function AppLayout() {
           <nav className="hidden items-center gap-0.5 text-sm lg:flex">
             {!user && (
               <>
-                <MarketingNavLink href="/#about" className={marketingNavClass(isHome)}>
+                <MarketingNavLink href="/#about" className={navClass}>
                   About
                 </MarketingNavLink>
-                <Link to="/directory" className={marketingNavClass(isHome)}>
+                <Link to="/directory" className={navClass}>
                   Directory
                 </Link>
-                <MarketingNavLink href="/#why-join" className={marketingNavClass(isHome)}>
+                <MarketingNavLink href="/#why-join" className={navClass}>
                   Events
                 </MarketingNavLink>
-                <MarketingNavLink href="/#legacy" className={marketingNavClass(isHome)}>
+                <MarketingNavLink href="/#legacy" className={navClass}>
                   Stories
                 </MarketingNavLink>
                 <Link
                   to="/claim"
-                  className={cn(
-                    marketingNavClass(isHome),
-                    isHome && "font-semibold text-gold-300"
-                  )}
+                  className="rounded-lg bg-gold-500 px-3 py-2 text-sm font-semibold text-brand-900 transition-colors hover:bg-gold-400"
                 >
                   Claim ID
                 </Link>
-                <Link
-                  to="/login"
-                  className={cn(
-                    marketingNavClass(isHome),
-                    isHome && "ml-1 rounded-lg bg-white/15 px-3 hover:bg-white/25"
-                  )}
-                >
+                <Link to="/login" className={navClass}>
                   Sign In
                 </Link>
               </>
@@ -187,52 +199,32 @@ export function AppLayout() {
           <nav
             className={cn(
               "border-t px-4 py-3 lg:hidden",
-              isHome ? "border-white/10 bg-brand-900/95" : "border-surface-border bg-white"
+              isHome ? "border-white/10 bg-brand-900/98 backdrop-blur-md" : "border-surface-border bg-white"
             )}
           >
             <div className="flex flex-col gap-1 text-sm">
               {!user && (
                 <>
-                  <MarketingNavLink
-                    href="/#about"
-                    className={marketingNavClass(isHome)}
-                    onClick={closeMobile}
-                  >
+                  <MarketingNavLink href="/#about" className={navClass} onClick={closeMobile}>
                     About
                   </MarketingNavLink>
-                  <Link
-                    to="/directory"
-                    className={marketingNavClass(isHome)}
-                    onClick={closeMobile}
-                  >
+                  <Link to="/directory" className={navClass} onClick={closeMobile}>
                     Directory
                   </Link>
-                  <MarketingNavLink
-                    href="/#why-join"
-                    className={marketingNavClass(isHome)}
-                    onClick={closeMobile}
-                  >
+                  <MarketingNavLink href="/#why-join" className={navClass} onClick={closeMobile}>
                     Events
                   </MarketingNavLink>
-                  <MarketingNavLink
-                    href="/#legacy"
-                    className={marketingNavClass(isHome)}
-                    onClick={closeMobile}
-                  >
+                  <MarketingNavLink href="/#legacy" className={navClass} onClick={closeMobile}>
                     Stories
                   </MarketingNavLink>
                   <Link
                     to="/claim"
-                    className={marketingNavClass(isHome)}
+                    className="mt-1 rounded-lg bg-gold-500 px-3 py-2.5 text-center font-semibold text-brand-900"
                     onClick={closeMobile}
                   >
                     Claim ID
                   </Link>
-                  <Link
-                    to="/login"
-                    className={marketingNavClass(isHome)}
-                    onClick={closeMobile}
-                  >
+                  <Link to="/login" className={navClass} onClick={closeMobile}>
                     Sign In
                   </Link>
                 </>
