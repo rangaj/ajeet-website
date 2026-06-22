@@ -27,13 +27,18 @@ export function ClaimPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^\d+$/.test(rollNumber.trim())) {
+      setError("Enter your school roll number using digits only (e.g. 1247).");
+      return;
+    }
+    const roll = String(parseInt(rollNumber.trim(), 10));
     setLoading(true);
     setError("");
     setResult(null);
     try {
       await ensureAuth();
       const data = await invokeFunction<{ status: string; message: string }>("start-claim", {
-        roll_number: rollNumber,
+        roll_number: roll,
         email,
         phone: phone || undefined,
         date_of_birth: dob || undefined,
@@ -52,11 +57,14 @@ export function ClaimPage() {
       <Card>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
-            label="Roll Number"
+            label="School Roll Number"
             required
             value={rollNumber}
-            onChange={(e) => setRollNumber(e.target.value)}
-            placeholder="e.g. 2015-CS-042"
+            onChange={(e) => setRollNumber(e.target.value.replace(/\D/g, ""))}
+            placeholder="e.g. 1247"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            hint="Your Sainik School Bijapur roll number (digits only, as issued at the school)."
           />
           <Input
             label="Email"

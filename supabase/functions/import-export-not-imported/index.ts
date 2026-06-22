@@ -411,7 +411,7 @@ Deno.serve(async (req) => {
 
     const { data: batch } = await adminClient
       .from("import_batches")
-      .select("*")
+      .select("file_name")
       .eq("id", batch_id)
       .single();
 
@@ -419,101 +419,48 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Batch not found" }), { status: 404, headers: corsHeaders });
     }
 
-    if (batch.committed_at) {
-      return new Response(JSON.stringify({ error: "Batch already committed" }), { status: 409, headers: corsHeaders });
-    }
-
-    const { data: validRows, error: rowsError } = await adminClient
+    const { data: records, error: recordsError } = await adminClient
       .from("imported_records")
       .select("*")
       .eq("import_batch_id", batch_id)
-      .eq("row_status", "valid")
+      .neq("row_status", "imported")
       .order("row_number", { ascending: true });
 
-    if (rowsError) throw rowsError;
+    if (recordsError) throw recordsError;
 
-    let imported = 0;
-    let commitFailed = 0;
-
-    for (const row of validRows ?? []) {
-      const payload = row.raw_payload as {
-        mapped?: Record<string, unknown>;
-        roll_number?: unknown;
-        name?: unknown;
+    const exportRows = (records ?? []).map((record) => {
+      const payload = record.raw_payload as {
+        source_line?: number;
+        raw?: Record<string, string>;
       };
-      const mapped = payload.mapped ?? payload;
-      const insertRecord = toDbInsert(mapped, batch_id);
+      const raw = payload.raw ?? {};
+      const reasons = Array.isArray(record.validation_errors)
+        ? record.validation_errors as Array<{ code?: string; detail?: string }>
+        : [];
 
-      const { data: inserted, error: insertError } = await adminClient
-        .from("alumni_members")
-        .insert(insertRecord)
-        .select("id")
-        .single();
-
-      if (insertError) {
-        commitFailed++;
-        const isDuplicate = insertError.code === "23505";
-        const reason = isDuplicate
-          ? {
-              code: "ALREADY_IN_DATABASE",
-              detail: `Roll number ${insertRecord.roll_number} already exists in alumni_members.`,
-            }
-          : {
-              code: "COMMIT_FAILED",
-              detail: insertError.message,
-            };
-
-        await adminClient
-          .from("imported_records")
-          .update({
-            row_status: "invalid",
-            validation_errors: [reason],
-          })
-          .eq("id", row.id);
-        continue;
-      }
-
-      imported++;
-      await adminClient
-        .from("imported_records")
-        .update({
-          row_status: "imported",
-          alumni_member_id: inserted.id,
-        })
-        .eq("id", row.id);
-    }
-
-    const { data: finalRecords } = await adminClient
-      .from("imported_records")
-      .select("row_status, validation_errors")
-      .eq("import_batch_id", batch_id);
-
-    const notImported = (finalRecords ?? []).filter((r) => r.row_status !== "imported").length;
-
-    await adminClient
-      .from("import_batches")
-      .update({
-        committed_at: new Date().toISOString(),
-        valid_rows: imported,
-        invalid_rows: (finalRecords ?? []).filter((r) => r.row_status === "invalid").length,
-        duplicate_rows: (finalRecords ?? []).filter((r) => r.row_status === "duplicate").length,
-      })
-      .eq("id", batch_id);
-
-    await adminClient.from("admin_audit_log").insert({
-      actor_id: user.id,
-      action: "import_commit",
-      entity_type: "import_batches",
-      entity_id: batch_id,
-      details: { imported, commit_failed: commitFailed, not_imported: notImported },
+      return {
+        source_line: payload.source_line ?? record.row_number,
+        raw,
+        row_status: record.row_status,
+        reasons: reasons.map((r) => ({
+          code: r.code ?? "UNKNOWN",
+          detail: r.detail ?? "",
+        })),
+      };
     });
+
+    const headers = exportRows[0]
+      ? Object.keys(exportRows[0].raw).filter((k) => k !== "__source_line")
+      : [];
+
+    const csv = buildNotImportedCsv(exportRows, headers);
+    const fileName = batch.file_name.replace(/\.csv$/i, "") + "-not-imported.csv";
 
     return new Response(JSON.stringify({
       batch_id,
-      imported,
-      commit_failed: commitFailed,
-      not_imported: notImported,
-      message: `Imported ${imported} alumni records. ${notImported} rows were not imported.`,
+      file_name: fileName,
+      count: exportRows.length,
+      csv,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

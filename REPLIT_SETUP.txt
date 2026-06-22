@@ -6,7 +6,7 @@ PREREQUISITES (you should already have these)
 ---------------------------------------------
 [x] Supabase project with migrations run
 [x] 5 Edge Functions deployed (start-claim, start-registration, import-preview,
-    import-commit, notify-registrant)
+    import-preview, import-commit, import-export-not-imported, notify-registrant)
 [x] Super admin user in Supabase Auth + profiles.role = 'super_admin'
 [x] Sample data (3 imported_unclaimed alumni rows)
 

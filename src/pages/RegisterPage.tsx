@@ -34,6 +34,12 @@ export function RegisterPage() {
     setError("");
     setResult(null);
 
+    if (!/^\d+$/.test(form.roll_number.trim())) {
+      setError("Enter your school roll number using digits only.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: form.email,
@@ -83,7 +89,16 @@ export function RegisterPage() {
       <PageHeader title="Register as an Ajeet" subtitle="Admin approval required" />
       <Card>
         <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-          <Input label="Roll Number *" required value={form.roll_number} onChange={(e) => update("roll_number", e.target.value)} />
+          <Input
+            label="School Roll Number *"
+            required
+            value={form.roll_number}
+            onChange={(e) => update("roll_number", e.target.value.replace(/\D/g, ""))}
+            placeholder="e.g. 1247"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            hint="Digits only, as issued at Sainik School Bijapur."
+          />
           <Input label="Email *" type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} />
           <Input label="Full Name *" required className="sm:col-span-2" value={form.name} onChange={(e) => update("name", e.target.value)} />
           <Input label="Course" value={form.course} onChange={(e) => update("course", e.target.value)} />
