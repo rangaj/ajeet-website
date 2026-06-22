@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, Badge } from "@/components/ui/Card";
+import { searchAlumni } from "@/lib/data-access";
 import type { SearchResult } from "@/types/database";
 
 const PAGE_SIZE = 24;
@@ -38,7 +38,7 @@ export function DirectoryPage() {
     setLoading(true);
     setError("");
     try {
-      const { data, error: rpcError } = await supabase.rpc("search_alumni", {
+      const { data, error: rpcError } = await searchAlumni({
         p_query: debouncedQuery || null,
         p_course: filters.course || null,
         p_stream: filters.stream || null,

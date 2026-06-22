@@ -12,7 +12,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(
   supabaseUrl ?? "https://placeholder.supabase.co",
-  supabaseAnonKey ?? "placeholder"
+  supabaseAnonKey ?? "placeholder",
+  { db: { schema: "public" } }
 );
 
 export async function invokeFunction<T>(

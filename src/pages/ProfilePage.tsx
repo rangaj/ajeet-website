@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -16,12 +17,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("alumni_members")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setMember(data));
+    fetchAlumniMemberByUserId(user.id).then(({ data }) => setMember(data));
   }, [user]);
 
   const updateField = (key: keyof AlumniMember, value: string | boolean) => {
@@ -41,9 +37,7 @@ export function ProfilePage() {
     if (!member || !user) return;
     setSaving(true);
     setError("");
-    const { error: err } = await supabase
-      .from("alumni_members")
-      .update({
+    const { error: err } = await updateAlumniMember(member.id, {
         company: member.company,
         job_position: member.job_position,
         current_location: member.current_location,
@@ -57,8 +51,7 @@ export function ProfilePage() {
         website_link: member.website_link,
         is_directory_visible: member.is_directory_visible,
         visibility_settings: member.visibility_settings,
-      })
-      .eq("id", member.id);
+      });
     setSaving(false);
     if (err) setError(err.message);
     else setMessage("Profile updated.");
@@ -76,10 +69,9 @@ export function ProfilePage() {
       setSaving(false);
       return;
     }
-    const { error: updateErr } = await supabase
-      .from("alumni_members")
-      .update({ profile_photo_path: path })
-      .eq("id", member.id);
+    const { error: updateErr } = await updateAlumniMember(member.id, {
+      profile_photo_path: path,
+    });
     setSaving(false);
     if (updateErr) setError(updateErr.message);
     else {
@@ -91,7 +83,7 @@ export function ProfilePage() {
   const handleRemovePhoto = async () => {
     if (!member?.profile_photo_path) return;
     await supabase.storage.from("profile-photos").remove([member.profile_photo_path]);
-    await supabase.from("alumni_members").update({ profile_photo_path: null }).eq("id", member.id);
+    await updateAlumniMember(member.id, { profile_photo_path: null });
     setMember({ ...member, profile_photo_path: null });
     setMessage("Photo removed.");
   };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase, invokeFunction } from "@/lib/supabase";
+import { approveRegistration, rejectRegistration } from "@/lib/data-access";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
 import { Badge, Alert } from "@/components/ui/Card";
@@ -34,10 +35,7 @@ export function AdminQueuePage() {
 
   const handleApprove = async (id: string) => {
     setLoading(true);
-    const { error } = await supabase.rpc("approve_registration", {
-      p_request_id: id,
-      p_note: note[id] ?? null,
-    });
+    const { error } = await approveRegistration(id, note[id] ?? null);
     if (!error) {
       await invokeFunction("notify-registrant", { request_id: id, event: "approved", note: note[id] }).catch(() => {});
       setMessage("Approved.");
@@ -48,10 +46,7 @@ export function AdminQueuePage() {
 
   const handleReject = async (id: string) => {
     setLoading(true);
-    const { error } = await supabase.rpc("reject_registration", {
-      p_request_id: id,
-      p_note: note[id] ?? null,
-    });
+    const { error } = await rejectRegistration(id, note[id] ?? null);
     if (!error) {
       await invokeFunction("notify-registrant", { request_id: id, event: "rejected", note: note[id] }).catch(() => {});
       setMessage("Rejected.");
