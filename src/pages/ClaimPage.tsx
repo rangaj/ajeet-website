@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { invokeFunction, supabase } from "@/lib/supabase";
+import { invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
