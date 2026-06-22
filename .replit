@@ -12,9 +12,7 @@ hidden = [".config", "package-lock.json"]
 
 [deployment]
 build = ["sh", "-c", "npm install && npm run build"]
-# Autoscale: serve dist on PORT (no vite preview — it blocks *.replit.app)
 run = ["sh", "-c", "node scripts/serve-dist.mjs"]
-# Static publish (preferred): set deploymentTarget + publicDir in Publishing UI
 deploymentTarget = "static"
 publicDir = "dist"
 
@@ -22,8 +20,9 @@ publicDir = "dist"
 from = "/*"
 to = "/index.html"
 
+# Replit Autoscale healthcheck expects port 5000 (must match serve-dist.mjs / PORT)
 [[ports]]
-localPort = 5173
+localPort = 5000
 externalPort = 80
 
 [nix]

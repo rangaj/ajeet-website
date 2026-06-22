@@ -6,6 +6,13 @@ import { fileURLToPath } from "node:url";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const port = Number(process.env.PORT) || 5000;
 
+if (!fs.existsSync(path.join(root, "index.html"))) {
+  console.error(`ERROR: ${root}/index.html not found. Run npm run build first.`);
+  process.exit(1);
+}
+
+console.log(`Starting static server on port ${port}...`);
+
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -46,7 +53,7 @@ const server = http.createServer((req, res) => {
         return;
       }
       const ext = path.extname(filePath);
-      res.writeHead(200, { "Content-Type": MIME[ext as keyof typeof MIME] ?? "application/octet-stream" });
+      res.writeHead(200, { "Content-Type": MIME[ext] ?? "application/octet-stream" });
       res.end(data);
     });
   });

@@ -11,10 +11,10 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
-    port: 5173,
-    strictPort: false,
-    // Replit preview uses *.replit.dev / *.repl.co hosts
-    allowedHosts: [".replit.dev", ".repl.co", "localhost"],
+    // Replit maps external port 80 → 5000 in .replit; use 5000 when running on Replit
+    port: process.env.REPL_ID ? 5000 : 5173,
+    strictPort: true,
+    allowedHosts: [".replit.dev", ".repl.co", ".replit.app", "localhost"],
     hmr: process.env.REPL_ID
       ? {
           protocol: "wss",
