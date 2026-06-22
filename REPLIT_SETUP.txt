@@ -1,0 +1,127 @@
+================================================================================
+REPLIT SETUP — School Alumni App
+================================================================================
+
+PREREQUISITES (you should already have these)
+---------------------------------------------
+[x] Supabase project with migrations run
+[x] 5 Edge Functions deployed (start-claim, start-registration, import-preview,
+    import-commit, notify-registrant)
+[x] Super admin user in Supabase Auth + profiles.role = 'super_admin'
+[x] Sample data (3 imported_unclaimed alumni rows)
+
+================================================================================
+STEP 1 — Push code to GitHub (if not already)
+================================================================================
+Replit works best importing from GitHub. From your machine:
+
+  git add .
+  git commit -m "Add Replit config"
+  git push origin main
+
+Or: zip the project folder and use Replit "Import from folder/upload".
+
+================================================================================
+STEP 2 — Create Repl
+================================================================================
+1. Go to https://replit.com and sign in
+2. Click + Create Repl
+3. Choose "Import from GitHub" and select your Alumni App repo
+   OR "Node.js" template then upload/import files
+4. Replit should detect .replit config automatically
+
+================================================================================
+STEP 3 — Add Supabase secrets (CRITICAL)
+================================================================================
+In Replit left sidebar → Secrets (lock icon) → Add:
+
+  Key: VITE_SUPABASE_URL
+  Value: https://YOUR_PROJECT_REF.supabase.co
+       (from Supabase → Project Settings → API → Project URL)
+
+  Key: VITE_SUPABASE_ANON_KEY
+  Value: eyJ... your anon public key
+       (from Supabase → Project Settings → API → anon public)
+
+Secrets become environment variables automatically on next run.
+
+DO NOT add service_role key to Replit — frontend only needs anon key.
+
+================================================================================
+STEP 4 — Install and run
+================================================================================
+In Replit Shell:
+
+  npm install
+  npm run dev
+
+Click the Webview / Open in new tab button when the server starts.
+Default dev URL looks like:
+  https://YOUR-REPL-NAME.USERNAME.repl.co
+
+================================================================================
+STEP 5 — Configure Supabase Auth for Replit URL
+================================================================================
+Supabase Dashboard → Authentication → URL Configuration
+
+1. Site URL: paste your full Replit webview URL (no trailing slash)
+   Example: https://school-alumni-app.yourname.repl.co
+
+2. Redirect URLs — add BOTH:
+   https://YOUR-REPL-NAME.USERNAME.repl.co/**
+   http://localhost:5173/**
+
+Save. This is required for magic link / OTP login to work.
+
+================================================================================
+STEP 6 — Smoke test
+================================================================================
+1. Open Replit app URL in browser
+2. Login with your super admin email
+3. Confirm "Admin" appears in navigation
+4. Admin → Data Import → upload sample-data/import-sample.csv
+   (should show 3 duplicates if sample SQL data already exists — that's OK)
+5. Claim flow: log out → Claim → 2015-SCI-001 + alumni1@example.com
+6. Admin → approve claim → log in as alumni → Directory
+
+================================================================================
+DEPLOYMENT (optional — always-on public URL)
+================================================================================
+Replit → Deployments → Deploy
+Uses: npm run build && npm run start (port 5000, serves dist/)
+
+After deploy, update Supabase Auth Site URL + Redirect URLs to the
+DEPLOYMENT URL (may differ from dev webview URL).
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Blank page / "Missing Supabase URL"
+  → Check Secrets spelling: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+  → Stop and Run again after adding secrets
+
+Login magic link goes nowhere
+  → Add exact Replit URL to Supabase Redirect URLs (with /**)
+
+Edge Function errors (claim/import)
+  → Functions must be deployed in Supabase Dashboard (you did this)
+  → User must be logged in for claim/register/import
+
+Port / Webview not loading
+  → Shell: npm run dev
+  → Check .replit maps port 5173 → 80
+
+Build fails on deploy
+  → Shell: npm run build — fix any TypeScript errors shown
+
+Import shows duplicates for all 3 rows
+  → Expected if you already inserted sample data via SQL
+
+================================================================================
+REPLIT vs LOCAL
+================================================================================
+Same app, same Supabase backend. Replit only hosts the React frontend.
+Database, auth, storage, edge functions stay in Supabase.
+
+================================================================================

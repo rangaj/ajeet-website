@@ -1,0 +1,22 @@
+modules = ["nodejs-20", "web"]
+
+run = "npm run dev"
+
+entrypoint = "index.html"
+
+hidden = [".config", "package-lock.json"]
+
+[deployment]
+run = ["sh", "-c", "npm run build && npm run start"]
+build = ["sh", "-c", "npm install && npm run build"]
+publicDir = "dist"
+
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+[nix]
+channel = "stable-24_05"
+
+[agent]
+expertMode = true

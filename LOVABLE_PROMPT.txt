@@ -1,0 +1,167 @@
+================================================================================
+LOVABLE MEGA-PROMPT — School Alumni Directory (Phase 1)
+Copy everything below the line into Lovable when connecting Supabase.
+Build in SLICES. Do NOT create new database tables.
+================================================================================
+
+PROJECT
+-------
+Build a premium, modern, fully responsive School Alumni Directory web app (Phase 1).
+Connect to my EXISTING Supabase project — backend is already live. Do NOT invent
+new tables, columns, or parallel auth systems.
+
+CRITICAL BACKEND RULES (non-negotiable)
+--------------------------------------
+1. Use ONLY these existing tables:
+   - profiles (role: alumni | admin | super_admin, member_status: pending | approved)
+   - alumni_members (canonical directory; roll_number is UNIQUE identity)
+   - approval_requests (type: claim | new_registration | conflict)
+   - import_batches, imported_records, import_field_mappings, admin_audit_log
+
+2. roll_number is IMMUTABLE for alumni — never editable in profile UI (admin/super_admin only).
+
+3. NO directory access until profiles.member_status = 'approved' (or user is admin).
+   Pending users see only: pending status, claim/register — NOT directory.
+
+4. Column is job_position (NOT "position" — PostgreSQL reserved word).
+
+5. Call existing Edge Functions by exact name:
+   - start-claim
+   - start-registration
+   - import-preview (multipart FormData with file field)
+   - import-commit (JSON: { batch_id })
+   - notify-registrant (JSON: { request_id, event, note? })
+   Events: submitted | approved | rejected | more_info
+
+6. Call existing RPCs:
+   - search_alumni(p_query, p_course, p_stream, p_year_from, p_year_to, p_location,
+     p_company, p_industry, p_skills, p_house, p_page, p_page_size, p_admin_mode)
+   - lookup_roll_number(p_roll_number)
+   - approve_registration(p_request_id, p_note)
+   - reject_registration(p_request_id, p_note)
+
+7. NEVER use service_role key in frontend. Anon key + user JWT only.
+
+8. Directory search MUST be server-side paginated (page_size 24). Never load 5000+ rows client-side.
+
+9. Premium membership fields are display metadata only — no payment behavior.
+
+PRODUCT DECISIONS (already decided)
+-----------------------------------
+- Email-only OTP / magic link for verification (no SMS in Phase 1)
+- Optional password after activation + forgot password flow
+- Alumni CAN hide from directory (alumni_members.is_directory_visible)
+- Profile edits after approval do NOT need admin approval
+- Privacy: phone, DOB, email, address hidden in directory unless visibility_settings opt-in
+- Scale: 5000+ alumni — debounce search 300ms, use search_alumni RPC with filters
+
+ROUTES (implement all)
+----------------------
+/                  Landing — hero, value props, CTA to Claim / Register / Login
+/login             Magic link + password tabs
+/forgot-password   Reset link
+/claim             Imported profile claim (Flow A)
+/register          New alumni registration (Flow B)
+/pending           Approval status (authenticated, not yet approved)
+/directory         Search + filters + paginated cards (approved alumni or admin only)
+/profile           Edit own profile, photo, privacy toggles
+/admin             Review queue tabs
+/admin/import      CSV upload preview + commit
+
+AUTH & ROLE ROUTING
+-------------------
+On login, load profiles row for auth.uid():
+- admin / super_admin → show Admin nav + full admin tools
+- alumni + pending → redirect away from /directory to /pending
+- alumni + approved → show Directory nav
+Guests: claim/register/login only
+
+CLAIM FLOW (Flow A)
+-------------------
+User enters roll_number + email (+ optional phone/DOB for verification).
+POST to start-claim Edge Function with Authorization header.
+- Auto-match → OTP sent, approval_request created
+- Mismatch → admin_review message
+Never create duplicate alumni_members on claim.
+
+REGISTRATION FLOW (Flow B)
+--------------------------
+User enters roll_number + email + profile fields + optional evidence file
+(upload to evidence-uploads bucket).
+POST to start-registration Edge Function.
+- Roll exists → use_claim_flow or conflict_review
+- Roll new → pending_review approval_request
+
+ADMIN IMPORT
+------------
+Admin uploads CSV → import-preview → show valid/invalid/duplicate counts + preview table
+→ import-commit on confirm. Use sample headers: Roll no, Name, email_id, Course, etc.
+
+ADMIN REVIEW QUEUE
+------------------
+Tabs: All Pending | Claims | New Registrations | Conflicts | Approved | Rejected
+Approve → approve_registration RPC + notify-registrant event approved
+Reject → reject_registration RPC + notify-registrant event rejected
+
+PROFILE
+-------
+Alumni edit: company, job_position, location, phone, skills, social links, photo
+(profile-photos bucket, path: {alumni_member_id}/avatar.webp)
+Privacy toggles map to visibility_settings JSONB + is_directory_visible checkbox
+
+================================================================================
+DESIGN DIRECTION — MODERN, PREMIUM, RESPONSIVE (very important)
+================================================================================
+
+Overall feel:
+- Premium alumni network — trustworthy, elegant, school pride — NOT generic startup SaaS
+- Clean editorial layout: generous whitespace, confident typography, subtle depth
+- Fully responsive: mobile-first; directory filters collapse to sheet/drawer on mobile
+- Polished micro-interactions: hover states, focus rings, skeleton loaders, smooth transitions
+- Accessible: WCAG-friendly contrast, keyboard nav, clear error states
+
+Visual system:
+- Typography: distinctive sans (e.g. DM Sans, Plus Jakarta Sans, or similar — avoid Inter/Roboto default look)
+- Color: deep navy or forest primary + warm gold/amber accent (school association feel)
+- Surfaces: soft off-white background, white cards, hairline borders, soft shadows (not heavy)
+- Radius: consistent lg/xl rounded corners
+- Icons: lucide-react, consistent stroke weight
+
+Landing page:
+- Full-width hero with subtle gradient or tasteful school imagery placeholder
+- Clear CTAs: "Claim My Profile" (primary), "New Registration" (secondary)
+- 3 feature cards: Secure activation, Searchable directory, Admin verified
+
+Directory:
+- Sticky search bar + filter chips (course, stream, year range, location, company, house)
+- Alumni cards: avatar/initials, name, batch, company, location — tap opens detail drawer/modal
+- "Load more" pagination — never infinite scroll without server pages
+- Empty state illustration + helpful copy
+
+Admin:
+- Data-dense but clean tables/cards; status badges with semantic colors
+- Import preview: summary stat pills (total/valid/invalid/duplicates) + scrollable preview table
+- Review queue: clear type badges (claim / new_registration / conflict)
+
+Do NOT:
+- Generic purple-on-white AI template aesthetic
+- Cluttered forms, tiny touch targets on mobile
+- Client-side full table fetch
+- New Supabase tables or renamed columns
+
+BUILD ORDER (one slice per Lovable prompt)
+------------------------------------------
+Slice 1: Connect Supabase + auth shell + role routing + premium landing + login
+Slice 2: Claim + Register + Pending pages wired to Edge Functions
+Slice 3: Admin import UI wired to import-preview / import-commit
+Slice 4: Directory search UI wired to search_alumni RPC
+Slice 5: Profile page + photo upload + privacy settings
+Slice 6: Admin review queue + approve/reject + polish pass on all screens
+
+TEST DATA (already in database)
+-------------------------------
+2015-SCI-001 / alumni1@example.com — imported_unclaimed
+2015-SCI-002 / alumni2@example.com — imported_unclaimed
+2016-COM-001 / alumni3@example.com — imported_unclaimed
+
+Start with Slice 1 only. Confirm Supabase connection before adding features.
