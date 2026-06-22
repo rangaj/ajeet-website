@@ -51,6 +51,19 @@ export async function invokeFunction<T>(
   }
 
   const { data, error } = await supabase.functions.invoke(name, { body });
-  if (error) throw error;
+  if (error) {
+    const httpError = error as Error & { context?: Response };
+    if (httpError.context) {
+      try {
+        const json = (await httpError.context.json()) as Record<string, unknown>;
+        throw new Error(String(json.message ?? json.error ?? error.message));
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message !== error.message) {
+          throw parseErr;
+        }
+      }
+    }
+    throw error;
+  }
   return data as T;
 }

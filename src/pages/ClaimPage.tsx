@@ -15,16 +15,6 @@ export function ClaimPage() {
   const [result, setResult] = useState<{ status: string; message: string } | null>(null);
   const [error, setError] = useState("");
 
-  const ensureAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) return;
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    if (otpError) throw otpError;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d+$/.test(rollNumber.trim())) {
@@ -36,7 +26,6 @@ export function ClaimPage() {
     setError("");
     setResult(null);
     try {
-      await ensureAuth();
       const data = await invokeFunction<{ status: string; message: string }>("start-claim", {
         roll_number: roll,
         email,

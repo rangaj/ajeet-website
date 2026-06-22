@@ -63,12 +63,6 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     const { data: { user } } = await userClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const body = await req.json();
     const rollNumber = normalizeRoll(body.roll_number ?? "");
@@ -134,7 +128,7 @@ Deno.serve(async (req) => {
         submitted_phone: body.phone ?? null,
         submitted_dob: body.date_of_birth ?? null,
         alumni_member_id: member.id,
-        user_id: user.id,
+        user_id: user?.id ?? null,
         submitted_payload: verification === "auto_matched"
           ? { verification: "auto_matched" }
           : {
@@ -147,13 +141,15 @@ Deno.serve(async (req) => {
 
     if (reqError) throw reqError;
 
-    await adminClient.from("admin_audit_log").insert({
-      actor_id: user.id,
-      action: verification === "auto_matched" ? "claim_auto_matched" : "claim_admin_review",
-      entity_type: "approval_requests",
-      entity_id: request.id,
-      details: { roll_number: rollNumber, verification },
-    });
+    if (user) {
+      await adminClient.from("admin_audit_log").insert({
+        actor_id: user.id,
+        action: verification === "auto_matched" ? "claim_auto_matched" : "claim_admin_review",
+        entity_type: "approval_requests",
+        entity_id: request.id,
+        details: { roll_number: rollNumber, verification },
+      });
+    }
 
     await notifyAdminClaim({
       roll_number: rollNumber,
