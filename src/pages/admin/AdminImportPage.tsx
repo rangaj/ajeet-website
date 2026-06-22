@@ -45,6 +45,14 @@ interface CommitState {
   message: string;
 }
 
+interface CommitApiResponse {
+  batch_id: string;
+  imported: number;
+  commit_failed?: number;
+  not_imported: number;
+  message: string;
+}
+
 type PreviewTab = "all" | "will_import" | "skipped";
 
 const REASON_LABELS: Record<string, string> = {
@@ -235,7 +243,7 @@ export function AdminImportPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await invokeFunction<CommitState & { batch_id: string }>("import-commit", {
+      const data = await invokeFunction<CommitApiResponse>("import-commit", {
         batch_id: preview.batchId,
       });
       setCommitted({
