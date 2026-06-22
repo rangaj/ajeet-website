@@ -102,7 +102,12 @@ CRITICAL — Deployment Secrets (not the same as workspace Secrets!)
 After deploy, update Supabase Auth Site URL + Redirect URLs to the
 DEPLOYMENT URL (may differ from dev webview URL).
 
-If publish says "issue publishing your artifact":
+If publish works but live URL shows error / blank page:
+  → Often Autoscale ran "vite preview" which blocks *.replit.app hosts.
+  → Fix: Pull latest (serve dist on PORT) and Redeploy.
+  → Prefer Publishing → Static (serves dist/ directly, no Node server).
+
+================================================================================
   1. Do NOT use Agent — fix in Cursor
   2. Replit → Pull latest from GitHub
   3. Shell: npm install && npm run build — read the error
