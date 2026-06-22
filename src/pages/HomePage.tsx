@@ -20,26 +20,26 @@ function PathOption({
     <Link
       to={to}
       className={cn(
-        "group flex items-center justify-between gap-4 rounded-2xl border p-5 transition-all",
+        "group flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 transition-all",
         primary
-          ? "border-gold-300 bg-white shadow-elevated hover:border-gold-400 hover:shadow-lg"
+          ? "border-gold-300 bg-white shadow-card hover:border-gold-400"
           : "border-surface-border bg-white hover:border-brand-200 hover:bg-brand-50/50"
       )}
     >
       <div className="min-w-0">
         <p
           className={cn(
-            "font-display text-lg font-bold",
+            "font-display text-base font-bold",
             primary ? "text-brand-900" : "text-brand-800"
           )}
         >
           {title}
         </p>
-        <p className="mt-1 text-sm text-brand-600">{description}</p>
+        <p className="mt-0.5 text-sm text-brand-600">{description}</p>
       </div>
       <ChevronRight
         className={cn(
-          "h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5",
+          "h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5",
           primary ? "text-gold-600" : "text-brand-400"
         )}
       />
@@ -53,42 +53,37 @@ export function HomePage() {
   return (
     <div>
       <section className="border-b border-surface-border bg-white">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 lg:grid-cols-[1fr_22rem] lg:items-center lg:py-20">
-          <div className="max-w-xl">
-            <BrandLogo size="xl" className="h-28 w-28 sm:h-32 sm:w-32" />
-
-            <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-brand-900 sm:text-4xl">
-              Sainik School Bijapur
-            </h1>
-            <p className="mt-2 text-lg font-medium text-brand-600">
-              Ajeet Alumni Association
-            </p>
+        <div className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
+          <div className="flex flex-col items-center text-center">
+            <BrandLogo size="xl" className="h-28 max-h-28 sm:h-32 sm:max-h-32" />
             <BrandMotto variant="hero" className="mt-4" />
-            <p className="mt-5 text-lg text-brand-600 text-balance">
-              Find and connect with fellow Ajeets across batches and borders.
-            </p>
+          </div>
 
-            {user && canAccessDirectory && (
-              <Link to="/directory" className="mt-8 inline-block">
+          {user && canAccessDirectory && (
+            <div className="mt-8 text-center">
+              <Link to="/directory">
                 <Button size="lg" variant="accent">
                   Open Directory
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-            )}
-            {user && !canAccessDirectory && (
-              <Link to="/pending" className="mt-8 inline-block">
+            </div>
+          )}
+
+          {user && !canAccessDirectory && (
+            <div className="mt-8 text-center">
+              <Link to="/pending">
                 <Button size="lg" variant="accent">
                   View Approval Status
                 </Button>
               </Link>
-            )}
-          </div>
+            </div>
+          )}
 
           {!user && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-wide text-brand-500">
-                Get started
+            <div className="mt-8 space-y-2.5">
+              <p className="mb-4 text-center text-sm text-brand-600">
+                Find and connect with fellow Ajeets across batches and borders.
               </p>
               <PathOption
                 to="/claim"
@@ -115,16 +110,18 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-surface-muted py-10">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-3">
+      <section className="bg-surface-muted py-6">
+        <div className="mx-auto grid max-w-lg gap-6 px-4 sm:grid-cols-3 sm:px-6">
           {[
             { value: "1963", label: "Established" },
             { value: "Verified", label: "Member directory" },
             { value: "Secure", label: "Email-verified access" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display text-2xl font-bold text-brand-900">{stat.value}</p>
-              <p className="mt-1 text-sm text-brand-600">{stat.label}</p>
+              <p className="font-display text-xl font-bold text-brand-900 sm:text-2xl">
+                {stat.value}
+              </p>
+              <p className="mt-0.5 text-sm text-brand-600">{stat.label}</p>
             </div>
           ))}
         </div>

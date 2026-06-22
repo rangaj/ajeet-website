@@ -5,10 +5,10 @@ export const AAA_LOGO_SRC = "/aaa-logo.png";
 export const SCHOOL_MOTTO = "Ajeet Hain Abheet Hain";
 
 const sizes = {
-  sm: "h-10 w-10",
-  md: "h-16 w-16",
-  lg: "h-24 w-24",
-  xl: "h-32 w-32",
+  sm: "h-10 w-auto max-h-10",
+  md: "h-16 w-auto max-h-16",
+  lg: "h-24 w-auto max-h-24",
+  xl: "h-32 w-auto max-h-32",
 } as const;
 
 export function BrandLogo({
@@ -22,7 +22,7 @@ export function BrandLogo({
     <img
       src={AAA_LOGO_SRC}
       alt="Ajeet Alumni Association — Sainik School Bijapur"
-      className={cn("object-contain", sizes[size], className)}
+      className={cn("bg-transparent object-contain object-left", sizes[size], className)}
     />
   );
 }

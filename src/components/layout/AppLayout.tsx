@@ -20,6 +20,7 @@ export function AppLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isHome = location.pathname === "/";
   const isFullBleed =
     location.pathname === "/" ||
     location.pathname === "/login" ||
@@ -36,7 +37,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-surface-muted">
       <header className="sticky top-0 z-50 border-b border-surface-border bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
           <div onClick={closeMobile}>
             <BrandLockup size="header" asLink />
           </div>
@@ -149,7 +150,7 @@ export function AppLayout() {
         )}
       </header>
 
-      <main className="flex-1">
+      <main className={isHome ? undefined : "flex-1"}>
         {isFullBleed ? (
           <Outlet />
         ) : (
