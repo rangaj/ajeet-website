@@ -62,11 +62,13 @@ export function ClaimPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            hint="Must match the email we have on file for your roll number."
           />
           <Input
             label="Mobile (optional)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            hint="If your email has changed, enter the mobile number on file to help verify your identity."
           />
           <Input
             label="Date of birth (optional)"
@@ -76,7 +78,7 @@ export function ClaimPage() {
           />
           {error && <Alert variant="error">{error}</Alert>}
           {result && (
-            <Alert variant={result.status === "admin_review" || result.status === "already_pending" ? "warning" : "success"}>
+            <Alert variant={result.status === "already_pending" ? "warning" : "success"}>
               {result.message}
               {result.status === "otp_sent" && (
                 <span>

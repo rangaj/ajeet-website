@@ -82,6 +82,23 @@ function pendingResponse(rollNumber: string, pending: { id: string; created_at: 
   );
 }
 
+const VERIFICATION_FAILED_MESSAGE =
+  "We could not verify the details you entered. Please check your roll number and contact information and try again.";
+
+function verificationFailedResponse() {
+  return new Response(
+    JSON.stringify({
+      error: "verification_failed",
+      status: "verification_failed",
+      message: VERIFICATION_FAILED_MESSAGE,
+    }),
+    {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    }
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -122,19 +139,13 @@ Deno.serve(async (req) => {
     if (memberError) throw memberError;
 
     if (!member) {
-      return new Response(JSON.stringify({
-        error: "not_found",
-        message: "Roll number not found. Use new registration instead.",
-      }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return verificationFailedResponse();
     }
 
     if (member.status !== "imported_unclaimed" && member.user_id) {
       return new Response(JSON.stringify({
         error: "already_claimed",
-        message: "This profile has already been claimed. Try logging in or contact admin.",
+        message: "This alumni profile is already linked to an account. Try signing in or contact the administrator.",
       }), {
         status: 409,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -148,18 +159,20 @@ Deno.serve(async (req) => {
     const phoneMatch = body.phone && member.mobile_phone &&
       member.mobile_phone.replace(/\D/g, "") === String(body.phone).replace(/\D/g, "");
     const dobMatch = body.date_of_birth && member.date_of_birth === body.date_of_birth;
-    const verification = emailMatch || phoneMatch || dobMatch ? "auto_matched" : "admin_review";
+    const autoMatched = emailMatch || phoneMatch || dobMatch;
 
-    if (verification === "auto_matched") {
-      const { error: otpError } = await anonClient.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo,
-        },
-      });
-      if (otpError) throw otpError;
+    if (!autoMatched) {
+      return verificationFailedResponse();
     }
+
+    const { error: otpError } = await anonClient.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo,
+      },
+    });
+    if (otpError) throw otpError;
 
     const { data: request, error: reqError } = await adminClient
       .from("approval_requests")
@@ -173,12 +186,7 @@ Deno.serve(async (req) => {
         submitted_dob: body.date_of_birth ?? null,
         alumni_member_id: member.id,
         user_id: user?.id ?? null,
-        submitted_payload: verification === "auto_matched"
-          ? { verification: "auto_matched" }
-          : {
-              verification: "admin_review",
-              imported_email: member.email,
-            },
+        submitted_payload: { verification: "auto_matched" },
       })
       .select()
       .single();
@@ -188,10 +196,10 @@ Deno.serve(async (req) => {
     if (user) {
       await adminClient.from("admin_audit_log").insert({
         actor_id: user.id,
-        action: verification === "auto_matched" ? "claim_auto_matched" : "claim_admin_review",
+        action: "claim_auto_matched",
         entity_type: "approval_requests",
         entity_id: request.id,
-        details: { roll_number: rollNumber, verification },
+        details: { roll_number: rollNumber, verification: "auto_matched" },
       });
     }
 
@@ -199,24 +207,14 @@ Deno.serve(async (req) => {
       roll_number: rollNumber,
       name: member.name,
       email,
-      verification,
+      verification: "auto_matched",
       request_id: request.id,
     }).catch(() => {});
 
-    if (verification === "auto_matched") {
-      return new Response(JSON.stringify({
-        status: "otp_sent",
-        message: "Verification email sent. Complete OTP to continue claim.",
-        auto_matched: true,
-        request_id: request.id,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     return new Response(JSON.stringify({
-      status: "admin_review",
-      message: "Email does not match our records. An admin will review your claim.",
+      status: "otp_sent",
+      message: "Verification email sent. Check your email to continue your claim.",
+      auto_matched: true,
       request_id: request.id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
