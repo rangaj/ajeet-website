@@ -5,7 +5,7 @@ import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { HouseSelector } from "@/components/register/HouseSelector";
 import { formatHouses } from "@/constants/houses";
 import { storePendingAvatar } from "@/lib/image";
-import { invokeFunction } from "@/lib/supabase";
+import { FunctionCallError, invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Card } from "@/components/ui/Card";
@@ -74,6 +74,50 @@ function SummaryRow({ label, value }: { label: string; value?: string | null }) 
   );
 }
 
+function RegistrationHelpLinks({ code }: { code?: string }) {
+  if (!code) return null;
+
+  if (code === "use_claim_flow" || code === "roll_exists") {
+    return (
+      <p className="mt-3 text-sm">
+        <Link to="/claim" className="font-semibold text-brand-700 hover:underline">
+          Claim your Ajeet ID
+        </Link>
+        {" · "}
+        <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+          Sign in
+        </Link>
+      </p>
+    );
+  }
+
+  if (code === "already_registered") {
+    return (
+      <p className="mt-3 text-sm">
+        <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+          Sign in to your account
+        </Link>
+      </p>
+    );
+  }
+
+  if (code === "already_pending") {
+    return (
+      <p className="mt-3 text-sm">
+        <Link to="/pending" className="font-semibold text-brand-700 hover:underline">
+          Check pending approval
+        </Link>
+        {" · "}
+        <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+          Sign in
+        </Link>
+      </p>
+    );
+  }
+
+  return null;
+}
+
 export function RegisterPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<RegForm>(emptyForm);
@@ -83,6 +127,7 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ status: string; message: string } | null>(null);
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<string | undefined>();
 
   const update = <K extends keyof RegForm>(key: K, value: RegForm[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -136,6 +181,7 @@ export function RegisterPage() {
 
     setLoading(true);
     setError("");
+    setErrorCode(undefined);
     setResult(null);
 
     const roll = String(parseInt(form.roll_number.trim(), 10));
@@ -181,11 +227,16 @@ export function RegisterPage() {
 
       setResult({
         status: data.status,
-        message:
-          "Registration submitted. Check your email to verify, and then await approval.",
+        message: data.message ?? "Registration submitted. Check your email to verify, and then await approval.",
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      if (err instanceof FunctionCallError) {
+        setError(err.message);
+        setErrorCode(err.code);
+      } else {
+        setError(err instanceof Error ? err.message : "Registration failed");
+        setErrorCode(undefined);
+      }
     } finally {
       setLoading(false);
     }
@@ -411,7 +462,14 @@ export function RegisterPage() {
           </div>
         )}
 
-        {error && <div className="mt-4"><Alert variant="error">{error}</Alert></div>}
+        {error && (
+          <div className="mt-4">
+            <Alert variant="error">
+              {error}
+              <RegistrationHelpLinks code={errorCode} />
+            </Alert>
+          </div>
+        )}
 
         <div className="mt-6 flex justify-between gap-3">
           <Button type="button" variant="secondary" onClick={goBack} disabled={step === 0 || loading}>

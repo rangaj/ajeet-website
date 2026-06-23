@@ -19,6 +19,22 @@ export const supabase = createClient<Database>(
   }
 );
 
+export class FunctionCallError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = "FunctionCallError";
+    this.code = code;
+  }
+}
+
+function throwFunctionError(json: Record<string, unknown>, fallback: string): never {
+  const code = typeof json.error === "string" ? json.error : undefined;
+  const message = String(json.message ?? json.error ?? fallback);
+  throw new FunctionCallError(message, code);
+}
+
 export async function invokeFunction<T>(
   name: string,
   body?: Record<string, unknown> | FormData
@@ -48,7 +64,7 @@ export async function invokeFunction<T>(
     }
 
     if (!res.ok) {
-      throw new Error(String(json.error ?? json.message ?? `Function call failed (${res.status})`));
+      throwFunctionError(json, `Function call failed (${res.status})`);
     }
     return json as T;
   }
@@ -59,7 +75,7 @@ export async function invokeFunction<T>(
     if (httpError.context) {
       try {
         const json = (await httpError.context.json()) as Record<string, unknown>;
-        throw new Error(String(json.message ?? json.error ?? error.message));
+        throwFunctionError(json, error.message);
       } catch (parseErr) {
         if (parseErr instanceof Error && parseErr.message !== error.message) {
           throw parseErr;

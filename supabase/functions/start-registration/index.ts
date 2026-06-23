@@ -37,7 +37,7 @@ function pendingResponse(rollNumber: string, pending: { id: string; created_at: 
       status: "already_pending",
       message:
         `A ${label} request for roll ${rollNumber} is already in the approval queue. ` +
-        "Please wait for admin review or check your email — do not submit again.",
+        "Please wait for admin review or check your email — do not register again.",
       request_id: pending.id,
       submitted_at: pending.created_at,
     }),
@@ -45,6 +45,48 @@ function pendingResponse(rollNumber: string, pending: { id: string; created_at: 
       status: 409,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
+  );
+}
+
+function blockResponse(
+  error: string,
+  message: string,
+  status = 409
+) {
+  return new Response(JSON.stringify({ error, status: error, message }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function registrationBlockedForMember(member: {
+  status: string;
+  user_id: string | null;
+}) {
+  if (member.user_id || member.status === "approved") {
+    return blockResponse(
+      "already_registered",
+      "This roll number is already linked to an account. Sign in instead of registering again."
+    );
+  }
+
+  if (member.status === "imported_unclaimed") {
+    return blockResponse(
+      "use_claim_flow",
+      "This roll number is already in our directory. Claim your Ajeet ID instead of registering."
+    );
+  }
+
+  if (member.status === "pending_review") {
+    return blockResponse(
+      "already_pending",
+      "This roll number already has a profile awaiting approval. Check your email or sign in — do not register again."
+    );
+  }
+
+  return blockResponse(
+    "roll_exists",
+    "This roll number is already in our system. Sign in if you have an account, or use Claim your Ajeet ID."
   );
 }
 
@@ -90,43 +132,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      if (existing.status === "imported_unclaimed" || !existing.user_id) {
-        return new Response(JSON.stringify({
-          error: "use_claim_flow",
-          message: "Roll number exists. Please use profile claim instead.",
-        }), {
-          status: 409,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const { data: conflictReq, error: conflictError } = await adminClient
-        .from("approval_requests")
-        .insert({
-          type: "conflict",
-          status: "pending_review",
-          roll_number: rollNumber,
-          submitted_email: email,
-          submitted_name: payload.name ?? null,
-          submitted_phone: payload.mobile_phone ?? null,
-          submitted_dob: payload.date_of_birth ?? null,
-          alumni_member_id: existing.id,
-          user_id: user?.id ?? null,
-          submitted_payload: payload,
-        })
-        .select()
-        .single();
-
-      if (conflictError) throw conflictError;
-
-      return new Response(JSON.stringify({
-        status: "conflict_review",
-        message: "Roll number already exists. Routed to admin conflict review.",
-        request_id: conflictReq.id,
-        possible_match: existing,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return registrationBlockedForMember(existing);
     }
 
     const { error: otpError } = await anonClient.auth.signInWithOtp({
