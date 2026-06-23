@@ -302,7 +302,15 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_alumni_member_id_fkey";
+            columns: ["alumni_member_id"];
+            isOneToOne: false;
+            referencedRelation: "alumni_members";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;

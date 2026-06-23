@@ -94,8 +94,8 @@ function DetailRow({
   emphasize,
 }: {
   label: string;
-  submitted?: string | null;
-  onFile?: string | null;
+  submitted?: string | number | null;
+  onFile?: string | number | null;
   emphasize?: boolean;
 }) {
   const mismatch =
@@ -272,31 +272,51 @@ export function AdminQueuePage() {
     actionableIds.length > 0 && actionableIds.every((id) => selected.has(id));
 
   const load = async () => {
-    let query = supabase
-      .from("approval_requests")
-      .select(
-        `
-        *,
-        member:alumni_members(
-          name, email, mobile_phone, date_of_birth, course, stream,
-          course_start_year, course_end_year, company, job_position,
-          current_location, home_town, house, status
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
+    let query = supabase.from("approval_requests").select("*").order("created_at", { ascending: false });
 
     if (tab === "all") query = query.in("status", ["pending_review", "more_info_required"]);
     else if (tab === "approved" || tab === "rejected") query = query.eq("status", tab as ApprovalStatus);
     else query = query.eq("type", tab as ApprovalType).in("status", ["pending_review", "more_info_required"]);
 
-    const { data, error: loadError } = await query;
+    const { data: rows, error: loadError } = await query;
     if (loadError) {
       setError(loadError.message);
       setRequests([]);
       return;
     }
-    setRequests((data as QueueRequest[]) ?? []);
+
+    const approvals = rows ?? [];
+    const memberIds = [
+      ...new Set(approvals.map((r) => r.alumni_member_id).filter((id): id is string => Boolean(id))),
+    ];
+
+    const memberById = new Map<string, MemberSnapshot>();
+    if (memberIds.length > 0) {
+      const { data: members, error: memberError } = await supabase
+        .from("alumni_members")
+        .select(
+          "id, name, email, mobile_phone, date_of_birth, course, stream, course_start_year, course_end_year, company, job_position, current_location, home_town, house, status"
+        )
+        .in("id", memberIds);
+
+      if (memberError) {
+        setError(memberError.message);
+        setRequests([]);
+        return;
+      }
+
+      for (const member of members ?? []) {
+        const { id, ...snapshot } = member;
+        memberById.set(id, snapshot);
+      }
+    }
+
+    setRequests(
+      approvals.map((r) => ({
+        ...r,
+        member: r.alumni_member_id ? memberById.get(r.alumni_member_id) ?? null : null,
+      }))
+    );
     setSelected(new Set());
   };
 
