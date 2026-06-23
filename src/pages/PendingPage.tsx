@@ -10,6 +10,17 @@ import type { ApprovalRequest } from "@/types/database";
 
 const ACTIVE_STATUSES = ["pending_review", "more_info_required"] as const;
 
+function formatStatus(status: string) {
+  return status.replace(/_/g, " ");
+}
+
+function badgeVariantForStatus(status: string): "warning" | "success" | "danger" | "default" {
+  if (status === "approved") return "success";
+  if (status === "rejected") return "danger";
+  if (ACTIVE_STATUSES.includes(status as (typeof ACTIVE_STATUSES)[number])) return "warning";
+  return "default";
+}
+
 async function linkPendingRequests(userId: string, email: string) {
   await supabase
     .from("approval_requests")
@@ -39,7 +50,7 @@ async function uploadPendingRegistrationPhoto(userId: string) {
 }
 
 export function PendingPage() {
-  const { user, profile, canAccessDirectory, refreshProfile } = useAuth();
+  const { user, profile, isAdmin, canAccessDirectory, refreshProfile } = useAuth();
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -65,7 +76,20 @@ export function PendingPage() {
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      setRequests(byUser ?? []);
+      const { data: byEmail } = await supabase
+        .from("approval_requests")
+        .select("*")
+        .is("user_id", null)
+        .ilike("submitted_email", email)
+        .in("status", [...ACTIVE_STATUSES])
+        .order("created_at", { ascending: false });
+
+      const merged = [...(byUser ?? []), ...(byEmail ?? [])];
+      const unique = Array.from(new Map(merged.map((r) => [r.id, r])).values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setRequests(unique);
       setReady(true);
     }
 
@@ -87,20 +111,44 @@ export function PendingPage() {
     <div className="mx-auto max-w-lg space-y-4">
       <PageHeader title="Approval pending" subtitle="We will notify you when access is granted" />
       <Card>
-        <p className="text-brand-700">
-          Status:{" "}
-          <Badge variant="warning">{profile?.member_status ?? "pending"}</Badge>
-        </p>
-        <p className="mt-3 text-sm text-brand-600">
-          Check your email to verify, and then await approval. A super admin is reviewing your
-          request.
-        </p>
-        {canAccessDirectory && activeRequests.length > 0 && (
-          <p className="mt-3 text-sm text-brand-600">
-            You are signed in as an admin. The claim below must still be approved in{" "}
-            <Link to="/admin" className="font-semibold underline">Admin → Review Queue</Link>{" "}
-            (use another admin account, or approve as yourself for testing).
-          </p>
+        {activeRequests.length > 0 ? (
+          <>
+            <p className="text-brand-700">
+              Request status:{" "}
+              <Badge variant={badgeVariantForStatus(activeRequests[0].status)}>
+                {formatStatus(activeRequests[0].status)}
+              </Badge>
+            </p>
+            {canAccessDirectory && (
+              <p className="mt-3 text-sm text-brand-600">
+                Your sign-in already has directory access
+                {isAdmin ? " as an admin" : ""}. The{" "}
+                {activeRequests[0].type.replace(/_/g, " ")} below is separate and still needs
+                approval in{" "}
+                <Link to="/admin" className="font-semibold underline">Admin → Review Queue</Link>
+                {isAdmin ? " (you can approve it yourself for testing)." : "."}
+              </p>
+            )}
+            {!canAccessDirectory && (
+              <p className="mt-3 text-sm text-brand-600">
+                Check your email to verify, then await approval. A super admin is reviewing your
+                request.
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-brand-700">
+              Account status:{" "}
+              <Badge variant={badgeVariantForStatus(profile?.member_status ?? "pending")}>
+                {formatStatus(profile?.member_status ?? "pending")}
+              </Badge>
+            </p>
+            <p className="mt-3 text-sm text-brand-600">
+              Check your email to verify, and then await approval. A super admin is reviewing your
+              request.
+            </p>
+          </>
         )}
       </Card>
 
@@ -112,7 +160,7 @@ export function PendingPage() {
               <li key={r.id} className="rounded-lg border border-slate-100 p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium capitalize">{r.type.replace(/_/g, " ")}</span>
-                  <Badge variant="warning">{r.status.replace(/_/g, " ")}</Badge>
+                  <Badge variant={badgeVariantForStatus(r.status)}>{formatStatus(r.status)}</Badge>
                 </div>
                 <p className="mt-1 text-slate-600">Roll: {r.roll_number}</p>
                 {r.reviewer_note && (
@@ -132,7 +180,7 @@ export function PendingPage() {
               .filter((r) => !ACTIVE_STATUSES.includes(r.status as (typeof ACTIVE_STATUSES)[number]))
               .map((r) => (
                 <li key={r.id} className="text-sm text-slate-600">
-                  {r.type.replace(/_/g, " ")} · Roll {r.roll_number} · {r.status.replace(/_/g, " ")}
+                  {r.type.replace(/_/g, " ")} · Roll {r.roll_number} · {formatStatus(r.status)}
                 </li>
               ))}
           </ul>
