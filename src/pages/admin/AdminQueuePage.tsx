@@ -1,3 +1,4 @@
+// Admin review queue — synced with GitHub main (build >= f8c9724)
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
