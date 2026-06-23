@@ -265,6 +265,16 @@ function RequestDetails({ request }: { request: QueueRequest }) {
   );
 }
 
+function mergeQueueRequests(
+  approvals: ApprovalRequest[],
+  memberById: Map<string, MemberSnapshot>
+): QueueRequest[] {
+  return approvals.map((r) => ({
+    ...r,
+    member: r.alumni_member_id ? memberById.get(r.alumni_member_id) ?? null : null,
+  }));
+}
+
 export function AdminQueuePage() {
   const [tab, setTab] = useState<string>("all");
   const [requests, setRequests] = useState<QueueRequest[]>([]);
@@ -328,12 +338,7 @@ export function AdminQueuePage() {
       }
     }
 
-    setRequests(
-      approvals.map((r) => ({
-        ...r,
-        member: r.alumni_member_id ? memberById.get(r.alumni_member_id) ?? null : null,
-      }))
-    );
+    setRequests(mergeQueueRequests(approvals, memberById));
     setSelected(new Set());
   };
 
