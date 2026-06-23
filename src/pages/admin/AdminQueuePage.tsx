@@ -1,4 +1,4 @@
-// Admin review queue — synced with GitHub main (build >= f8c9724)
+// Admin review queue — synced with GitHub main (build >= pending-profile-fix)
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
@@ -134,6 +134,15 @@ function VerificationBadge({ payload }: { payload: Json }) {
   return null;
 }
 
+function houseLabelFromPayload(payload: Json): string | null {
+  if (!isRecord(payload)) return null;
+  if (typeof payload.house === "string" && payload.house) return payload.house;
+  if (Array.isArray(payload.houses)) {
+    return (payload.houses as string[]).join(", ");
+  }
+  return null;
+}
+
 function RequestDetails({ request }: { request: QueueRequest }) {
   const payload = request.submitted_payload;
   const member = request.member;
@@ -186,7 +195,11 @@ function RequestDetails({ request }: { request: QueueRequest }) {
             submitted={payloadString(payload, "current_location")}
             onFile={member.current_location}
           />
-          <DetailRow label="House(s)" submitted={payloadString(payload, "house") ?? (isRecord(payload) && Array.isArray(payload.houses) ? (payload.houses as string[]).join(", ") : null)} onFile={member.house} />
+          <DetailRow
+            label="House(s)"
+            submitted={houseLabelFromPayload(payload) ?? payloadString(payload, "house")}
+            onFile={member.house}
+          />
         </dl>
       </div>
     );
@@ -232,16 +245,7 @@ function RequestDetails({ request }: { request: QueueRequest }) {
         <div>
           <dt className="text-xs font-medium uppercase text-slate-400">House(s)</dt>
           <dd className="text-sm text-slate-800">
-            {formatValue(
-              request.submitted_payload &&
-                typeof request.submitted_payload === "object" &&
-                !Array.isArray(request.submitted_payload) &&
-                ("house" in request.submitted_payload
-                  ? String((request.submitted_payload as Record<string, unknown>).house ?? "")
-                  : Array.isArray((request.submitted_payload as Record<string, unknown>).houses)
-                    ? ((request.submitted_payload as Record<string, unknown>).houses as string[]).join(", ")
-                    : null)
-            )}
+            {formatValue(houseLabelFromPayload(request.submitted_payload))}
           </dd>
         </div>
         <div>

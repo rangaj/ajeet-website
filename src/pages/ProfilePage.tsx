@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
-import { parseStorageRef, profilePhotoPath } from "@/lib/storage";
+import { parseStorageRef, profilePhotoPath as buildProfilePhotoPath } from "@/lib/storage";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
@@ -52,10 +52,10 @@ export function ProfilePage() {
     setSaving(true);
     setError("");
 
-    let profilePhotoPath = member.profile_photo_path;
+    let nextPhotoPath = member.profile_photo_path;
 
     if (photoBlob) {
-      const storagePath = profilePhotoPath(member.id);
+      const storagePath = buildProfilePhotoPath(member.id);
       const { error: uploadErr } = await supabase.storage
         .from("profile-photos")
         .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
@@ -64,7 +64,7 @@ export function ProfilePage() {
         setSaving(false);
         return;
       }
-      profilePhotoPath = storagePath;
+      nextPhotoPath = storagePath;
     }
 
     const { error: err } = await updateAlumniMember(member.id, {
@@ -81,7 +81,7 @@ export function ProfilePage() {
       website_link: member.website_link,
       is_directory_visible: member.is_directory_visible,
       visibility_settings: member.visibility_settings,
-      ...(photoBlob ? { profile_photo_path: profilePhotoPath } : {}),
+      ...(photoBlob ? { profile_photo_path: nextPhotoPath } : {}),
     });
 
     setSaving(false);
@@ -89,7 +89,7 @@ export function ProfilePage() {
     else {
       setMessage("Profile updated.");
       setPhotoBlob(null);
-      if (profilePhotoPath) setMember({ ...member, profile_photo_path: profilePhotoPath });
+      if (nextPhotoPath) setMember({ ...member, profile_photo_path: nextPhotoPath });
     }
   };
 

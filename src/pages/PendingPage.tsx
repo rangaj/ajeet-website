@@ -42,18 +42,19 @@ export function PendingPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user?.email) return;
+    const currentUser = user;
+    if (!currentUser?.email) return;
 
     async function load() {
-      await linkPendingRegistration(user.id, user.email!);
-      await uploadPendingRegistrationPhoto(user.id);
+      await linkPendingRegistration(currentUser.id, currentUser.email);
+      await uploadPendingRegistrationPhoto(currentUser.id);
 
       await refreshProfile();
 
       const { data } = await supabase
         .from("approval_requests")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false });
 
       setRequests(data ?? []);
