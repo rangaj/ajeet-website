@@ -13,7 +13,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient<Database>(
   supabaseUrl ?? "https://placeholder.supabase.co",
   supabaseAnonKey ?? "placeholder",
-  { db: { schema: "public" } }
+  {
+    db: { schema: "public" },
+    auth: { detectSessionInUrl: true },
+  }
 );
 
 export async function invokeFunction<T>(

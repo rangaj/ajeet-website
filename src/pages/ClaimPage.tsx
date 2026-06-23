@@ -29,6 +29,7 @@ export function ClaimPage() {
       const data = await invokeFunction<{ status: string; message: string }>("start-claim", {
         roll_number: roll,
         email,
+        email_redirect_to: `${window.location.origin}/pending`,
         phone: phone || undefined,
         date_of_birth: dob || undefined,
       });
@@ -77,6 +78,13 @@ export function ClaimPage() {
           {result && (
             <Alert variant={result.status === "admin_review" || result.status === "already_pending" ? "warning" : "success"}>
               {result.message}
+              {result.status === "otp_sent" && (
+                <span>
+                  {" "}
+                  After verifying, visit{" "}
+                  <Link to="/pending" className="font-semibold underline">Pending approval</Link>.
+                </span>
+              )}
             </Alert>
           )}
           <Button type="submit" className="w-full" disabled={loading}>

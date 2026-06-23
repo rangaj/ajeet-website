@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader ?? "" } },
     });
+    const anonClient = createClient(supabaseUrl, anonKey);
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     const { data: { user } } = await userClient.auth.getUser();
@@ -103,6 +104,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const rollNumber = normalizeRoll(body.roll_number ?? "");
     const email = normalizeEmail(body.email ?? "");
+    const emailRedirectTo = body.email_redirect_to ?? undefined;
 
     if (!rollNumber || !email) {
       return new Response(JSON.stringify({ error: "roll_number and email are required" }), {
@@ -149,9 +151,12 @@ Deno.serve(async (req) => {
     const verification = emailMatch || phoneMatch || dobMatch ? "auto_matched" : "admin_review";
 
     if (verification === "auto_matched") {
-      const { error: otpError } = await userClient.auth.signInWithOtp({
+      const { error: otpError } = await anonClient.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: true },
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo,
+        },
       });
       if (otpError) throw otpError;
     }

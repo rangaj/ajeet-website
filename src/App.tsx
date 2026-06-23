@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthHashRedirect } from "@/components/auth/AuthHashRedirect";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { HomePage } from "@/pages/HomePage";
@@ -15,7 +16,9 @@ import { AdminImportPage } from "@/pages/admin/AdminImportPage";
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <AuthHashRedirect />
+      <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
@@ -60,5 +63,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
+    </>
   );
 }

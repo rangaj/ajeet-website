@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { invokeFunction, supabase } from "@/lib/supabase";
 import { dataUrlToBlob, takePendingAvatar } from "@/lib/image";
@@ -8,13 +8,15 @@ import { Card, Alert, Badge } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 import type { ApprovalRequest } from "@/types/database";
 
-async function linkPendingRegistration(userId: string, email: string) {
+const ACTIVE_STATUSES = ["pending_review", "more_info_required"] as const;
+
+async function linkPendingRequests(userId: string, email: string) {
   await supabase
     .from("approval_requests")
     .update({ user_id: userId })
     .is("user_id", null)
-    .eq("type", "new_registration")
-    .ilike("submitted_email", email);
+    .ilike("submitted_email", email)
+    .in("status", [...ACTIVE_STATUSES]);
 }
 
 async function uploadPendingRegistrationPhoto(userId: string) {
@@ -41,6 +43,11 @@ export function PendingPage() {
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [ready, setReady] = useState(false);
 
+  const activeRequests = useMemo(
+    () => requests.filter((r) => ACTIVE_STATUSES.includes(r.status as (typeof ACTIVE_STATUSES)[number])),
+    [requests]
+  );
+
   useEffect(() => {
     if (!user?.email) return;
 
@@ -48,25 +55,24 @@ export function PendingPage() {
     const email = user.email;
 
     async function load() {
-      await linkPendingRegistration(userId, email);
+      await linkPendingRequests(userId, email);
       await uploadPendingRegistrationPhoto(userId);
-
       await refreshProfile();
 
-      const { data } = await supabase
+      const { data: byUser } = await supabase
         .from("approval_requests")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      setRequests(data ?? []);
+      setRequests(byUser ?? []);
       setReady(true);
     }
 
     void load();
   }, [user, refreshProfile]);
 
-  if (canAccessDirectory) {
+  if (ready && canAccessDirectory && activeRequests.length === 0) {
     return (
       <Card>
         <Alert variant="success">
@@ -89,24 +95,24 @@ export function PendingPage() {
           Check your email to verify, and then await approval. A super admin is reviewing your
           request.
         </p>
+        {canAccessDirectory && activeRequests.length > 0 && (
+          <p className="mt-3 text-sm text-brand-600">
+            You are signed in as an admin. The claim below must still be approved in{" "}
+            <Link to="/admin" className="font-semibold underline">Admin → Review Queue</Link>{" "}
+            (use another admin account, or approve as yourself for testing).
+          </p>
+        )}
       </Card>
 
-      {ready && requests.length > 0 && (
+      {ready && activeRequests.length > 0 && (
         <Card>
-          <h2 className="font-semibold">Your Requests</h2>
+          <h2 className="font-semibold">Your active requests</h2>
           <ul className="mt-4 space-y-3">
-            {requests.map((r) => (
+            {activeRequests.map((r) => (
               <li key={r.id} className="rounded-lg border border-slate-100 p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium capitalize">{r.type.replace(/_/g, " ")}</span>
-                  <Badge
-                    variant={
-                      r.status === "approved" ? "success" :
-                      r.status === "rejected" ? "danger" : "warning"
-                    }
-                  >
-                    {r.status.replace(/_/g, " ")}
-                  </Badge>
+                  <Badge variant="warning">{r.status.replace(/_/g, " ")}</Badge>
                 </div>
                 <p className="mt-1 text-slate-600">Roll: {r.roll_number}</p>
                 {r.reviewer_note && (
@@ -114,6 +120,21 @@ export function PendingPage() {
                 )}
               </li>
             ))}
+          </ul>
+        </Card>
+      )}
+
+      {ready && requests.length > activeRequests.length && (
+        <Card>
+          <h2 className="font-semibold text-sm text-slate-500">Earlier requests</h2>
+          <ul className="mt-3 space-y-2">
+            {requests
+              .filter((r) => !ACTIVE_STATUSES.includes(r.status as (typeof ACTIVE_STATUSES)[number]))
+              .map((r) => (
+                <li key={r.id} className="text-sm text-slate-600">
+                  {r.type.replace(/_/g, " ")} · Roll {r.roll_number} · {r.status.replace(/_/g, " ")}
+                </li>
+              ))}
           </ul>
         </Card>
       )}
