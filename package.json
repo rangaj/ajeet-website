@@ -9,6 +9,8 @@
     "start": "node scripts/serve-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
+    "version:check": "node scripts/check-version-sync.mjs",
+    "changelog:notes": "node scripts/changelog-for-version.mjs",
     "seed:synthetic": "tsx scripts/seed-synthetic.ts",
     "audit:security": "tsx scripts/security-audit.ts"
   },

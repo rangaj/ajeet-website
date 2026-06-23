@@ -21,3 +21,6 @@ jobs:
 
       - name: Typecheck and build
         run: npm run build
+
+      - name: Verify FE/BE version files stay in sync
+        run: npm run version:check
