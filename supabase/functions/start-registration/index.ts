@@ -1,14 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import {
-  AWAITING_EMAIL_STATUS,
-  emailVerificationExpiresAt,
-} from "../_shared/email-verification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const EMAIL_LINK_VALID_DAYS = 7;
+const AWAITING_EMAIL_STATUS = "awaiting_email_verification";
+
+function emailVerificationExpiresAt(from = new Date()) {
+  const expires = new Date(from);
+  expires.setDate(expires.getDate() + EMAIL_LINK_VALID_DAYS);
+  return expires.toISOString();
+}
 
 function normalizeRoll(roll: string) {
   const trimmed = roll.trim();
