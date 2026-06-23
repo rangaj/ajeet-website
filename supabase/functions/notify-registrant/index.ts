@@ -8,28 +8,68 @@ const corsHeaders = {
 
 type NotifyEvent = "submitted" | "approved" | "rejected" | "more_info";
 
-const templates: Record<NotifyEvent, { subject: string; body: (ctx: Record<string, string>) => string }> = {
-  submitted: {
-    subject: "Alumni registration received",
-    body: (ctx) =>
-      `Hello ${ctx.name},\n\nWe received your alumni registration for roll number ${ctx.roll_number}. An admin will review it shortly.\n\n— School Alumni Association`,
-  },
-  approved: {
-    subject: "Alumni registration approved",
-    body: (ctx) =>
-      `Hello ${ctx.name},\n\nYour alumni registration has been approved. You can now sign in and access the directory.\n\n— School Alumni Association`,
-  },
-  rejected: {
-    subject: "Alumni registration update",
-    body: (ctx) =>
-      `Hello ${ctx.name},\n\nYour alumni registration could not be approved.${ctx.note ? `\n\nNote: ${ctx.note}` : ""}\n\n— School Alumni Association`,
-  },
-  more_info: {
-    subject: "More information needed — alumni registration",
-    body: (ctx) =>
-      `Hello ${ctx.name},\n\nWe need more information to process your registration.${ctx.note ? `\n\nNote: ${ctx.note}` : ""}\n\n— School Alumni Association`,
-  },
-};
+function appSiteUrl() {
+  return (Deno.env.get("APP_SITE_URL") ?? "https://ajeet-website.replit.app").replace(/\/$/, "");
+}
+
+function templates(event: NotifyEvent, ctx: Record<string, string>) {
+  const loginUrl = `${appSiteUrl()}/login`;
+
+  switch (event) {
+    case "submitted":
+      return {
+        subject: "Ajeet alumni request received",
+        text:
+          `Hello ${ctx.name},\n\nWe received your ${ctx.request_label} for roll number ${ctx.roll_number}. ` +
+          `An admin will review it shortly.\n\n— Ajeets Alumni`,
+      };
+    case "approved":
+      return {
+        subject: "Your Ajeet alumni access is approved",
+        text:
+          `Hello ${ctx.name},\n\n` +
+          `Your Ajeet alumni access has been approved (roll ${ctx.roll_number}).\n\n` +
+          `Set your password (recommended):\n${ctx.password_setup_link}\n\n` +
+          `Or sign in anytime with a magic link:\n${loginUrl}\n\n` +
+          `— Ajeets Alumni`,
+      };
+    case "rejected":
+      return {
+        subject: "Ajeet alumni request update",
+        text:
+          `Hello ${ctx.name},\n\nYour ${ctx.request_label} could not be approved.` +
+          `${ctx.note ? `\n\nNote: ${ctx.note}` : ""}\n\n— Ajeets Alumni`,
+      };
+    case "more_info":
+      return {
+        subject: "More information needed — Ajeet alumni",
+        text:
+          `Hello ${ctx.name},\n\nWe need more information to process your ${ctx.request_label}.` +
+          `${ctx.note ? `\n\nNote: ${ctx.note}` : ""}\n\n— Ajeets Alumni`,
+      };
+  }
+}
+
+function requestLabel(type: string) {
+  if (type === "claim") return "claim request";
+  if (type === "new_registration") return "registration";
+  return type.replace(/_/g, " ");
+}
+
+async function passwordSetupLink(
+  adminClient: ReturnType<typeof createClient>,
+  email: string
+) {
+  const redirectTo = `${appSiteUrl()}/reset-password`;
+  const { data, error } = await adminClient.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo },
+  });
+
+  if (error) throw error;
+  return data.properties?.action_link ?? redirectTo;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -52,7 +92,7 @@ Deno.serve(async (req) => {
     if (!request_id || !event) {
       return new Response(JSON.stringify({ error: "request_id and event required" }), {
         status: 400,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -66,12 +106,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Request not found" }), { status: 404, headers: corsHeaders });
     }
 
-    const template = templates[event];
-    const ctx = {
+    const ctx: Record<string, string> = {
       name: request.submitted_name ?? "Alumni",
       roll_number: request.roll_number,
       note: note ?? request.reviewer_note ?? "",
+      request_label: requestLabel(request.type),
+      password_setup_link: "",
     };
+
+    if (event === "approved") {
+      ctx.password_setup_link = await passwordSetupLink(adminClient, request.submitted_email);
+    }
+
+    const template = templates(event, ctx);
 
     if (resendKey) {
       const from = Deno.env.get("NOTIFY_FROM_EMAIL") ?? "alumni@example.com";
@@ -85,7 +132,7 @@ Deno.serve(async (req) => {
           from,
           to: request.submitted_email,
           subject: template.subject,
-          text: template.body(ctx),
+          text: template.text,
         }),
       });
     }

@@ -25,6 +25,7 @@ export interface Profile {
   id: string;
   role: AppRole;
   member_status: MemberStatus;
+  password_set_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -145,6 +146,7 @@ export type Database = {
           id: string;
           role: AppRole;
           member_status: MemberStatus;
+          password_set_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -152,6 +154,7 @@ export type Database = {
           id: string;
           role?: AppRole;
           member_status?: MemberStatus;
+          password_set_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -159,6 +162,7 @@ export type Database = {
           id?: string;
           role?: AppRole;
           member_status?: MemberStatus;
+          password_set_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

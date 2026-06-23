@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
+import { PasswordSetupBanner } from "@/components/auth/PasswordSetupBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
@@ -66,7 +67,14 @@ export function AppLayout() {
   const isFullBleed =
     location.pathname === "/" ||
     location.pathname === "/login" ||
-    location.pathname === "/forgot-password";
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password";
+
+  const showPasswordBanner =
+    Boolean(user) &&
+    profile?.member_status === "approved" &&
+    !profile.password_set_at &&
+    !["/reset-password", "/forgot-password", "/login"].includes(location.pathname);
 
   useEffect(() => {
     if (!isHome) {
@@ -265,6 +273,7 @@ export function AppLayout() {
       </header>
 
       <main className={isHome ? undefined : "flex-1"}>
+        {showPasswordBanner && <PasswordSetupBanner />}
         {isFullBleed ? (
           <Outlet />
         ) : (

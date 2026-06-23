@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "migrations_from": "20250622000001",
-  "migrations_through": "20250622000008",
+  "migrations_through": "20250622000009",
   "edge_functions": [
     "start-claim",
     "start-registration",

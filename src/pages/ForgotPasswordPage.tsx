@@ -16,11 +16,11 @@ export function ForgotPasswordPage() {
     setLoading(true);
     setError("");
     const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (err) setError(err.message);
-    else setMessage("If an account exists, a password reset link has been sent.");
+    else setMessage("If an account exists, a password link has been sent. Open it to choose your new password.");
   };
 
   return (
