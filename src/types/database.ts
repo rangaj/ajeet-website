@@ -16,6 +16,8 @@ export type AlumniStatus =
   | "hidden";
 export type ApprovalType = "claim" | "new_registration" | "conflict";
 export type ApprovalStatus =
+  | "awaiting_email_verification"
+  | "expired"
   | "pending_review"
   | "approved"
   | "rejected"
@@ -85,6 +87,7 @@ export interface ApprovalRequest {
   reviewer_id: string | null;
   reviewer_note: string | null;
   reviewed_at: string | null;
+  email_verification_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -265,6 +268,7 @@ export type Database = {
           reviewer_id: string | null;
           reviewer_note: string | null;
           reviewed_at: string | null;
+          email_verification_expires_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -284,6 +288,7 @@ export type Database = {
           reviewer_id?: string | null;
           reviewer_note?: string | null;
           reviewed_at?: string | null;
+          email_verification_expires_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -303,6 +308,7 @@ export type Database = {
           reviewer_id?: string | null;
           reviewer_note?: string | null;
           reviewed_at?: string | null;
+          email_verification_expires_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -353,6 +359,18 @@ export type Database = {
           p_note?: string | null;
         };
         Returns: string;
+      };
+      link_approved_alumni_self: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      promote_email_verified_request: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      expire_stale_email_verifications: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       reject_registration: {
         Args: {

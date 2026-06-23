@@ -1,8 +1,9 @@
 // Admin review queue — synced with GitHub main (build >= pending-profile-fix)
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, Mail, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
 import { approveRegistration, rejectRegistration } from "@/lib/data-access";
+import { formatEmailLinkExpiry, isEmailLinkExpired } from "@/lib/approval-email";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
 import { Badge, Alert } from "@/components/ui/Card";
@@ -14,8 +15,9 @@ import type {
   Json,
 } from "@/types/database";
 
-const TABS: { key: ApprovalType | "all" | "approved" | "rejected"; label: string }[] = [
+const TABS: { key: ApprovalType | "all" | "approved" | "rejected" | "awaiting_email_link"; label: string }[] = [
   { key: "all", label: "All Pending" },
+  { key: "awaiting_email_link", label: "Awaiting email link" },
   { key: "claim", label: "Claims" },
   { key: "new_registration", label: "New Registrations" },
   { key: "conflict", label: "Conflicts" },
@@ -283,6 +285,7 @@ export function AdminQueuePage() {
   const [error, setError] = useState("");
 
   const isPendingTab = tab === "all" || tab === "claim" || tab === "new_registration" || tab === "conflict";
+  const isAwaitingEmailTab = tab === "awaiting_email_link";
 
   const actionableIds = useMemo(
     () =>
@@ -296,11 +299,19 @@ export function AdminQueuePage() {
     actionableIds.length > 0 && actionableIds.every((id) => selected.has(id));
 
   const load = async () => {
+    await supabase.rpc("expire_stale_email_verifications");
+
     let query = supabase.from("approval_requests").select("*").order("created_at", { ascending: false });
 
-    if (tab === "all") query = query.in("status", ["pending_review", "more_info_required"]);
-    else if (tab === "approved" || tab === "rejected") query = query.eq("status", tab as ApprovalStatus);
-    else query = query.eq("type", tab as ApprovalType).in("status", ["pending_review", "more_info_required"]);
+    if (tab === "awaiting_email_link") {
+      query = query.in("status", ["awaiting_email_verification", "expired"]);
+    } else if (tab === "all") {
+      query = query.in("status", ["pending_review", "more_info_required"]);
+    } else if (tab === "approved" || tab === "rejected") {
+      query = query.eq("status", tab as ApprovalStatus);
+    } else {
+      query = query.eq("type", tab as ApprovalType).in("status", ["pending_review", "more_info_required"]);
+    }
 
     const { data: rows, error: loadError } = await query;
     if (loadError) {
@@ -407,13 +418,33 @@ export function AdminQueuePage() {
   const handleApprove = (id: string) => processRequests([id], "approve");
   const handleReject = (id: string) => processRequests([id], "reject");
 
+  const handleResendLink = async (id: string) => {
+    setLoading(true);
+    setError("");
+    setMessage("");
+    try {
+      const data = await invokeFunction<{ message: string }>("resend-approval-link", {
+        request_id: id,
+        email_redirect_to: `${window.location.origin}/pending`,
+      });
+      setMessage(data.message ?? "Verification link resent.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Review Queue</h2>
           <p className="text-sm text-slate-500">
-            Key fields at a glance. Expand a row for email, verification, and other details.
+            {isAwaitingEmailTab
+              ? "Submitted but the verification email has not been opened yet. Links expire after 7 days — resend if needed."
+              : "Key fields at a glance. Expand a row for email, verification, and other details."}
           </p>
         </div>
         {isPendingTab && requests.length > 0 && (
@@ -484,6 +515,8 @@ export function AdminQueuePage() {
       <ul className="space-y-4">
         {requests.map((r) => {
           const actionable = r.status === "pending_review" || r.status === "more_info_required";
+          const expired = isEmailLinkExpired(r);
+          const expiryLabel = formatEmailLinkExpiry(r.email_verification_expires_at);
           return (
             <li
               key={r.id}
@@ -508,12 +541,24 @@ export function AdminQueuePage() {
                     <Badge>{TYPE_LABELS[r.type]}</Badge>
                     <Badge
                       variant={
-                        r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"
+                        r.status === "approved"
+                          ? "success"
+                          : r.status === "rejected" || expired
+                            ? "danger"
+                            : "warning"
                       }
                     >
-                      {r.status.replace(/_/g, " ")}
+                      {expired && r.status === "awaiting_email_verification"
+                        ? "expired"
+                        : r.status.replace(/_/g, " ")}
                     </Badge>
                     <span className="text-sm text-slate-500">{formatDate(r.created_at)}</span>
+                    {expiryLabel && isAwaitingEmailTab && !expired && (
+                      <span className="text-sm text-slate-400">· Link expires {expiryLabel}</span>
+                    )}
+                    {expired && isAwaitingEmailTab && (
+                      <span className="text-sm text-red-600">· Email link expired — resend or user may claim again</span>
+                    )}
                     {r.reviewed_at && (
                       <span className="text-sm text-slate-400">· Reviewed {formatDate(r.reviewed_at)}</span>
                     )}
@@ -527,6 +572,23 @@ export function AdminQueuePage() {
                   </dl>
 
                   <RequestExtraDetails request={r} />
+
+                  {isAwaitingEmailTab && (
+                    <div className="mt-4 border-t border-slate-100 pt-4">
+                      <p className="mb-2 text-sm text-slate-600">
+                        Email: <strong>{r.submitted_email}</strong>
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleResendLink(r.id)}
+                        disabled={loading}
+                      >
+                        <Mail className="mr-1.5 h-4 w-4" />
+                        Resend verification link
+                      </Button>
+                    </div>
+                  )}
 
                   {actionable && (
                     <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">

@@ -66,7 +66,15 @@ export function PendingPage() {
     const email = user.email;
 
     async function load() {
+      await supabase.rpc("expire_stale_email_verifications");
       await linkPendingRequests(userId, email);
+
+      const { data: promotedId } = await supabase.rpc("promote_email_verified_request");
+      if (promotedId) {
+        await invokeFunction("notify-admin-pending", { request_id: promotedId }).catch(() => {});
+      }
+
+      await supabase.rpc("link_approved_alumni_self");
       await uploadPendingRegistrationPhoto(userId);
       await refreshProfile();
 

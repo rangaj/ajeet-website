@@ -251,7 +251,8 @@ export function RegisterPage() {
             {result.message}
           </Alert>
           <p className="mt-4 text-sm text-brand-600">
-            After you verify your email, you can check status on the{" "}
+            You must click the verification link in your email to finish registration — only then will
+            your request go to admin review. After that, check status on the{" "}
             <Link to="/pending" className="font-semibold text-brand-700 hover:underline">
               pending page
             </Link>

@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "migrations_from": "20250622000001",
-  "migrations_through": "20250622000009",
+  "migrations_through": "20250622000012",
   "edge_functions": [
     "start-claim",
     "start-registration",
@@ -9,6 +9,8 @@
     "import-preview",
     "import-commit",
     "import-export-not-imported",
-    "notify-registrant"
+    "notify-registrant",
+    "notify-admin-pending",
+    "resend-approval-link"
   ]
 }

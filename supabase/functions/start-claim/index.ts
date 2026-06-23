@@ -1,5 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import {
+  AWAITING_EMAIL_STATUS,
+  emailVerificationExpiresAt,
+} from "../_shared/email-verification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,39 +20,9 @@ function normalizeRoll(roll: string) {
   return String(parseInt(trimmed, 10));
 }
 
-async function notifyAdminClaim(details: {
-  roll_number: string;
-  name: string;
-  email: string;
-  verification: string;
-  request_id?: string;
-}) {
-  const resendKey = Deno.env.get("RESEND_API_KEY");
-  const adminEmail = Deno.env.get("ADMIN_NOTIFY_EMAIL") ?? "ssbjajeets@gmail.com";
-  if (!resendKey) return;
+const REVIEW_QUEUE_STATUSES = ["pending_review", "more_info_required"] as const;
 
-  const from = Deno.env.get("NOTIFY_FROM_EMAIL") ?? "alumni@example.com";
-  const requestLine = details.request_id ? `\nRequest ID: ${details.request_id}` : "";
-
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: adminEmail,
-      subject: `New Ajeet ID claim — Roll ${details.roll_number}`,
-      text:
-        `A new Ajeet ID claim was submitted.\n\nRoll: ${details.roll_number}\nName: ${details.name}\nSubmitted email: ${details.email}\nVerification: ${details.verification}${requestLine}\n\nReview in the admin queue.`,
-    }),
-  });
-}
-
-const PENDING_STATUSES = ["pending_review", "more_info_required"] as const;
-
-async function findPendingByRoll(
+async function findInReviewByRoll(
   adminClient: ReturnType<typeof createClient>,
   rollNumber: string
 ) {
@@ -56,21 +30,36 @@ async function findPendingByRoll(
     .from("approval_requests")
     .select("id, created_at, type, status")
     .eq("roll_number", rollNumber)
-    .in("status", [...PENDING_STATUSES])
+    .in("status", [...REVIEW_QUEUE_STATUSES])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   return data;
 }
 
-function pendingResponse(rollNumber: string, pending: { id: string; created_at: string; type: string }) {
+async function findAwaitingByRoll(
+  adminClient: ReturnType<typeof createClient>,
+  rollNumber: string
+) {
+  const { data } = await adminClient
+    .from("approval_requests")
+    .select("id, created_at, type, status, email_verification_expires_at")
+    .eq("roll_number", rollNumber)
+    .eq("status", AWAITING_EMAIL_STATUS)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+function inReviewResponse(rollNumber: string, pending: { id: string; created_at: string; type: string }) {
   const label = pending.type.replace(/_/g, " ");
   return new Response(
     JSON.stringify({
       error: "already_pending",
       status: "already_pending",
       message:
-        `A ${label} request for roll ${rollNumber} is already in the approval queue. ` +
+        `A ${label} request for roll ${rollNumber} is already awaiting admin review. ` +
         "Please wait for admin review or check your email — do not submit again.",
       request_id: pending.id,
       submitted_at: pending.created_at,
@@ -81,6 +70,14 @@ function pendingResponse(rollNumber: string, pending: { id: string; created_at: 
     }
   );
 }
+
+const EMAIL_REQUIRED_MESSAGE =
+  "We've sent a verification link to your email. You must click it to complete your claim — " +
+  "only then will your request be sent for admin review. The link is valid for 7 days.";
+
+const EMAIL_RESENT_MESSAGE =
+  "A verification link was already sent. We've sent it again — you must click the link in your email " +
+  "to complete your claim. The link is valid for 7 days.";
 
 const VERIFICATION_FAILED_MESSAGE =
   "We could not verify the details you entered. Please check your roll number and contact information and try again.";
@@ -97,6 +94,21 @@ function verificationFailedResponse() {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
   );
+}
+
+async function sendVerificationOtp(
+  anonClient: ReturnType<typeof createClient>,
+  email: string,
+  emailRedirectTo?: string
+) {
+  const { error: otpError } = await anonClient.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo,
+    },
+  });
+  if (otpError) throw otpError;
 }
 
 Deno.serve(async (req) => {
@@ -130,6 +142,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    await adminClient.rpc("expire_stale_email_verifications");
+
     const { data: member, error: memberError } = await adminClient
       .from("alumni_members")
       .select("*")
@@ -152,8 +166,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    const pending = await findPendingByRoll(adminClient, rollNumber);
-    if (pending) return pendingResponse(rollNumber, pending);
+    const inReview = await findInReviewByRoll(adminClient, rollNumber);
+    if (inReview) return inReviewResponse(rollNumber, inReview);
+
+    const awaiting = await findAwaitingByRoll(adminClient, rollNumber);
+    if (awaiting) {
+      const expiresAt = awaiting.email_verification_expires_at
+        ? new Date(awaiting.email_verification_expires_at)
+        : null;
+      if (expiresAt && expiresAt >= new Date()) {
+        await sendVerificationOtp(anonClient, email, emailRedirectTo);
+        await adminClient
+          .from("approval_requests")
+          .update({
+            submitted_email: email,
+            email_verification_expires_at: emailVerificationExpiresAt(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", awaiting.id);
+
+        return new Response(JSON.stringify({
+          status: "otp_resent",
+          message: EMAIL_RESENT_MESSAGE,
+          request_id: awaiting.id,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const emailMatch = member.email && normalizeEmail(member.email) === email;
     const phoneMatch = body.phone && member.mobile_phone &&
@@ -165,20 +205,15 @@ Deno.serve(async (req) => {
       return verificationFailedResponse();
     }
 
-    const { error: otpError } = await anonClient.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo,
-      },
-    });
-    if (otpError) throw otpError;
+    await sendVerificationOtp(anonClient, email, emailRedirectTo);
+
+    const expiresAt = emailVerificationExpiresAt();
 
     const { data: request, error: reqError } = await adminClient
       .from("approval_requests")
       .insert({
         type: "claim",
-        status: "pending_review",
+        status: AWAITING_EMAIL_STATUS,
         roll_number: rollNumber,
         submitted_email: email,
         submitted_name: member.name,
@@ -186,6 +221,7 @@ Deno.serve(async (req) => {
         submitted_dob: body.date_of_birth ?? null,
         alumni_member_id: member.id,
         user_id: user?.id ?? null,
+        email_verification_expires_at: expiresAt,
         submitted_payload: { verification: "auto_matched" },
       })
       .select()
@@ -193,29 +229,11 @@ Deno.serve(async (req) => {
 
     if (reqError) throw reqError;
 
-    if (user) {
-      await adminClient.from("admin_audit_log").insert({
-        actor_id: user.id,
-        action: "claim_auto_matched",
-        entity_type: "approval_requests",
-        entity_id: request.id,
-        details: { roll_number: rollNumber, verification: "auto_matched" },
-      });
-    }
-
-    await notifyAdminClaim({
-      roll_number: rollNumber,
-      name: member.name,
-      email,
-      verification: "auto_matched",
-      request_id: request.id,
-    }).catch(() => {});
-
     return new Response(JSON.stringify({
-      status: "otp_sent",
-      message: "Verification email sent. Check your email to continue your claim.",
-      auto_matched: true,
+      status: "awaiting_email",
+      message: EMAIL_REQUIRED_MESSAGE,
       request_id: request.id,
+      email_verification_expires_at: expiresAt,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

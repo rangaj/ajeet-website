@@ -80,10 +80,12 @@ export function ClaimPage() {
           {result && (
             <Alert variant={result.status === "already_pending" ? "warning" : "success"}>
               {result.message}
-              {result.status === "otp_sent" && (
+              {(result.status === "awaiting_email" ||
+                result.status === "otp_resent" ||
+                result.status === "otp_sent") && (
                 <span>
                   {" "}
-                  After verifying, visit{" "}
+                  After you click the link in your email, visit{" "}
                   <Link to="/pending" className="font-semibold underline">Pending approval</Link>.
                 </span>
               )}

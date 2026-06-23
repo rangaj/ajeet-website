@@ -3,6 +3,19 @@
 All notable releases of the Ajeet Alumni App. Versions follow [Semantic Versioning](https://semver.org/).
 Frontend (`package.json`) and backend (`supabase/VERSION.json`) share the same release number.
 
+## [1.0.0-beta.3] - 2026-06-23
+
+Email verification gate and approval auto-linking.
+
+### Frontend
+- Admin tab **Awaiting email link** (7-day expiry, resend link, expired state)
+- Claim/register messaging: must click email link before admin review
+- Pending page promotes verified requests and notifies admin
+
+### Backend (Supabase)
+- Migrations `000010`–`000012`: auto-link approve by email, email verification statuses, promote on magic-link
+- Edge functions: `start-claim`, `start-registration`, `notify-admin-pending`, `resend-approval-link`
+
 ## [1.0.0-beta.2] - 2026-06-22
 
 Post-approval password setup and recovery flow.
@@ -44,5 +57,6 @@ Phase 1 beta — claim, register, admin approval, and cleaned import data.
 ### Known limitations
 - Transactional email depends on placeholder sender until business domain is configured
 
+[1.0.0-beta.3]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.1
