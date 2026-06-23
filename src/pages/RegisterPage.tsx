@@ -196,7 +196,7 @@ export function RegisterPage() {
       <div className="mx-auto max-w-lg">
         <PageHeader title="Registration submitted" />
         <Card>
-          <Alert variant={result.status === "conflict_review" ? "warning" : "success"}>
+          <Alert variant={result.status === "conflict_review" || result.status === "already_pending" ? "warning" : "success"}>
             {result.message}
           </Alert>
           <p className="mt-4 text-sm text-brand-600">

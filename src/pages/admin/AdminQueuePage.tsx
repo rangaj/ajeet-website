@@ -143,75 +143,39 @@ function houseLabelFromPayload(payload: Json): string | null {
   return null;
 }
 
-function RequestDetails({ request }: { request: QueueRequest }) {
+function passingYear(request: QueueRequest): string {
+  const fromPayload = payloadString(request.submitted_payload, "course_end_year");
+  if (fromPayload) return fromPayload;
+  if (request.member?.course_end_year != null) return String(request.member.course_end_year);
+  return "—";
+}
+
+function displayHouses(request: QueueRequest): string {
+  return formatValue(houseLabelFromPayload(request.submitted_payload) ?? request.member?.house);
+}
+
+function displayName(request: QueueRequest): string {
+  return formatValue(request.submitted_name ?? request.member?.name);
+}
+
+function SummaryField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
+      <dd className="mt-1 text-sm font-semibold text-slate-900">{value}</dd>
+    </div>
+  );
+}
+
+function RequestExtraDetails({ request }: { request: QueueRequest }) {
   const payload = request.submitted_payload;
   const member = request.member;
   const isClaim = request.type === "claim" || request.type === "conflict";
 
-  if (isClaim && member) {
-    return (
-      <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <VerificationBadge payload={payload} />
-          {member.status && (
-            <Badge variant={member.status === "imported_unclaimed" ? "warning" : "default"}>
-              On file: {member.status.replace(/_/g, " ")}
-            </Badge>
-          )}
-        </div>
-        <div className="mb-2 hidden text-xs font-semibold uppercase tracking-wide text-slate-400 sm:grid sm:grid-cols-[8rem_1fr_1fr] sm:gap-2">
-          <span />
-          <span>Submitted</span>
-          <span>On file</span>
-        </div>
-        <dl>
-          <DetailRow label="Name" submitted={request.submitted_name} onFile={member.name} />
-          <DetailRow label="Roll" submitted={request.roll_number} onFile={request.roll_number} />
-          <DetailRow label="Email" submitted={request.submitted_email} onFile={member.email} emphasize />
-          <DetailRow label="Mobile" submitted={request.submitted_phone} onFile={member.mobile_phone} />
-          <DetailRow
-            label="Date of birth"
-            submitted={request.submitted_dob}
-            onFile={member.date_of_birth}
-          />
-          {!isRecord(payload) || payload.verification !== "auto_matched" ? (
-            <DetailRow
-              label="Imported email"
-              submitted={request.submitted_email}
-              onFile={payloadString(payload, "imported_email")}
-              emphasize
-            />
-          ) : null}
-          <DetailRow label="Course" submitted={payloadString(payload, "course")} onFile={member.course} />
-          <DetailRow label="Stream" submitted={payloadString(payload, "stream")} onFile={member.stream} />
-          <DetailRow
-            label="Batch end"
-            submitted={payloadString(payload, "course_end_year")}
-            onFile={member.course_end_year}
-          />
-          <DetailRow label="Company" submitted={payloadString(payload, "company")} onFile={member.company} />
-          <DetailRow
-            label="Location"
-            submitted={payloadString(payload, "current_location")}
-            onFile={member.current_location}
-          />
-          <DetailRow
-            label="House(s)"
-            submitted={houseLabelFromPayload(payload) ?? payloadString(payload, "house")}
-            onFile={member.house}
-          />
-        </dl>
-      </div>
-    );
-  }
-
   const payloadEntries = isRecord(payload)
     ? Object.entries(payload).filter(
         ([key, value]) =>
-          key !== "verification" &&
-          key !== "imported_email" &&
-          key !== "house" &&
-          key !== "houses" &&
+          !["verification", "imported_email", "house", "houses", "name", "course_end_year"].includes(key) &&
           value !== null &&
           value !== undefined &&
           value !== ""
@@ -219,54 +183,82 @@ function RequestDetails({ request }: { request: QueueRequest }) {
     : [];
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-      {isRecord(payload) && payload.verification ? (
-        <div className="mb-3">
+    <details className="mt-3 rounded-lg border border-slate-100 bg-slate-50/50">
+      <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-slate-50">
+        More details
+      </summary>
+      <div className="border-t border-slate-100 px-4 py-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <VerificationBadge payload={payload} />
+          {member?.status && (
+            <Badge variant={member.status === "imported_unclaimed" ? "warning" : "default"}>
+              On file: {member.status.replace(/_/g, " ")}
+            </Badge>
+          )}
         </div>
-      ) : null}
-      <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">Name</dt>
-          <dd className="text-sm text-slate-800">{formatValue(request.submitted_name)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">Roll</dt>
-          <dd className="text-sm text-slate-800">{formatValue(request.roll_number)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">Email</dt>
-          <dd className="text-sm text-slate-800">{formatValue(request.submitted_email)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">Mobile</dt>
-          <dd className="text-sm text-slate-800">{formatValue(request.submitted_phone)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">House(s)</dt>
-          <dd className="text-sm text-slate-800">
-            {formatValue(houseLabelFromPayload(request.submitted_payload))}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs font-medium uppercase text-slate-400">Date of birth</dt>
-          <dd className="text-sm text-slate-800">{formatValue(request.submitted_dob)}</dd>
-        </div>
-        {payloadEntries.map(([key, value]) => (
-          <div key={key}>
-            <dt className="text-xs font-medium uppercase text-slate-400">
-              {PAYLOAD_FIELD_LABELS[key] ?? key.replace(/_/g, " ")}
-            </dt>
-            <dd className="text-sm text-slate-800">{formatValue(String(value))}</dd>
-          </div>
-        ))}
-      </dl>
-      {request.evidence_path && (
-        <p className="mt-3 text-sm text-slate-600">
-          Evidence: <span className="font-mono text-xs">{request.evidence_path}</span>
-        </p>
-      )}
-    </div>
+
+        {isClaim && member ? (
+          <>
+            <div className="mb-2 hidden text-xs font-semibold uppercase tracking-wide text-slate-400 sm:grid sm:grid-cols-[8rem_1fr_1fr] sm:gap-2">
+              <span />
+              <span>Submitted</span>
+              <span>On file</span>
+            </div>
+            <dl>
+              <DetailRow label="Email" submitted={request.submitted_email} onFile={member.email} emphasize />
+              <DetailRow label="Mobile" submitted={request.submitted_phone} onFile={member.mobile_phone} />
+              <DetailRow label="Date of birth" submitted={request.submitted_dob} onFile={member.date_of_birth} />
+              {!isRecord(payload) || payload.verification !== "auto_matched" ? (
+                <DetailRow
+                  label="Imported email"
+                  submitted={request.submitted_email}
+                  onFile={payloadString(payload, "imported_email")}
+                  emphasize
+                />
+              ) : null}
+              <DetailRow label="Course" submitted={payloadString(payload, "course")} onFile={member.course} />
+              <DetailRow label="Stream" submitted={payloadString(payload, "stream")} onFile={member.stream} />
+              <DetailRow label="Start year" submitted={payloadString(payload, "course_start_year")} onFile={member.course_start_year} />
+              <DetailRow label="Company" submitted={payloadString(payload, "company")} onFile={member.company} />
+              <DetailRow label="Location" submitted={payloadString(payload, "current_location")} onFile={member.current_location} />
+            </dl>
+          </>
+        ) : (
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs font-medium uppercase text-slate-400">Email</dt>
+              <dd className="text-sm text-slate-800">{formatValue(request.submitted_email)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase text-slate-400">Mobile</dt>
+              <dd className="text-sm text-slate-800">{formatValue(request.submitted_phone)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase text-slate-400">Date of birth</dt>
+              <dd className="text-sm text-slate-800">{formatValue(request.submitted_dob)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase text-slate-400">Start year</dt>
+              <dd className="text-sm text-slate-800">{formatValue(payloadString(payload, "course_start_year"))}</dd>
+            </div>
+            {payloadEntries.map(([key, value]) => (
+              <div key={key}>
+                <dt className="text-xs font-medium uppercase text-slate-400">
+                  {PAYLOAD_FIELD_LABELS[key] ?? key.replace(/_/g, " ")}
+                </dt>
+                <dd className="text-sm text-slate-800">{formatValue(String(value))}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {request.evidence_path && (
+          <p className="mt-3 text-sm text-slate-600">
+            Evidence: <span className="font-mono text-xs">{request.evidence_path}</span>
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -421,7 +413,7 @@ export function AdminQueuePage() {
         <div>
           <h2 className="text-lg font-semibold">Review Queue</h2>
           <p className="text-sm text-slate-500">
-            Compare submitted details with on-file records. Select multiple to approve or reject in bulk.
+            Key fields at a glance. Expand a row for email, verification, and other details.
           </p>
         </div>
         {isPendingTab && requests.length > 0 && (
@@ -527,12 +519,14 @@ export function AdminQueuePage() {
                     )}
                   </div>
 
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
-                    {r.submitted_name ?? "—"}
-                    <span className="font-normal text-slate-500"> · Roll {r.roll_number}</span>
-                  </p>
+                  <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <SummaryField label="Full name" value={displayName(r)} />
+                    <SummaryField label="Roll number" value={formatValue(r.roll_number)} />
+                    <SummaryField label="House(s)" value={displayHouses(r)} />
+                    <SummaryField label="Year of passing" value={passingYear(r)} />
+                  </dl>
 
-                  <RequestDetails request={r} />
+                  <RequestExtraDetails request={r} />
 
                   {actionable && (
                     <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">

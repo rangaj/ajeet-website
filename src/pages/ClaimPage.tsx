@@ -75,7 +75,7 @@ export function ClaimPage() {
           />
           {error && <Alert variant="error">{error}</Alert>}
           {result && (
-            <Alert variant={result.status === "admin_review" ? "warning" : "success"}>
+            <Alert variant={result.status === "admin_review" || result.status === "already_pending" ? "warning" : "success"}>
               {result.message}
             </Alert>
           )}

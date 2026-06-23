@@ -46,6 +46,42 @@ async function notifyAdminClaim(details: {
   });
 }
 
+const PENDING_STATUSES = ["pending_review", "more_info_required"] as const;
+
+async function findPendingByRoll(
+  adminClient: ReturnType<typeof createClient>,
+  rollNumber: string
+) {
+  const { data } = await adminClient
+    .from("approval_requests")
+    .select("id, created_at, type, status")
+    .eq("roll_number", rollNumber)
+    .in("status", [...PENDING_STATUSES])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+function pendingResponse(rollNumber: string, pending: { id: string; created_at: string; type: string }) {
+  const label = pending.type.replace(/_/g, " ");
+  return new Response(
+    JSON.stringify({
+      error: "already_pending",
+      status: "already_pending",
+      message:
+        `A ${label} request for roll ${rollNumber} is already in the approval queue. ` +
+        "Please wait for admin review or check your email — do not submit again.",
+      request_id: pending.id,
+      submitted_at: pending.created_at,
+    }),
+    {
+      status: 409,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    }
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -102,6 +138,9 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const pending = await findPendingByRoll(adminClient, rollNumber);
+    if (pending) return pendingResponse(rollNumber, pending);
 
     const emailMatch = member.email && normalizeEmail(member.email) === email;
     const phoneMatch = body.phone && member.mobile_phone &&
