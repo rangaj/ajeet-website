@@ -6,6 +6,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function normalizeRoll(roll: string) {
+  const trimmed = roll.trim();
+  if (!/^\d+$/.test(trimmed)) return "";
+  return String(parseInt(trimmed, 10));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -20,20 +26,16 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader ?? "" } },
     });
+    const anonClient = createClient(supabaseUrl, anonKey);
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     const { data: { user } } = await userClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const body = await req.json();
-    const rollNumber = String(body.roll_number ?? "").trim();
+    const rollNumber = normalizeRoll(body.roll_number ?? "");
     const email = String(body.email ?? "").trim().toLowerCase();
     const payload = body.payload ?? {};
+    const emailRedirectTo = body.email_redirect_to ?? undefined;
 
     if (!rollNumber || !email) {
       return new Response(JSON.stringify({ error: "roll_number and email are required" }), {
@@ -59,16 +61,10 @@ Deno.serve(async (req) => {
         });
       }
 
-      const nameSimilar = payload.name &&
-        existing.name?.toLowerCase().includes(String(payload.name).toLowerCase().slice(0, 3));
-      const emailSimilar = existing.email?.toLowerCase() === email;
-
-      const requestType = nameSimilar || emailSimilar ? "conflict" : "conflict";
-
       const { data: conflictReq, error: conflictError } = await adminClient
         .from("approval_requests")
         .insert({
-          type: requestType,
+          type: "conflict",
           status: "pending_review",
           roll_number: rollNumber,
           submitted_email: email,
@@ -76,8 +72,7 @@ Deno.serve(async (req) => {
           submitted_phone: payload.mobile_phone ?? null,
           submitted_dob: payload.date_of_birth ?? null,
           alumni_member_id: existing.id,
-          user_id: user.id,
-          evidence_path: body.evidence_path ?? null,
+          user_id: user?.id ?? null,
           submitted_payload: payload,
         })
         .select()
@@ -95,9 +90,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error: otpError } = await userClient.auth.signInWithOtp({
+    const { error: otpError } = await anonClient.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo,
+      },
     });
     if (otpError) throw otpError;
 
@@ -111,8 +109,7 @@ Deno.serve(async (req) => {
         submitted_name: payload.name ?? null,
         submitted_phone: payload.mobile_phone ?? null,
         submitted_dob: payload.date_of_birth ?? null,
-        user_id: user.id,
-        evidence_path: body.evidence_path ?? null,
+        user_id: user?.id ?? null,
         submitted_payload: payload,
       })
       .select()
@@ -122,7 +119,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       status: "pending_review",
-      message: "Registration submitted. Verify your email and wait for admin approval.",
+      message: "Registration submitted. Check your email to verify, and then await approval.",
       request_id: request.id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -185,7 +185,7 @@ function RequestDetails({ request }: { request: QueueRequest }) {
             submitted={payloadString(payload, "current_location")}
             onFile={member.current_location}
           />
-          <DetailRow label="House" submitted={payloadString(payload, "house")} onFile={member.house} />
+          <DetailRow label="House(s)" submitted={payloadString(payload, "house") ?? (isRecord(payload) && Array.isArray(payload.houses) ? (payload.houses as string[]).join(", ") : null)} onFile={member.house} />
         </dl>
       </div>
     );
@@ -196,6 +196,8 @@ function RequestDetails({ request }: { request: QueueRequest }) {
         ([key, value]) =>
           key !== "verification" &&
           key !== "imported_email" &&
+          key !== "house" &&
+          key !== "houses" &&
           value !== null &&
           value !== undefined &&
           value !== ""
@@ -225,6 +227,21 @@ function RequestDetails({ request }: { request: QueueRequest }) {
         <div>
           <dt className="text-xs font-medium uppercase text-slate-400">Mobile</dt>
           <dd className="text-sm text-slate-800">{formatValue(request.submitted_phone)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium uppercase text-slate-400">House(s)</dt>
+          <dd className="text-sm text-slate-800">
+            {formatValue(
+              request.submitted_payload &&
+                typeof request.submitted_payload === "object" &&
+                !Array.isArray(request.submitted_payload) &&
+                ("house" in request.submitted_payload
+                  ? String((request.submitted_payload as Record<string, unknown>).house ?? "")
+                  : Array.isArray((request.submitted_payload as Record<string, unknown>).houses)
+                    ? ((request.submitted_payload as Record<string, unknown>).houses as string[]).join(", ")
+                    : null)
+            )}
+          </dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase text-slate-400">Date of birth</dt>
