@@ -1,9 +1,35 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { execSync } from "node:child_process";
+
+function resolveBuildId() {
+  if (process.env.VITE_BUILD_ID) return process.env.VITE_BUILD_ID;
+  try {
+    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+
+const buildId = resolveBuildId();
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "html-build-id",
+      transformIndexHtml(html) {
+        return html.replace(
+          "</head>",
+          `    <meta name="app-build" content="${buildId}" />\n  </head>`
+        );
+      },
+    },
+  ],
+  define: {
+    "import.meta.env.VITE_BUILD_ID": JSON.stringify(buildId),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

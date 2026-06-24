@@ -77,7 +77,13 @@ const server = http.createServer((req, res) => {
         return;
       }
       const ext = path.extname(filePath).toLowerCase();
-      res.writeHead(200, { "Content-Type": MIME[ext] ?? "application/octet-stream" });
+      const isHtml = ext === ".html" || filePath === indexPath;
+      res.writeHead(200, {
+        "Content-Type": MIME[ext] ?? "application/octet-stream",
+        "Cache-Control": isHtml
+          ? "no-cache, no-store, must-revalidate"
+          : "public, max-age=31536000, immutable",
+      });
       res.end(data);
     });
   });

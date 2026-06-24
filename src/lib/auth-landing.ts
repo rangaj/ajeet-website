@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { clearAdminDirectoryView } from "@/lib/admin-navigation";
 
 /** Resolve where an authenticated user should land after sign-in. */
 export async function resolvePostAuthPath(): Promise<"/admin" | "/directory" | "/pending"> {
@@ -23,7 +24,10 @@ export async function resolvePostAuthPath(): Promise<"/admin" | "/directory" | "
   const isApproved =
     profile?.role === "alumni" && profile?.member_status === "approved";
 
-  if (isAdmin) return "/admin";
+  if (isAdmin) {
+    clearAdminDirectoryView();
+    return "/admin";
+  }
   if (isApproved) return "/directory";
   return "/pending";
 }

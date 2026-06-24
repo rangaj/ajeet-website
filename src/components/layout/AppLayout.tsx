@@ -5,6 +5,8 @@ import { PasswordSetupBanner } from "@/components/auth/PasswordSetupBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
+import { allowAdminDirectoryView, clearAdminDirectoryView } from "@/lib/admin-navigation";
+import { BUILD_ID } from "@/lib/build-info";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -88,6 +90,7 @@ export function AppLayout() {
   }, [isHome]);
 
   const handleSignOut = async () => {
+    clearAdminDirectoryView();
     await signOut();
     setMobileOpen(false);
     navigate("/");
@@ -106,6 +109,11 @@ export function AppLayout() {
         )
       : "sticky border-b border-surface-border bg-white/95 backdrop-blur-md"
   );
+
+  const openDirectory = () => {
+    allowAdminDirectoryView();
+    closeMobile();
+  };
 
   const footerLinks = [
     { label: "About", href: "/#about" },
@@ -158,7 +166,13 @@ export function AppLayout() {
               </>
             )}
             {user && canAccessDirectory && (
-              <NavLink to="/directory" className={navLinkClass}>
+              <NavLink
+                to="/directory"
+                className={navLinkClass}
+                onClick={() => {
+                  if (isAdmin) allowAdminDirectoryView();
+                }}
+              >
                 Directory
               </NavLink>
             )}
@@ -238,7 +252,7 @@ export function AppLayout() {
                 </>
               )}
               {user && canAccessDirectory && (
-                <NavLink to="/directory" className={navLinkClass} onClick={closeMobile}>
+                <NavLink to="/directory" className={navLinkClass} onClick={openDirectory}>
                   Directory
                 </NavLink>
               )}
@@ -319,6 +333,7 @@ export function AppLayout() {
           </div>
           <p className="mt-8 border-t border-brand-800 pt-6 text-center text-sm text-brand-300 sm:text-left">
             © Ajeet Alumni Association. All Rights Reserved.
+            <span className="mt-1 block text-xs text-brand-400/80">Build {BUILD_ID}</span>
           </p>
         </div>
       </footer>

@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { ClipboardList, Upload, Users } from "lucide-react";
+import { allowAdminDirectoryView } from "@/lib/admin-navigation";
 import { cn } from "@/lib/utils";
 
 const ADMIN_TABS = [
@@ -55,6 +56,7 @@ export function AdminLayout() {
         ))}
         <Link
           to="/directory"
+          onClick={allowAdminDirectoryView}
           className="inline-flex items-center gap-2 rounded-full border border-surface-border bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-brand-200 hover:bg-brand-50 sm:text-sm"
         >
           <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />

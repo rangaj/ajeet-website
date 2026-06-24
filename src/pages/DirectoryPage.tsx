@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { DirectoryDiscoveryPanel } from "@/components/directory/DirectoryDiscoveryPanel";
 import { DirectoryMemberCard } from "@/components/directory/DirectoryMemberCard";
@@ -9,6 +10,8 @@ import {
   hasDirectoryFilters,
   type DirectoryFilters,
 } from "@/constants/directory-browse";
+import { useAuth } from "@/hooks/useAuth";
+import { adminMayViewDirectory } from "@/lib/admin-navigation";
 import { searchAlumni } from "@/lib/data-access";
 import type { SearchResult } from "@/types/database";
 
@@ -19,6 +22,8 @@ function shouldSearch(query: string, filters: DirectoryFilters): boolean {
 }
 
 export function DirectoryPage() {
+  const navigate = useNavigate();
+  const { isAdmin, loading: authLoading } = useAuth();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [filters, setFilters] = useState<DirectoryFilters>(EMPTY_DIRECTORY_FILTERS);
@@ -28,6 +33,13 @@ export function DirectoryPage() {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (authLoading || !isAdmin) return;
+    if (!adminMayViewDirectory()) {
+      navigate("/admin", { replace: true });
+    }
+  }, [authLoading, isAdmin, navigate]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300);
