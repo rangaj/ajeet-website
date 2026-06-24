@@ -115,15 +115,51 @@ export function AppLayout() {
     closeMobile();
   };
 
-  const footerLinks = [
-    { label: "About", href: "/#about" },
-    { label: "Directory", to: "/directory" },
-    { label: "Events", href: "/#why-join" },
-    { label: "Stories", href: "/#legacy" },
-    { label: "Contact Us", href: "/#heritage" },
-    { label: "Privacy Policy", to: "/privacy" },
-    { label: "Terms of Use", to: "/terms" },
-    { label: "Directory Usage Policy", to: "/directory-usage" },
+  const footerSections = [
+    {
+      title: "Platform",
+      links: [
+        { label: "Directory", to: "/directory" },
+        { label: "Claim Profile", to: "/claim" },
+        { label: "Register", to: "/register" },
+        { label: "Contact Us", to: "/contact" },
+      ],
+    },
+    {
+      title: "Community",
+      links: [
+        { label: "Events", to: "/events" },
+        { label: "Stories", to: "/stories" },
+      ],
+    },
+    {
+      title: "Media",
+      links: [
+        {
+          label: "YouTube",
+          href: "https://www.youtube.com/@ajeetalumniassociation",
+          external: true,
+        },
+        {
+          label: "The AEiF Podcast",
+          href: "https://open.spotify.com/show/5MxQBL9UwP4IHcwcun3FZ3",
+          external: true,
+        },
+        {
+          label: "The AKF Podcast",
+          href: "https://open.spotify.com/show/1XPNpzdwDUJf0KICAlGkOE",
+          external: true,
+        },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Privacy Policy", to: "/privacy" },
+        { label: "Terms of Use", to: "/terms" },
+        { label: "Directory Usage Policy", to: "/directory-usage" },
+      ],
+    },
   ] as const;
 
   const navClass = marketingNavClass(isHome, homeScrolled);
@@ -149,12 +185,12 @@ export function AppLayout() {
                 <Link to="/directory" className={navClass}>
                   Directory
                 </Link>
-                <MarketingNavLink href="/#why-join" className={navClass}>
+                <Link to="/events" className={navClass}>
                   Events
-                </MarketingNavLink>
-                <MarketingNavLink href="/#legacy" className={navClass}>
+                </Link>
+                <Link to="/stories" className={navClass}>
                   Stories
-                </MarketingNavLink>
+                </Link>
                 <Link
                   to="/claim"
                   className="rounded-lg bg-gold-500 px-3 py-2 text-sm font-semibold text-brand-900 transition-colors hover:bg-gold-400"
@@ -234,12 +270,12 @@ export function AppLayout() {
                   <Link to="/directory" className={navClass} onClick={closeMobile}>
                     Directory
                   </Link>
-                  <MarketingNavLink href="/#why-join" className={navClass} onClick={closeMobile}>
+                  <Link to="/events" className={navClass} onClick={closeMobile}>
                     Events
-                  </MarketingNavLink>
-                  <MarketingNavLink href="/#legacy" className={navClass} onClick={closeMobile}>
+                  </Link>
+                  <Link to="/stories" className={navClass} onClick={closeMobile}>
                     Stories
-                  </MarketingNavLink>
+                  </Link>
                   <Link
                     to="/claim"
                     className="mt-1 rounded-lg bg-gold-500 px-3 py-2.5 text-center font-semibold text-brand-900"
@@ -310,27 +346,38 @@ export function AppLayout() {
                 <p className="text-sm text-brand-200">Sainik School Bijapur</p>
               </div>
             </div>
-            <nav className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
-              {footerLinks.map((link) =>
-                "to" in link ? (
-                  <Link
-                    key={link.label}
-                    to={link.to}
-                    className="text-brand-200 transition-colors hover:text-white"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <MarketingNavLink
-                    key={link.label}
-                    href={link.href}
-                    className="text-brand-200 transition-colors hover:text-white"
-                  >
-                    {link.label}
-                  </MarketingNavLink>
-                )
-              )}
-            </nav>
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {footerSections.map((section) => (
+                <div key={section.title}>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gold-300">
+                    {section.title}
+                  </p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {section.links.map((link) => (
+                      <li key={link.label}>
+                        {"to" in link ? (
+                          <Link
+                            to={link.to}
+                            className="text-brand-200 transition-colors hover:text-white"
+                          >
+                            {link.label}
+                          </Link>
+                        ) : (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand-200 transition-colors hover:text-white"
+                          >
+                            {link.label}
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
           <p className="mt-8 border-t border-brand-800 pt-6 text-center text-sm text-brand-300 sm:text-left">
             © Ajeet Alumni Association. All Rights Reserved.

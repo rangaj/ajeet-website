@@ -15,6 +15,9 @@ import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminQueuePage } from "@/pages/admin/AdminQueuePage";
 import { AdminImportPage } from "@/pages/admin/AdminImportPage";
 import { ShareCardPage } from "@/pages/ShareCardPage";
+import { ContactPage } from "@/pages/ContactPage";
+import { EventsPage } from "@/pages/EventsPage";
+import { StoriesPage } from "@/pages/StoriesPage";
 import { PolicyDocumentView } from "@/components/content/PolicyDocumentView";
 import {
   directoryUsagePolicy,
@@ -34,6 +37,9 @@ export default function App() {
         <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="claim" element={<ClaimPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="events" element={<EventsPage />} />
+        <Route path="stories" element={<StoriesPage />} />
         <Route path="card/:token" element={<ShareCardPage />} />
         <Route path="privacy" element={<PolicyDocumentView document={privacyPolicy} />} />
         <Route path="terms" element={<PolicyDocumentView document={termsOfUse} />} />

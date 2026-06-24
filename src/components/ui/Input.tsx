@@ -60,9 +60,10 @@ export function Textarea({ label, className, id, ...props }: TextareaProps) {
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   options: { value: string; label: string }[];
+  error?: string;
 }
 
-export function Select({ label, options, className, id, ...props }: SelectProps) {
+export function Select({ label, options, className, id, error, ...props }: SelectProps) {
   const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
   return (
     <div className="space-y-1">
@@ -76,6 +77,7 @@ export function Select({ label, options, className, id, ...props }: SelectProps)
         className={cn(
           "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
           "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
+          error && "border-red-300",
           className
         )}
         {...props}
@@ -84,6 +86,7 @@ export function Select({ label, options, className, id, ...props }: SelectProps)
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }
