@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, Handshake, Heart, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BrandLogo } from "@/components/brand/BrandLogo";
@@ -93,6 +93,16 @@ function ClaimCtas({
 }
 
 export function HomePage() {
+  const { loading, canAccessDirectory } = useAuth();
+
+  if (!loading && canAccessDirectory) {
+    return <Navigate to="/directory" replace />;
+  }
+
+  if (loading) {
+    return <div className="min-h-[40vh] bg-warm-white" aria-hidden />;
+  }
+
   return (
     <div className="bg-warm-white">
       {/* Hero — identity first, no building photo */}

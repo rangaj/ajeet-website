@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { resolvePostAuthPath } from "@/lib/auth-landing";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -20,7 +21,7 @@ function hashType(): string | null {
 }
 
 export function ResetPasswordPage() {
-  const { canAccessDirectory, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [ready, setReady] = useState(false);
@@ -77,7 +78,8 @@ export function ResetPasswordPage() {
       await refreshProfile();
     }
 
-    window.location.replace(canAccessDirectory ? "/directory" : "/pending");
+    const path = await resolvePostAuthPath();
+    window.location.replace(path);
   };
 
   const title = isRecovery ? "Reset your password" : "Choose a password";

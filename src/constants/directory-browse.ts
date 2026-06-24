@@ -117,3 +117,59 @@ export function describeActiveBrowse(
 
   return null;
 }
+
+export type DiscoveryHint = {
+  id: string;
+  label: string;
+  filters: DirectoryFilters;
+  kind: "batch" | "house" | "location";
+};
+
+/** Compact quick-start hints shown inside the discovery panel. */
+export const DISCOVERY_HINTS: DiscoveryHint[] = [
+  {
+    id: "batch-2000",
+    label: "Batch 2000",
+    filters: filtersFromBatch(BATCH_PRESETS[4]),
+    kind: "batch",
+  },
+  {
+    id: "batch-1990",
+    label: "1990s",
+    filters: filtersFromBatch(BATCH_PRESETS[3]),
+    kind: "batch",
+  },
+  {
+    id: "house-hoysala",
+    label: "Hoysala",
+    filters: filtersFromHouse("Hoysala"),
+    kind: "house",
+  },
+  {
+    id: "house-adilshahi",
+    label: "Adilshahi",
+    filters: filtersFromHouse("Adilshahi"),
+    kind: "house",
+  },
+  {
+    id: "loc-bengaluru",
+    label: "Bengaluru",
+    filters: filtersFromLocation("Bengaluru"),
+    kind: "location",
+  },
+  {
+    id: "loc-mumbai",
+    label: "Mumbai",
+    filters: filtersFromLocation("Mumbai"),
+    kind: "location",
+  },
+];
+
+export function filtersMatchHint(
+  filters: DirectoryFilters,
+  hint: DiscoveryHint
+): boolean {
+  return Object.entries(hint.filters).every(
+    ([key, value]) => filters[key as keyof DirectoryFilters] === value
+  );
+}

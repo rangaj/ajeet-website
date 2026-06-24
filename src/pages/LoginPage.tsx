@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { resolvePostAuthPath } from "@/lib/auth-landing";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Card";
@@ -9,12 +11,18 @@ import { cn } from "@/lib/utils";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    void resolvePostAuthPath().then((path) => navigate(path, { replace: true }));
+  }, [authLoading, user, navigate]);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +43,19 @@ export function LoginPage() {
     setLoading(true);
     setError("");
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) {
+      setLoading(false);
+      setError(err.message);
+      return;
+    }
+    const path = await resolvePostAuthPath();
     setLoading(false);
-    if (err) setError(err.message);
-    else navigate("/pending");
+    navigate(path, { replace: true });
   };
+
+  if (authLoading || user) {
+    return <div className="min-h-[40vh]" aria-hidden />;
+  }
 
   return (
     <AuthShell

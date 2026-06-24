@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { resolvePostAuthPath } from "@/lib/auth-landing";
 
 function hashType(): string | null {
   const hash = window.location.hash.replace(/^#/, "");
@@ -26,7 +27,7 @@ export function AuthHashRedirect() {
       }
 
       if (pathname === "/" || pathname === "/login") {
-        navigate("/pending", { replace: true });
+        void resolvePostAuthPath().then((path) => navigate(path, { replace: true }));
       }
     };
 

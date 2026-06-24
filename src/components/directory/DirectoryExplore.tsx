@@ -10,20 +10,24 @@ import {
   PROFESSION_PRESETS,
   type DirectoryFilters,
 } from "@/constants/directory-browse";
+import { getHouseColor } from "@/constants/houses";
 
 interface DirectoryExploreProps {
   filters: DirectoryFilters;
   onBrowse: (filters: DirectoryFilters) => void;
+  embedded?: boolean;
 }
 
 function ExploreChip({
   label,
   active,
   onClick,
+  accentColor,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
+  accentColor?: string;
 }) {
   return (
     <button
@@ -35,6 +39,13 @@ function ExploreChip({
           ? "border-brand-600 bg-brand-600 text-white"
           : "border-surface-border bg-white text-brand-800 hover:border-brand-300 hover:bg-brand-50"
       )}
+      style={
+        !active && accentColor
+          ? { borderColor: `${accentColor}66`, backgroundColor: `${accentColor}14` }
+          : active && accentColor
+            ? { backgroundColor: accentColor, borderColor: accentColor }
+            : undefined
+      }
       aria-pressed={active}
     >
       {label}
@@ -59,17 +70,19 @@ function ExploreGroup({
   );
 }
 
-export function DirectoryExplore({ filters, onBrowse }: DirectoryExploreProps) {
+export function DirectoryExplore({ filters, onBrowse, embedded = false }: DirectoryExploreProps) {
   return (
     <section className="space-y-5">
-      <div>
-        <h2 className="font-display text-lg font-semibold text-slate-900">
-          Explore
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Browse by shared school identity — batch, house, location, or profession.
-        </p>
-      </div>
+      {!embedded && (
+        <div>
+          <h2 className="font-display text-lg font-semibold text-slate-900">
+            Explore
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Browse by shared school identity — batch, house, location, or profession.
+          </p>
+        </div>
+      )}
 
       <ExploreGroup title="Browse by Batch">
         {BATCH_PRESETS.map((preset) => (
@@ -91,6 +104,7 @@ export function DirectoryExplore({ filters, onBrowse }: DirectoryExploreProps) {
             key={house}
             label={house}
             active={filters.house === house}
+            accentColor={getHouseColor(house)}
             onClick={() => onBrowse(filtersFromHouse(house))}
           />
         ))}

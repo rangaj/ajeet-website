@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { invokeFunction, supabase } from "@/lib/supabase";
 import { dataUrlToBlob, takePendingAvatar } from "@/lib/image";
 import { registrationAssetPath } from "@/lib/storage";
@@ -105,14 +105,7 @@ export function PendingPage() {
   }, [user, refreshProfile]);
 
   if (ready && canAccessDirectory && activeRequests.length === 0) {
-    return (
-      <Card>
-        <Alert variant="success">
-          Your account is approved.{" "}
-          <Link to="/directory" className="font-medium underline">Browse the directory</Link>
-        </Alert>
-      </Card>
-    );
+    return <Navigate to="/directory" replace />;
   }
 
   return (

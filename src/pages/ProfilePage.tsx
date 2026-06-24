@@ -5,6 +5,8 @@ import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { parseStorageRef, profilePhotoPath as buildProfilePhotoPath } from "@/lib/storage";
+import { HouseColorDots } from "@/components/house/HouseColorDots";
+import { parseHouses, getHouseColor } from "@/constants/houses";
 import {
   formatBatch,
   formatHousesWithLabel,
@@ -146,13 +148,21 @@ export function ProfilePage() {
 
   const batch = formatBatch(member.course_end_year);
   const house = formatHousesWithLabel(member.house);
+  const houses = parseHouses(member.house);
+  const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : undefined;
   const initial = member.name.trim().charAt(0).toUpperCase();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-8">
-      <header className="space-y-5 border-b border-surface-border pb-6">
+      <header
+        className="space-y-5 border-b border-surface-border pb-6"
+        style={accentColor ? { borderBottomColor: `${accentColor}44` } : undefined}
+      >
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-display text-xl font-semibold text-brand-700 sm:h-20 sm:w-20 sm:text-2xl">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-display text-xl font-semibold text-brand-700 ring-2 ring-offset-2 sm:h-20 sm:w-20 sm:text-2xl"
+            style={accentColor ? { boxShadow: `0 0 0 2px ${accentColor}` } : undefined}
+          >
             {photoPreview ? (
               <img src={photoPreview} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -160,10 +170,13 @@ export function ProfilePage() {
             )}
           </div>
           <div className="min-w-0 space-y-1">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              {member.name}
-            </h1>
-            {batch && <p className="text-sm text-slate-600 sm:text-base">{batch}</p>}
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {member.name}
+              </h1>
+              <HouseColorDots houseValue={member.house} size="md" />
+            </div>
+            {batch && <p className="text-sm text-gold-700 sm:text-base">{batch}</p>}
             <p className="text-sm text-slate-600 sm:text-base">
               {formatRollNumber(member.roll_number)}
             </p>

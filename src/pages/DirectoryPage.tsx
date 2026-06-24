@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { DirectoryAdvancedFilters } from "@/components/directory/DirectoryAdvancedFilters";
-import { DirectoryExplore } from "@/components/directory/DirectoryExplore";
+import { DirectoryDiscoveryPanel } from "@/components/directory/DirectoryDiscoveryPanel";
 import { DirectoryMemberCard } from "@/components/directory/DirectoryMemberCard";
 import { DirectoryMemberDetail } from "@/components/directory/DirectoryMemberDetail";
 import {
@@ -98,31 +96,24 @@ export function DirectoryPage() {
   const showResults = shouldSearch(debouncedQuery, filters);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">
-          Alumni Directory
+          Discover Ajeets
         </h1>
         <p className="text-sm text-slate-600 sm:text-base">
-          Reconnect with fellow Ajeets — search by name, roll number, batch, house, and more.
+          Reconnect with batchmates, housemates, and fellow alumni.
         </p>
       </header>
 
-      <section className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" aria-hidden />
-          <input
-            className="w-full rounded-xl border border-surface-border bg-white py-2.5 pl-10 pr-4 text-sm shadow-card focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100 sm:text-base"
-            placeholder="Search Ajeets — name, roll number, batch, house, company, location…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search Ajeets"
-          />
-        </div>
-        <p className="text-xs text-slate-500">
-          Search by name, roll number, batch, house, company, or location.
-        </p>
-      </section>
+      <DirectoryDiscoveryPanel
+        query={query}
+        onQueryChange={setQuery}
+        filters={filters}
+        onBrowse={handleBrowse}
+        onFiltersChange={setFilters}
+        compact={showResults}
+      />
 
       {showResults && (
         <section className="space-y-4">
@@ -146,7 +137,9 @@ export function DirectoryPage() {
             <p className="text-sm text-slate-500">Finding Ajeets…</p>
           )}
           {!loading && results.length === 0 && (
-            <p className="text-sm text-slate-500">No Ajeets match your search. Try a different browse option.</p>
+            <p className="text-sm text-slate-500">
+              No Ajeets match your search. Try another hint or browse option above.
+            </p>
           )}
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,18 +160,6 @@ export function DirectoryPage() {
             </div>
           )}
         </section>
-      )}
-
-      <DirectoryExplore filters={filters} onBrowse={handleBrowse} />
-
-      <section>
-        <DirectoryAdvancedFilters filters={filters} onChange={setFilters} />
-      </section>
-
-      {!showResults && (
-        <p className="text-center text-sm text-slate-500">
-          Start typing or choose a browse option to discover fellow Ajeets.
-        </p>
       )}
 
       {selected && (

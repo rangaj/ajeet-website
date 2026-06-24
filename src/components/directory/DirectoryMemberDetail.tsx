@@ -5,6 +5,8 @@ import {
   formatHousesWithLabel,
   formatRollNumber,
 } from "@/lib/alumni-display";
+import { HouseColorDots } from "@/components/house/HouseColorDots";
+import { parseHouses, getHouseColor } from "@/constants/houses";
 import type { SearchResult } from "@/types/database";
 
 interface DirectoryMemberDetailProps {
@@ -33,6 +35,8 @@ function DetailSection({
 export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetailProps) {
   const batch = formatBatch(member.course_end_year);
   const house = formatHousesWithLabel(member.house);
+  const houses = parseHouses(member.house);
+  const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : undefined;
   const courseLine = [member.course, member.stream, member.course_end_year]
     .filter(Boolean)
     .join(" · ");
@@ -43,15 +47,19 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
       onClick={onClose}
     >
       <Card
-        className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-b-none rounded-t-2xl p-5 sm:rounded-2xl sm:p-6"
+        className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-b-none rounded-t-2xl border-t-4 p-5 sm:rounded-2xl sm:p-6"
+        style={accentColor ? { borderTopColor: accentColor } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-1">
-            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              {member.name}
-            </h2>
-            {batch && <p className="text-sm text-slate-600">{batch}</p>}
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                {member.name}
+              </h2>
+              <HouseColorDots houseValue={member.house} size="md" />
+            </div>
+            {batch && <p className="text-sm text-gold-700">{batch}</p>}
             <p className="text-sm text-slate-600">{formatRollNumber(member.roll_number)}</p>
             {house && <p className="text-sm text-slate-600">{house}</p>}
           </div>

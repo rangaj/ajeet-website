@@ -1,4 +1,4 @@
-import { HOUSES, formatHouses } from "@/constants/houses";
+import { HOUSES, formatHouses, getHouseAbbrev, getHouseColor } from "@/constants/houses";
 import { cn } from "@/lib/utils";
 
 interface HouseSelectorProps {
@@ -29,20 +29,32 @@ export function HouseSelector({ value, onChange, error }: HouseSelectorProps) {
       <div className="flex flex-wrap gap-2">
         {HOUSES.map((house) => {
           const selected = value.includes(house);
+          const color = getHouseColor(house);
           return (
             <button
               key={house}
               type="button"
               onClick={() => toggle(house)}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
                 selected
                   ? "border-brand-600 bg-brand-600 text-white"
                   : "border-surface-border bg-white text-brand-700 hover:border-brand-300 hover:bg-brand-50"
               )}
+              style={
+                selected
+                  ? undefined
+                  : { borderColor: `${color}55`, backgroundColor: `${color}12` }
+              }
               aria-pressed={selected}
             >
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: color }}
+                aria-hidden
+              />
               {house}
+              <span className="text-xs opacity-70">({getHouseAbbrev(house)})</span>
             </button>
           );
         })}

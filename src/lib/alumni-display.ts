@@ -28,6 +28,6 @@ export function formatHousesWithLabel(value: string | null | undefined): string 
   if (!value) return "";
   return formatHouses(parseHouses(value))
     .split(", ")
-    .map((h) => formatHouseLabel(h))
+    .map((house) => formatHouseLabel(house))
     .join(", ");
 }
