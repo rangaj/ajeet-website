@@ -9,6 +9,3 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-/** Set in vite.config.ts from git SHA (or VITE_BUILD_ID env at build time). */
-declare const __APP_BUILD_ID__: string;
