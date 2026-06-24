@@ -8,7 +8,8 @@ declare global {
 }
 
 function isValidBuildId(value: string | undefined | null): value is string {
-  return Boolean(value?.trim()) && !INVALID_BUILD_IDS.has(value.trim());
+  const trimmed = value?.trim();
+  return Boolean(trimmed) && !INVALID_BUILD_IDS.has(trimmed);
 }
 
 /** Read build stamp from index.html (replaced by vite at build time). */
