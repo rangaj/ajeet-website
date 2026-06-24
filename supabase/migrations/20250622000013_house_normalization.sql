@@ -61,7 +61,6 @@ DECLARE
     'Adilshahi', 'Chalukya', 'Hoysala', 'Rashtrakoota',
     'Vijayanagar', 'Wodeyar', 'Rani Channamma'
   ];
-  c TEXT;
 BEGIN
   raw := trim(coalesce(p_house, ''));
   IF raw = '' THEN RETURN NULL; END IF;
@@ -81,8 +80,9 @@ BEGIN
 
   RETURN array_to_string(
     ARRAY(
-      SELECT c FROM unnest(canonical_order) AS c
-      WHERE c = ANY(results)
+      SELECT house_name
+      FROM unnest(canonical_order) AS house_name
+      WHERE house_name = ANY(results)
     ),
     ', '
   );
