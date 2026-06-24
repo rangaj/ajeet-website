@@ -15,7 +15,7 @@ hidden = [".config", "package-lock.json"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "npm install && rm -rf dist && npm run build"]
+build = ["sh", "-c", "npm install && rm -rf dist && export VITE_BUILD_ID=$(node scripts/resolve-build-id.mjs) && npm run build"]
 run = ["sh", "-c", "node scripts/serve-dist.mjs"]
 
 # Healthcheck expects this port (must match scripts/serve-dist.mjs)

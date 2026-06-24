@@ -1,16 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { execSync } from "node:child_process";
-
-function resolveBuildId() {
-  if (process.env.VITE_BUILD_ID) return process.env.VITE_BUILD_ID;
-  try {
-    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
-  } catch {
-    return "unknown";
-  }
-}
+import { resolveBuildId } from "./scripts/resolve-build-id.mjs";
 
 const buildId = resolveBuildId();
 const BUILD_ID_PLACEHOLDER = "__BUILD_ID__";

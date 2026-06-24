@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/resolve-build-id.mjs && tsc --noEmit && vite build",
     "start": "node scripts/serve-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
