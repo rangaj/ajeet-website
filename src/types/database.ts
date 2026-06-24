@@ -421,6 +421,7 @@ export type Database = {
           p_is_directory_visible?: boolean | null;
           p_visibility_settings?: Record<string, boolean> | null;
           p_profile_photo_path?: string | null;
+          p_clear_profile_photo?: boolean | null;
         };
         Returns: boolean;
       };

@@ -88,6 +88,7 @@ export type OwnProfileUpdate = {
   is_directory_visible?: boolean;
   visibility_settings?: Record<string, boolean>;
   profile_photo_path?: string | null;
+  clear_profile_photo?: boolean;
 };
 
 export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
@@ -106,6 +107,7 @@ export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
     p_is_directory_visible: patch.is_directory_visible ?? null,
     p_visibility_settings: patch.visibility_settings ?? null,
     p_profile_photo_path: patch.profile_photo_path ?? null,
+    p_clear_profile_photo: patch.clear_profile_photo ?? false,
   });
 }
 

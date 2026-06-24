@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Copy, RefreshCw, Share2 } from "lucide-react";
 import {
   getOrCreateShareLink,
@@ -45,6 +45,7 @@ function ShareLinkBlock({
   member: AlumniMember;
 }) {
   const [token, setToken] = useState<string | null>(null);
+  const [prepared, setPrepared] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -59,11 +60,23 @@ function ShareLinkBlock({
       return;
     }
     setToken(data as string);
+    setPrepared(true);
   }, [linkType]);
 
-  useEffect(() => {
-    void loadToken();
-  }, [loadToken]);
+  if (!prepared) {
+    return (
+      <Card className="space-y-3 p-5">
+        <div>
+          <h3 className="font-display text-base font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-600">{description}</p>
+        </div>
+        <Button size="sm" variant="secondary" onClick={() => void loadToken()} disabled={loading}>
+          {loading ? "Preparing…" : "Prepare share link"}
+        </Button>
+        {error && <Alert variant="error">{error}</Alert>}
+      </Card>
+    );
+  }
 
   const url = token ? shareUrl(token) : "";
   const shareText =

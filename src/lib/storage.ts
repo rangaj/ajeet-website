@@ -16,3 +16,8 @@ export function registrationAssetPath(userId: string): string {
 export function profilePhotoPath(memberId: string): string {
   return `${memberId}/avatar.webp`;
 }
+
+/** Preferred path — matches storage RLS (auth user id folder). */
+export function profilePhotoPathForUser(userId: string): string {
+  return `${userId}/avatar.webp`;
+}

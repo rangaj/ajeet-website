@@ -5,7 +5,7 @@ import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-ac
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
-import { parseStorageRef, profilePhotoPath as buildProfilePhotoPath } from "@/lib/storage";
+import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
 import {
@@ -84,10 +84,11 @@ export function ProfilePage() {
     let nextPhotoPath = member.profile_photo_path;
 
     if (photoBlob) {
-      const storagePath = buildProfilePhotoPath(member.id);
+      const storagePath = profilePhotoPathForUser(user.id);
+      await supabase.storage.from("profile-photos").remove([storagePath]);
       const { error: uploadErr } = await supabase.storage
         .from("profile-photos")
-        .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
+        .upload(storagePath, photoBlob, { upsert: false, contentType: "image/webp" });
       if (uploadErr) {
         setError(`Photo upload failed: ${uploadErr.message}`);
         setSaving(false);
@@ -114,8 +115,9 @@ export function ProfilePage() {
     });
 
     setSaving(false);
-    if (err) setError(err.message);
-    else {
+    if (err) {
+      setError(`Profile save failed: ${err.message}`);
+    } else {
       setMessage("Profile updated.");
       setPhotoBlob(null);
       if (nextPhotoPath) setMember({ ...member, profile_photo_path: nextPhotoPath });
@@ -128,7 +130,7 @@ export function ProfilePage() {
     if (ref) {
       await supabase.storage.from(ref.bucket).remove([ref.path]);
     }
-    await updateOwnAlumniProfile({ profile_photo_path: null });
+    await updateOwnAlumniProfile({ clear_profile_photo: true });
     setMember({ ...member, profile_photo_path: null });
     setPhotoPreview(null);
     setPhotoBlob(null);
