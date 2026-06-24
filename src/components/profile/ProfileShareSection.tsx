@@ -6,6 +6,10 @@ import {
   type ShareLinkType,
 } from "@/lib/data-access";
 import { formatHousesWithLabel, formatRollNumber } from "@/lib/alumni-display";
+import {
+  formatDisplayMemberName,
+  formatDisplayShareName,
+} from "@/lib/display-text";
 import { profilePhotoToDataUrl } from "@/lib/photo-data-url";
 import {
   captureShareCardImage,
@@ -21,17 +25,22 @@ import type { AlumniMember } from "@/types/database";
 
 function networkShareMessage(member: AlumniMember, url: string) {
   const house = formatHousesWithLabel(member.house);
+  const displayName = formatDisplayShareName(member.name);
   return [
     "I'm on the Ajeet Alumni Network — Sainik School Bijapur alumni connecting worldwide.",
-    `${member.name} · ${formatRollNumber(member.roll_number)}${house ? ` · ${house}` : ""}`,
+    `${displayName} · ${formatRollNumber(member.roll_number)}${house ? ` · ${house}` : ""}`,
     url,
   ].join("\n");
 }
 
 function contactShareMessage(member: AlumniMember, url: string) {
   const house = formatHousesWithLabel(member.house);
+  const displayName = formatDisplayMemberName({
+    name: member.name,
+    salutation: member.salutation,
+  });
   return [
-    `${member.name} — Ajeet Alumni Association`,
+    `${displayName} — Ajeet Alumni Association`,
     `${formatRollNumber(member.roll_number)}${house ? ` · ${house}` : ""}`,
     url,
   ].join("\n");

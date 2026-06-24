@@ -10,6 +10,11 @@ import { parseHouses } from "@/constants/houses";
 import { HouseColorDots, HouseColorStrip } from "@/components/house/HouseColorDots";
 import { MemberAvatar } from "@/components/member/MemberAvatar";
 import { cn } from "@/lib/utils";
+import {
+  formatDisplayJobPosition,
+  formatDisplayLocation,
+  formatDisplayMemberName,
+} from "@/lib/display-text";
 import type { SearchResult } from "@/types/database";
 
 interface DirectoryMemberCardProps {
@@ -30,6 +35,12 @@ export function DirectoryMemberCard({
   const earlierEmployers = getEarlierEmployers(member.company);
   const employers = parseEmployers(member.company);
   const hasMultipleEmployers = employers.length > 1;
+  const displayName = formatDisplayMemberName({
+    name: member.name,
+    salutation: member.salutation,
+  });
+  const displayJob = formatDisplayJobPosition(member.job_position);
+  const displayLocation = formatDisplayLocation(member.current_location);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -78,7 +89,7 @@ export function DirectoryMemberCard({
               compact ? "text-sm" : "text-base sm:text-lg"
             )}
           >
-            {member.name}
+            {displayName}
           </h3>
           <HouseColorDots houseValue={member.house} className="mt-1" />
         </div>
@@ -87,8 +98,8 @@ export function DirectoryMemberCard({
           {[batch, formatRollNumber(member.roll_number)].filter(Boolean).join(" • ")}
         </p>
 
-        {!compact && member.job_position && (
-          <p className="line-clamp-1 text-sm font-medium text-slate-800">{member.job_position}</p>
+        {!compact && displayJob && (
+          <p className="line-clamp-1 text-sm font-medium text-slate-800">{displayJob}</p>
         )}
 
         {!compact && latestEmployer && (
@@ -122,9 +133,9 @@ export function DirectoryMemberCard({
         )}
 
         <div className="mt-auto">
-          {member.current_location && (
+          {displayLocation && (
             <p className={cn("line-clamp-1 text-slate-500", compact ? "text-xs" : "text-sm")}>
-              {member.current_location}
+              {displayLocation}
             </p>
           )}
         </div>

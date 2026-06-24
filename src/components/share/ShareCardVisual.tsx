@@ -9,6 +9,11 @@ import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
 import { parseHouses, getHouseColor } from "@/constants/houses";
 import { appSiteHostname } from "@/lib/site-url";
+import {
+  formatDisplayJobPosition,
+  formatDisplayLocation,
+  formatDisplayShareName,
+} from "@/lib/display-text";
 import { cn } from "@/lib/utils";
 import type { ShareLinkType } from "@/lib/data-access";
 
@@ -37,6 +42,9 @@ export function ShareCardVisual({
   const accent = houses.length === 1 ? getHouseColor(houses[0]) : "#1e3a5f";
   const latestEmployer = getLatestEmployer(data.company);
   const isNetwork = data.linkType === "network";
+  const displayName = formatDisplayShareName(data.name);
+  const displayJob = formatDisplayJobPosition(data.jobPosition);
+  const displayLocation = formatDisplayLocation(data.currentLocation);
   const identityLine = [formatRollNumber(data.rollNumber), house].filter(Boolean).join(" · ");
 
   return (
@@ -57,7 +65,7 @@ export function ShareCardVisual({
               size="xl"
               className="mx-auto"
             />
-            <p className="mt-4 font-display text-xl font-bold">{data.name}</p>
+            <p className="mt-4 font-display text-xl font-bold">{displayName}</p>
             {identityLine && <p className="mt-1 text-sm text-gold-200">{identityLine}</p>}
             <p className="mt-4 text-sm leading-relaxed text-brand-100">
               I&apos;m on the Ajeet Alumni Network. Claim or join to connect with fellow Sainik
@@ -78,18 +86,18 @@ export function ShareCardVisual({
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="font-display text-xl font-bold text-slate-900">{data.name}</p>
+                  <p className="font-display text-xl font-bold text-slate-900">{displayName}</p>
                   <HouseColorDots houseValue={data.house} size="md" />
                 </div>
                 <p className="mt-1 text-sm font-medium text-gold-700">
                   {[batch, formatRollNumber(data.rollNumber), house].filter(Boolean).join(" · ")}
                 </p>
-                {data.jobPosition && (
-                  <p className="mt-3 text-base font-semibold text-slate-900">{data.jobPosition}</p>
+                {displayJob && (
+                  <p className="mt-3 text-base font-semibold text-slate-900">{displayJob}</p>
                 )}
                 {latestEmployer && <p className="text-sm text-slate-700">{latestEmployer}</p>}
-                {data.currentLocation && (
-                  <p className="mt-1 text-sm text-slate-500">{data.currentLocation}</p>
+                {displayLocation && (
+                  <p className="mt-1 text-sm text-slate-500">{displayLocation}</p>
                 )}
               </div>
             </div>

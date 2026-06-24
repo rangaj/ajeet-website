@@ -11,6 +11,11 @@ import { MemberAvatar } from "@/components/member/MemberAvatar";
 import { parseHouses, getHouseColor } from "@/constants/houses";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
+import {
+  formatDisplayJobPosition,
+  formatDisplayLocation,
+  formatDisplayMemberName,
+} from "@/lib/display-text";
 import type { SearchResult } from "@/types/database";
 
 interface DirectoryMemberDetailProps {
@@ -70,6 +75,12 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
     .join(" · ");
   const latestEmployer = getLatestEmployer(member.company);
   const earlierEmployers = getEarlierEmployers(member.company);
+  const displayName = formatDisplayMemberName({
+    name: member.name,
+    salutation: member.salutation,
+  });
+  const displayJob = formatDisplayJobPosition(member.job_position);
+  const displayLocation = formatDisplayLocation(member.current_location);
 
   return (
     <div
@@ -114,7 +125,7 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                      {member.name}
+                      {displayName}
                     </h2>
                     <HouseColorDots houseValue={member.house} size="md" />
                   </div>
@@ -123,10 +134,10 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                  {member.current_location && (
+                  {displayLocation && (
                     <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
                       <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      {member.current_location}
+                      {displayLocation}
                     </p>
                   )}
                   <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800">
@@ -151,8 +162,8 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
           {(member.job_position || latestEmployer) && (
             <DetailSection title="Career">
               <div className="rounded-xl border border-surface-border bg-warm-white p-4 space-y-2">
-                {member.job_position && (
-                  <p className="text-base font-semibold text-slate-900">{member.job_position}</p>
+                {displayJob && (
+                  <p className="text-base font-semibold text-slate-900">{displayJob}</p>
                 )}
                 {latestEmployer && (
                   <div>

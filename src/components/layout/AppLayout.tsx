@@ -31,7 +31,7 @@ function marketingNavClass(isHome: boolean, homeScrolled: boolean) {
 }
 
 export function AppLayout() {
-  const { user, isAdmin, canAccessDirectory, signOut, profile } = useAuth();
+  const { user, isAdmin, canAccessDirectory, signOut, profile, navDisplayName } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -208,8 +208,11 @@ export function AppLayout() {
             )}
             {user && (
               <div className="ml-2 flex items-center gap-2 border-l border-surface-border pl-3">
-                <span className="hidden text-xs font-medium uppercase tracking-wide text-brand-500 lg:inline">
-                  {profile?.role?.replace("_", " ")}
+                <span
+                  className="hidden max-w-[9rem] truncate text-sm font-medium text-brand-700 lg:inline"
+                  title={navDisplayName}
+                >
+                  {navDisplayName}
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label="Sign out">
                   <LogOut className="h-4 w-4" />
@@ -287,14 +290,17 @@ export function AppLayout() {
                 </NavLink>
               )}
               {user && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="mt-2 w-full justify-center"
-                  onClick={handleSignOut}
-                >
-                  Sign Out
-                </Button>
+                <>
+                  <p className="px-3 py-2 text-sm font-medium text-brand-700">{navDisplayName}</p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-2 w-full justify-center"
+                    onClick={handleSignOut}
+                  >
+                    Sign Out
+                  </Button>
+                </>
               )}
             </div>
           </nav>

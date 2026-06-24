@@ -18,6 +18,11 @@ import {
   formatHousesWithLabel,
   formatRollNumber,
 } from "@/lib/alumni-display";
+import {
+  formatDisplayJobPosition,
+  formatDisplayLocation,
+  formatDisplayMemberName,
+} from "@/lib/display-text";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
@@ -165,6 +170,12 @@ export function ProfilePage() {
   const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : undefined;
   const initial = member.name.trim().charAt(0).toUpperCase();
   const completeness = getProfileCompleteness(member);
+  const displayName = formatDisplayMemberName({
+    name: member.name,
+    salutation: member.salutation,
+  });
+  const displayJob = formatDisplayJobPosition(member.job_position);
+  const displayLocation = formatDisplayLocation(member.current_location);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-8">
@@ -225,7 +236,7 @@ export function ProfilePage() {
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2">
               <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                {member.name}
+                {displayName}
               </h1>
               <HouseColorDots houseValue={member.house} size="md" />
             </div>
@@ -238,12 +249,12 @@ export function ProfilePage() {
         </div>
 
         <div className="space-y-0.5">
-          {member.job_position && (
-            <p className="text-base font-medium text-slate-900">{member.job_position}</p>
+          {displayJob && (
+            <p className="text-base font-medium text-slate-900">{displayJob}</p>
           )}
           {member.company && <p className="text-sm text-slate-700">{member.company}</p>}
-          {member.current_location && (
-            <p className="text-sm text-slate-500">{member.current_location}</p>
+          {displayLocation && (
+            <p className="text-sm text-slate-500">{displayLocation}</p>
           )}
         </div>
 
