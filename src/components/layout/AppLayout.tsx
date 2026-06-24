@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
 import { allowAdminDirectoryView, clearAdminDirectoryView } from "@/lib/admin-navigation";
-import { BUILD_ID } from "@/lib/build-info";
+import { getBuildId } from "@/lib/build-info";
 import { AAA_MOTTO } from "@/constants/brand";
 import { cn } from "@/lib/utils";
 
@@ -368,7 +368,7 @@ export function AppLayout() {
             <p className="font-display italic text-gold-300">{AAA_MOTTO}</p>
             <p className="text-brand-400">Official alumni platform of the Ajeet community.</p>
             <p className="pt-2">© Ajeet Alumni Association. All Rights Reserved.</p>
-            <span className="block text-xs text-brand-400/80">Build {BUILD_ID}</span>
+            <span className="block text-xs text-brand-400/80">Build {getBuildId()}</span>
           </div>
         </div>
       </footer>

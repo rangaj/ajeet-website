@@ -13,6 +13,7 @@ function resolveBuildId() {
 }
 
 const buildId = resolveBuildId();
+const BUILD_ID_PLACEHOLDER = "__BUILD_ID__";
 
 export default defineConfig({
   plugins: [
@@ -26,10 +27,17 @@ export default defineConfig({
     {
       name: "html-build-id",
       transformIndexHtml(html) {
-        return html.replace(
-          "</head>",
-          `    <meta name="app-build" content="${buildId}" />\n  </head>`
-        );
+        return html.replaceAll(BUILD_ID_PLACEHOLDER, buildId);
+      },
+    },
+    {
+      name: "emit-build-id-txt",
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "build-id.txt",
+          source: buildId,
+        });
       },
     },
   ],
