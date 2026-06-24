@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { CONTACT_CATEGORIES, submitContactEnquiry } from "@/lib/contact";
 import { FunctionCallError } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Card } from "@/components/ui/Card";
 
-const VALID_CATEGORIES = new Set(
+const VALID_CATEGORIES = new Set<string>(
   CONTACT_CATEGORIES.map((c) => c.value).filter(Boolean)
 );
 

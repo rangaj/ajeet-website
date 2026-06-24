@@ -30,35 +30,6 @@ function marketingNavClass(isHome: boolean, homeScrolled: boolean) {
   return marketingNavOnLight;
 }
 
-function MarketingNavLink({
-  href,
-  children,
-  onClick,
-  className,
-}: {
-  href: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-}) {
-  const { pathname } = useLocation();
-  const to = pathname === "/" ? href.replace("/#", "#") : href.startsWith("/") ? href : `/#${href}`;
-
-  if (to.startsWith("#") || to.includes("#")) {
-    return (
-      <a href={to} className={className} onClick={onClick}>
-        {children}
-      </a>
-    );
-  }
-
-  return (
-    <Link to={to} className={className} onClick={onClick}>
-      {children}
-    </Link>
-  );
-}
-
 export function AppLayout() {
   const { user, isAdmin, canAccessDirectory, signOut, profile } = useAuth();
   const navigate = useNavigate();
