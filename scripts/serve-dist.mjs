@@ -5,15 +5,27 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const indexPath = path.join(root, "index.html");
+const buildIdPath = path.join(root, "build-id.txt");
+
 const port = Number(process.env.PORT) || 5000;
 const host = "0.0.0.0";
+
+if (!process.env.PORT) {
+  console.warn("[serve-dist] PORT not set; defaulting to 5000");
+}
 
 if (!fs.existsSync(indexPath)) {
   console.error(`ERROR: ${indexPath} not found. Run npm run build first.`);
   process.exit(1);
 }
 
-console.log(`Starting static server on ${host}:${port} (PORT=${process.env.PORT ?? "unset"})`);
+const indexHtml = fs.readFileSync(indexPath, "utf8");
+const buildId = fs.existsSync(buildIdPath)
+  ? fs.readFileSync(buildIdPath, "utf8").trim()
+  : "missing";
+
+console.log(`[serve-dist] build-id=${buildId}`);
+console.log(`[serve-dist] starting on ${host}:${port} (PORT=${process.env.PORT})`);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -29,7 +41,16 @@ const MIME = {
   ".ico": "image/x-icon",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8",
 };
+
+function sendHtml(res, html) {
+  res.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+  });
+  res.end(html);
+}
 
 function resolveFilePath(pathname) {
   const relative =
@@ -57,7 +78,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let filePath = resolveFilePath(pathname);
+  if (pathname === "/" || pathname === "") {
+    sendHtml(res, indexHtml);
+    return;
+  }
+
+  const filePath = resolveFilePath(pathname);
   if (!filePath) {
     res.writeHead(403);
     res.end("Forbidden");
@@ -66,7 +92,8 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
-      filePath = indexPath;
+      sendHtml(res, indexHtml);
+      return;
     }
 
     fs.readFile(filePath, (readErr, data) => {
@@ -77,12 +104,12 @@ const server = http.createServer((req, res) => {
         return;
       }
       const ext = path.extname(filePath).toLowerCase();
-      const isHtml = ext === ".html" || filePath === indexPath;
       res.writeHead(200, {
         "Content-Type": MIME[ext] ?? "application/octet-stream",
-        "Cache-Control": isHtml
-          ? "no-cache, no-store, must-revalidate"
-          : "public, max-age=31536000, immutable",
+        "Cache-Control":
+          ext === ".html"
+            ? "no-cache, no-store, must-revalidate"
+            : "public, max-age=31536000, immutable",
       });
       res.end(data);
     });
@@ -95,5 +122,5 @@ server.on("error", (err) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Serving ${root} on http://${host}:${port}`);
+  console.log(`[serve-dist] serving ${root}`);
 });

@@ -3,7 +3,7 @@
 # See replit.md and REPLIT_SETUP.txt.
 #
 # Replit Publishing has no type picker for this Repl — it uses Autoscale.
-# Config below is Autoscale-only: build dist, then serve on PORT 5000.
+# Config below is Autoscale-only: build dist, then serve on $PORT.
 
 modules = ["nodejs-20", "web"]
 
@@ -17,11 +17,6 @@ hidden = [".config", "package-lock.json"]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm install && rm -rf dist && export VITE_BUILD_ID=$(node scripts/resolve-build-id.mjs) && npm run build"]
 run = ["sh", "-c", "node scripts/serve-dist.mjs"]
-
-# Healthcheck expects this port (must match scripts/serve-dist.mjs)
-[[ports]]
-localPort = 5000
-externalPort = 80
 
 [nix]
 channel = "stable-24_05"
