@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
 import { resolveBuildId } from "./scripts/resolve-build-id.mjs";
 
 const buildId = resolveBuildId();
 const BUILD_ID_PLACEHOLDER = "__BUILD_ID__";
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [
@@ -36,14 +37,13 @@ export default defineConfig({
     {
       name: "verify-build-id",
       closeBundle() {
-        const htmlPath = path.resolve("dist", "index.html");
+        const htmlPath = path.resolve(rootDir, "dist", "index.html");
         if (!fs.existsSync(htmlPath)) return;
-        const html = fs.readFileSync(htmlPath, "utf8");
-        if (html.includes(BUILD_ID_PLACEHOLDER)) {
-          throw new Error(
-            `[build] ${BUILD_ID_PLACEHOLDER} was not replaced in dist/index.html`
-          );
-        }
+        let html = fs.readFileSync(htmlPath, "utf8");
+        if (!html.includes(BUILD_ID_PLACEHOLDER)) return;
+        html = html.replaceAll(BUILD_ID_PLACEHOLDER, buildId);
+        fs.writeFileSync(htmlPath, html);
+        console.log(`[build] patched ${BUILD_ID_PLACEHOLDER} in dist/index.html → ${buildId}`);
       },
     },
   ],
@@ -52,7 +52,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(rootDir, "./src"),
     },
   },
   server: {

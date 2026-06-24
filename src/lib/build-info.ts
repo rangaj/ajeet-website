@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 
 const BUILD_ID_PLACEHOLDER = "__BUILD_ID__";
-const INVALID_BUILD_IDS = new Set([BUILD_ID_PLACEHOLDER, "unknown", ""]);
+const INVALID_BUILD_IDS = new Set([BUILD_ID_PLACEHOLDER, "unknown", "live", "dev", ""]);
+/** Git short SHA or Replit dated fallback from resolve-build-id.mjs (e.g. r202606242230). */
+const BUILD_ID_PATTERN = /^(?:[a-f0-9]{7,40}|r\d{12,})$/i;
 
 declare global {
   interface Window {
@@ -15,8 +17,10 @@ declare const __BUILD_SHA__: string;
 function isValidBuildId(value: string | undefined | null): value is string {
   if (value == null) return false;
   const trimmed = value.trim();
-  if (!trimmed) return false;
-  return !INVALID_BUILD_IDS.has(trimmed);
+  if (!trimmed || trimmed.length > 40) return false;
+  if (INVALID_BUILD_IDS.has(trimmed)) return false;
+  if (trimmed.includes("<") || trimmed.includes(">")) return false;
+  return BUILD_ID_PATTERN.test(trimmed);
 }
 
 function compileTimeBuildId(): string | null {
@@ -26,7 +30,7 @@ function compileTimeBuildId(): string | null {
   return null;
 }
 
-/** Read build stamp from bundle, index.html, or /build-id.txt. */
+/** Read build stamp from bundle or index.html. */
 export function getBuildId(): string {
   const compiled = compileTimeBuildId();
   if (compiled) return compiled;
@@ -51,7 +55,7 @@ export function getBuildId(): string {
   return import.meta.env.PROD ? "live" : "dev";
 }
 
-/** Footer label — fetches /build-id.txt if compile-time and HTML stamps are missing. */
+/** Footer label — optional fetch of /build-id.txt when stamps are missing. */
 export function useBuildId(): string {
   const [buildId, setBuildId] = useState(getBuildId);
 

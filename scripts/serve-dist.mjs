@@ -78,6 +78,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === "/build-id.txt") {
+    if (fs.existsSync(buildIdPath)) {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(fs.readFileSync(buildIdPath, "utf8"));
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("not found");
+    return;
+  }
+
   if (pathname === "/" || pathname === "") {
     sendHtml(res, indexHtml);
     return;
@@ -92,6 +103,12 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
+      // SPA client routes only — never return index.html for asset paths.
+      if (path.extname(pathname)) {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
       sendHtml(res, indexHtml);
       return;
     }
