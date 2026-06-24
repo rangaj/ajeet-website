@@ -18,6 +18,12 @@ export default defineConfig({
   plugins: [
     react(),
     {
+      name: "log-build-id",
+      buildStart() {
+        console.log(`[vite] APP_BUILD_ID=${buildId}`);
+      },
+    },
+    {
       name: "html-build-id",
       transformIndexHtml(html) {
         return html.replace(
@@ -28,7 +34,7 @@ export default defineConfig({
     },
   ],
   define: {
-    "import.meta.env.VITE_BUILD_ID": JSON.stringify(buildId),
+    __APP_BUILD_ID__: JSON.stringify(buildId),
   },
   resolve: {
     alias: {

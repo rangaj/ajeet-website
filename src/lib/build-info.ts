@@ -1,2 +1,2 @@
-/** Injected at build time via vite.config.ts (git short SHA). */
-export const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? "dev";
+/** Injected at build time via vite.config.ts `define` (git short SHA). */
+export const BUILD_ID = __APP_BUILD_ID__;
