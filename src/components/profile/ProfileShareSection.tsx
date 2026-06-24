@@ -1,11 +1,18 @@
-import { useCallback, useState } from "react";
-import { Copy, RefreshCw, Share2 } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { Copy, Download, ExternalLink, RefreshCw, Share2 } from "lucide-react";
 import {
   getOrCreateShareLink,
   regenerateShareLink,
   type ShareLinkType,
 } from "@/lib/data-access";
 import { formatHousesWithLabel, formatRollNumber } from "@/lib/alumni-display";
+import {
+  captureShareCardImage,
+  downloadShareCardImage,
+  shareShareCardImage,
+  whatsAppShareUrl,
+} from "@/lib/share-card-image";
+import { ShareCardVisual } from "@/components/share/ShareCardVisual";
 import { Button } from "@/components/ui/Button";
 import { Alert, Card } from "@/components/ui/Card";
 import type { AlumniMember } from "@/types/database";
@@ -19,7 +26,7 @@ function networkShareMessage(member: AlumniMember, url: string) {
   return [
     "I'm on the Ajeet Alumni Network — Sainik School Bijapur alumni connecting worldwide.",
     `${member.name} · ${formatRollNumber(member.roll_number)}${house ? ` · ${house}` : ""}`,
-    `Claim or join to connect with other Ajeets: ${url}`,
+    url,
   ].join("\n");
 }
 
@@ -28,8 +35,7 @@ function contactShareMessage(member: AlumniMember, url: string) {
   return [
     `${member.name} — Ajeet Alumni Association`,
     `${formatRollNumber(member.roll_number)}${house ? ` · ${house}` : ""}`,
-    `View my alumni card: ${url}`,
-    "Join the network for full contact details.",
+    url,
   ].join("\n");
 }
 
@@ -38,15 +44,19 @@ function ShareLinkBlock({
   description,
   linkType,
   member,
+  photoUrl,
 }: {
   title: string;
   description: string;
   linkType: ShareLinkType;
   member: AlumniMember;
+  photoUrl?: string | null;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [token, setToken] = useState<string | null>(null);
   const [prepared, setPrepared] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -63,21 +73,6 @@ function ShareLinkBlock({
     setPrepared(true);
   }, [linkType]);
 
-  if (!prepared) {
-    return (
-      <Card className="space-y-3 p-5">
-        <div>
-          <h3 className="font-display text-base font-semibold text-slate-900">{title}</h3>
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
-        </div>
-        <Button size="sm" variant="secondary" onClick={() => void loadToken()} disabled={loading}>
-          {loading ? "Preparing…" : "Prepare share link"}
-        </Button>
-        {error && <Alert variant="error">{error}</Alert>}
-      </Card>
-    );
-  }
-
   const url = token ? shareUrl(token) : "";
   const shareText =
     linkType === "network"
@@ -88,29 +83,73 @@ function ShareLinkBlock({
         ? contactShareMessage(member, url)
         : "";
 
-  const copyLink = async () => {
-    if (!url) return;
-    await navigator.clipboard.writeText(shareText || url);
-    setMessage("Copied to clipboard.");
+  const cardData = {
+    linkType,
+    name: member.name,
+    rollNumber: member.roll_number,
+    house: member.house,
+    courseEndYear: member.course_end_year,
+    jobPosition: member.job_position,
+    company: member.company,
+    currentLocation: member.current_location,
+    profilePhotoPath: member.profile_photo_path,
+    photoUrl,
   };
 
-  const nativeShare = async () => {
-    if (!url || !navigator.share) {
-      await copyLink();
-      return;
+  const captureCard = async () => {
+    if (!cardRef.current) {
+      throw new Error("Card preview not ready.");
     }
+    return captureShareCardImage(cardRef.current);
+  };
+
+  const copyLink = async () => {
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    setMessage("Link copied.");
+  };
+
+  const shareCardImage = async () => {
+    setImageBusy(true);
+    setError("");
     try {
-      await navigator.share({
+      const blob = await captureCard();
+      const result = await shareShareCardImage(blob, {
         title:
           linkType === "network"
             ? "Join me on the Ajeet Alumni Network"
             : `${member.name} — Ajeet Alumni Card`,
         text: shareText,
-        url,
       });
-    } catch {
-      // User cancelled share sheet.
+      setMessage(
+        result === "shared"
+          ? "Share sheet opened — pick WhatsApp or another app."
+          : "Card image downloaded — attach it in WhatsApp or your social app."
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not share card image.");
+    } finally {
+      setImageBusy(false);
     }
+  };
+
+  const downloadCardImage = async () => {
+    setImageBusy(true);
+    setError("");
+    try {
+      const blob = await captureCard();
+      downloadShareCardImage(blob, `ajeet-card-${member.roll_number}.png`);
+      setMessage("Card image downloaded.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not download card image.");
+    } finally {
+      setImageBusy(false);
+    }
+  };
+
+  const openWhatsApp = () => {
+    if (!url) return;
+    window.open(whatsAppShareUrl(shareText), "_blank", "noopener,noreferrer");
   };
 
   const regenerate = async () => {
@@ -131,11 +170,32 @@ function ShareLinkBlock({
     setMessage("New link generated.");
   };
 
+  if (!prepared) {
+    return (
+      <Card className="space-y-3 p-5">
+        <div>
+          <h3 className="font-display text-base font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-600">{description}</p>
+        </div>
+        <Button size="sm" variant="secondary" onClick={() => void loadToken()} disabled={loading}>
+          {loading ? "Preparing…" : "Prepare share card"}
+        </Button>
+        {error && <Alert variant="error">{error}</Alert>}
+      </Card>
+    );
+  }
+
   return (
     <Card className="space-y-4 p-5">
       <div>
         <h3 className="font-display text-base font-semibold text-slate-900">{title}</h3>
         <p className="mt-1 text-sm text-slate-600">{description}</p>
+      </div>
+
+      <div className="flex justify-center rounded-xl bg-slate-100 p-4">
+        <div ref={cardRef}>
+          <ShareCardVisual data={cardData} />
+        </div>
       </div>
 
       {token && (
@@ -145,19 +205,44 @@ function ShareLinkBlock({
       )}
 
       <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={() => void shareCardImage()} disabled={!token || imageBusy}>
+          <Share2 className="mr-1.5 h-4 w-4" />
+          {imageBusy ? "Preparing…" : "Share card image"}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => void downloadCardImage()}
+          disabled={!token || imageBusy}
+        >
+          <Download className="mr-1.5 h-4 w-4" />
+          Download image
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => void openWhatsApp()} disabled={!token}>
+          WhatsApp (link)
+        </Button>
         <Button size="sm" variant="secondary" onClick={() => void copyLink()} disabled={!token}>
           <Copy className="mr-1.5 h-4 w-4" />
-          Copy message
+          Copy link
         </Button>
-        <Button size="sm" onClick={() => void nativeShare()} disabled={!token}>
-          <Share2 className="mr-1.5 h-4 w-4" />
-          Share
-        </Button>
+        {token && (
+          <a href={url} target="_blank" rel="noreferrer">
+            <Button size="sm" variant="ghost">
+              <ExternalLink className="mr-1.5 h-4 w-4" />
+              Open card page
+            </Button>
+          </a>
+        )}
         <Button size="sm" variant="ghost" onClick={() => void regenerate()} disabled={loading}>
           <RefreshCw className="mr-1.5 h-4 w-4" />
           New link
         </Button>
       </div>
+
+      <p className="text-xs text-slate-500">
+        For WhatsApp groups, use Share card image on your phone (or download and attach the PNG).
+        The link opens the live card page for anyone who taps it.
+      </p>
 
       {message && <Alert variant="success">{message}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
@@ -165,22 +250,30 @@ function ShareLinkBlock({
   );
 }
 
-export function ProfileShareSection({ member }: { member: AlumniMember }) {
+export function ProfileShareSection({
+  member,
+  photoUrl,
+}: {
+  member: AlumniMember;
+  photoUrl?: string | null;
+}) {
   if (member.status !== "approved") return null;
 
   return (
     <div className="space-y-4">
       <ShareLinkBlock
         title="Invite an Ajeet"
-        description="Share that you're on the network — great for batch WhatsApp groups and reunions."
+        description="Visual network card for batch WhatsApp groups, reunions, and LinkedIn posts."
         linkType="network"
         member={member}
+        photoUrl={photoUrl}
       />
       <ShareLinkBlock
         title="Share contact card"
-        description="A professional alumni card with your identity and career snapshot. No email or phone on the public link."
+        description="Professional alumni card with your photo, batch, and career snapshot."
         linkType="contact"
         member={member}
+        photoUrl={photoUrl}
       />
     </div>
   );
