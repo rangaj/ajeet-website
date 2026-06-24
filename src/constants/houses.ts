@@ -51,17 +51,9 @@ export const HOUSE_DEFINITIONS = [
   },
 ] as const;
 
-export const HOUSES = HOUSE_DEFINITIONS.map((d) => d.canonical) as readonly [
-  "Adilshahi",
-  "Chalukya",
-  "Hoysala",
-  "Rashtrakoota",
-  "Vijayanagar",
-  "Wodeyar",
-  "Rani Channamma",
-];
+export type HouseName = (typeof HOUSE_DEFINITIONS)[number]["canonical"];
 
-export type HouseName = (typeof HOUSES)[number];
+export const HOUSES: readonly HouseName[] = HOUSE_DEFINITIONS.map((d) => d.canonical);
 
 const HOUSE_BY_CANONICAL = new Map(
   HOUSE_DEFINITIONS.map((d) => [d.canonical, d] as const)

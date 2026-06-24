@@ -4,7 +4,7 @@ import { invokeFunction, supabase } from "@/lib/supabase";
 import { dataUrlToBlob, takePendingAvatar } from "@/lib/image";
 import { registrationAssetPath } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, Alert, Badge } from "@/components/ui/Card";
+import { Card, Badge } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 import type { ApprovalRequest } from "@/types/database";
 
