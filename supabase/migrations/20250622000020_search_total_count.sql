@@ -1,5 +1,9 @@
 -- Add total_count to directory search results
 
+DROP FUNCTION IF EXISTS search_alumni(
+  TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, BOOLEAN
+);
+
 CREATE OR REPLACE FUNCTION search_alumni(
   p_query TEXT DEFAULT NULL,
   p_course TEXT DEFAULT NULL,
