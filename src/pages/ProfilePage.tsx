@@ -1,13 +1,39 @@
 import { useEffect, useState } from "react";
+import { Linkedin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { parseStorageRef, profilePhotoPath as buildProfilePhotoPath } from "@/lib/storage";
+import {
+  formatBatch,
+  formatHousesWithLabel,
+  formatRollNumber,
+} from "@/lib/alumni-display";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Card, Alert } from "@/components/ui/Card";
 import type { AlumniMember } from "@/types/database";
+
+function ProfileSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="space-y-4 p-5 sm:p-6">
+      <div>
+        <h2 className="font-display text-lg font-semibold text-slate-900">{title}</h2>
+        {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
+      </div>
+      {children}
+    </Card>
+  );
+}
 
 export function ProfilePage() {
   const { user, isAdmin } = useAuth();
@@ -110,60 +136,142 @@ export function ProfilePage() {
     return (
       <Card>
         <p className="text-slate-600">
-          {isAdmin ? "No alumni profile linked to this account." : "Complete registration and approval to manage your profile."}
+          {isAdmin
+            ? "No alumni profile linked to this account."
+            : "Complete registration and approval to manage your profile."}
         </p>
       </Card>
     );
   }
 
+  const batch = formatBatch(member.course_end_year);
+  const house = formatHousesWithLabel(member.house);
+  const initial = member.name.trim().charAt(0).toUpperCase();
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">My Profile</h1>
+    <div className="mx-auto max-w-2xl space-y-6 pb-8">
+      <header className="space-y-5 border-b border-surface-border pb-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-display text-xl font-semibold text-brand-700 sm:h-20 sm:w-20 sm:text-2xl">
+            {photoPreview ? (
+              <img src={photoPreview} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initial
+            )}
+          </div>
+          <div className="min-w-0 space-y-1">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              {member.name}
+            </h1>
+            {batch && <p className="text-sm text-slate-600 sm:text-base">{batch}</p>}
+            <p className="text-sm text-slate-600 sm:text-base">
+              {formatRollNumber(member.roll_number)}
+            </p>
+            {house && <p className="text-sm text-slate-600 sm:text-base">{house}</p>}
+          </div>
+        </div>
 
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Identity (read-only)</h2>
-        <p className="text-sm text-slate-600">Roll number: <strong>{member.roll_number}</strong></p>
-        <p className="text-sm text-slate-600">Name: {member.name}</p>
-        {member.house && (
-          <p className="text-sm text-slate-600">House(s): {member.house}</p>
+        <div className="space-y-0.5">
+          {member.job_position && (
+            <p className="text-base font-medium text-slate-900">{member.job_position}</p>
+          )}
+          {member.company && <p className="text-sm text-slate-700">{member.company}</p>}
+          {member.current_location && (
+            <p className="text-sm text-slate-500">{member.current_location}</p>
+          )}
+        </div>
+
+        {member.linkedin_link && (
+          <a
+            href={member.linkedin_link}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            <Linkedin className="h-4 w-4" />
+            LinkedIn
+          </a>
         )}
-      </Card>
+      </header>
 
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Profile Photo</h2>
+      <ProfileSection title="Profile Photo" description="Shown in the directory when your profile is visible.">
         <AvatarUpload
           name={member.name}
           previewUrl={photoPreview}
           onPreviewChange={setPhotoPreview}
           onBlobReady={setPhotoBlob}
           onRemove={() => void handleRemovePhoto()}
-          hint="JPG, PNG, or WebP · max 2 MB. Shown in the directory when visible."
+          hint="JPG, PNG, or WebP · max 2 MB"
         />
-      </Card>
+      </ProfileSection>
 
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Professional & Contact</h2>
-        <Input label="Company" value={member.company ?? ""} onChange={(e) => updateField("company", e.target.value)} />
-        <Input label="Position" value={member.job_position ?? ""} onChange={(e) => updateField("job_position", e.target.value)} />
-        <Input label="Location" value={member.current_location ?? ""} onChange={(e) => updateField("current_location", e.target.value)} />
-        <Input label="Mobile" value={member.mobile_phone ?? ""} onChange={(e) => updateField("mobile_phone", e.target.value)} />
-        <Textarea label="Skills" value={member.professional_skills ?? ""} onChange={(e) => updateField("professional_skills", e.target.value)} />
-        <Input label="LinkedIn" value={member.linkedin_link ?? ""} onChange={(e) => updateField("linkedin_link", e.target.value)} />
-        <Input label="Website" value={member.website_link ?? ""} onChange={(e) => updateField("website_link", e.target.value)} />
-      </Card>
+      <ProfileSection
+        title="Professional"
+        description="How fellow Ajeets will find you after your school identity."
+      >
+        <Input
+          label="Current role"
+          value={member.job_position ?? ""}
+          onChange={(e) => updateField("job_position", e.target.value)}
+        />
+        <Input
+          label="Organisation"
+          value={member.company ?? ""}
+          onChange={(e) => updateField("company", e.target.value)}
+        />
+        <Input
+          label="Location"
+          value={member.current_location ?? ""}
+          onChange={(e) => updateField("current_location", e.target.value)}
+        />
+        <Textarea
+          label="Skills"
+          value={member.professional_skills ?? ""}
+          onChange={(e) => updateField("professional_skills", e.target.value)}
+        />
+        <Input
+          label="LinkedIn"
+          value={member.linkedin_link ?? ""}
+          onChange={(e) => updateField("linkedin_link", e.target.value)}
+        />
+        <Input
+          label="Website"
+          value={member.website_link ?? ""}
+          onChange={(e) => updateField("website_link", e.target.value)}
+        />
+      </ProfileSection>
 
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Privacy</h2>
-        <label className="flex items-center gap-2 text-sm">
+      <ProfileSection title="Contact" description="Visible only when you allow it in privacy settings.">
+        <Input
+          label="Mobile"
+          value={member.mobile_phone ?? ""}
+          onChange={(e) => updateField("mobile_phone", e.target.value)}
+        />
+        <Input
+          label="Secondary email"
+          value={member.secondary_email ?? ""}
+          onChange={(e) => updateField("secondary_email", e.target.value)}
+        />
+      </ProfileSection>
+
+      <ProfileSection title="Mentorship" description="Mentorship matching will be available in a future release.">
+        <label className="flex items-center gap-2 text-sm text-slate-500">
+          <input type="checkbox" disabled className="rounded border-slate-300" />
+          Open to mentoring fellow Ajeets
+        </label>
+      </ProfileSection>
+
+      <ProfileSection title="Privacy">
+        <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
             checked={member.is_directory_visible}
             onChange={(e) => updateField("is_directory_visible", e.target.checked)}
           />
-          Show me in directory search
+          Show me in the alumni directory
         </label>
         {(["show_email", "show_phone", "show_social_links"] as const).map((key) => (
-          <label key={key} className="flex items-center gap-2 text-sm">
+          <label key={key} className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={member.visibility_settings?.[key] ?? false}
@@ -172,12 +280,12 @@ export function ProfilePage() {
             Show {key.replace("show_", "").replace("_", " ")} to other alumni
           </label>
         ))}
-      </Card>
+      </ProfileSection>
 
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
       <Button onClick={() => void handleSave()} disabled={saving}>
-        {saving ? "Saving..." : "Save Changes"}
+        {saving ? "Saving…" : "Save Changes"}
       </Button>
     </div>
   );

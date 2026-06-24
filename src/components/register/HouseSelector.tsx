@@ -1,4 +1,4 @@
-import { HOUSES } from "@/constants/houses";
+import { HOUSES, formatHouses } from "@/constants/houses";
 import { cn } from "@/lib/utils";
 
 interface HouseSelectorProps {
@@ -48,7 +48,7 @@ export function HouseSelector({ value, onChange, error }: HouseSelectorProps) {
         })}
       </div>
       {value.length > 0 && (
-        <p className="text-xs text-slate-500">Selected: {value.join(", ")}</p>
+        <p className="text-xs text-slate-500">Selected: {formatHouses(value)}</p>
       )}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>

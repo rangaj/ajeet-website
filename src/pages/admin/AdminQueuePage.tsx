@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Mail, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
 import { approveRegistration, rejectRegistration } from "@/lib/data-access";
+import { formatHouses, formatHousesDisplay } from "@/constants/houses";
 import { formatEmailLinkExpiry, isEmailLinkExpired } from "@/lib/approval-email";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
@@ -140,7 +141,7 @@ function houseLabelFromPayload(payload: Json): string | null {
   if (!isRecord(payload)) return null;
   if (typeof payload.house === "string" && payload.house) return payload.house;
   if (Array.isArray(payload.houses)) {
-    return (payload.houses as string[]).join(", ");
+    return formatHouses(payload.houses as string[]);
   }
   return null;
 }
@@ -153,7 +154,8 @@ function passingYear(request: QueueRequest): string {
 }
 
 function displayHouses(request: QueueRequest): string {
-  return formatValue(houseLabelFromPayload(request.submitted_payload) ?? request.member?.house);
+  const raw = houseLabelFromPayload(request.submitted_payload) ?? request.member?.house;
+  return formatValue(raw ? formatHousesDisplay(raw) : null);
 }
 
 function displayName(request: QueueRequest): string {
