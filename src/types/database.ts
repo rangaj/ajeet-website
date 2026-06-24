@@ -405,6 +405,25 @@ export type Database = {
         Args: { p_link_type: "contact" | "network" };
         Returns: string;
       };
+      update_own_alumni_profile: {
+        Args: {
+          p_company?: string | null;
+          p_job_position?: string | null;
+          p_current_location?: string | null;
+          p_mobile_phone?: string | null;
+          p_secondary_email?: string | null;
+          p_professional_skills?: string | null;
+          p_industries_worked_in?: string | null;
+          p_linkedin_link?: string | null;
+          p_facebook_link?: string | null;
+          p_twitter_link?: string | null;
+          p_website_link?: string | null;
+          p_is_directory_visible?: boolean | null;
+          p_visibility_settings?: Record<string, boolean> | null;
+          p_profile_photo_path?: string | null;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       app_role: AppRole;

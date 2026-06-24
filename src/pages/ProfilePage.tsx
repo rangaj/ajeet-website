@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Linkedin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access";
+import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
@@ -89,14 +89,14 @@ export function ProfilePage() {
         .from("profile-photos")
         .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
       if (uploadErr) {
-        setError(uploadErr.message);
+        setError(`Photo upload failed: ${uploadErr.message}`);
         setSaving(false);
         return;
       }
       nextPhotoPath = storagePath;
     }
 
-    const { error: err } = await updateAlumniMember(member.id, {
+    const { error: err } = await updateOwnAlumniProfile({
       company: member.company,
       job_position: member.job_position,
       current_location: member.current_location,
@@ -128,7 +128,7 @@ export function ProfilePage() {
     if (ref) {
       await supabase.storage.from(ref.bucket).remove([ref.path]);
     }
-    await updateAlumniMember(member.id, { profile_photo_path: null });
+    await updateOwnAlumniProfile({ profile_photo_path: null });
     setMember({ ...member, profile_photo_path: null });
     setPhotoPreview(null);
     setPhotoBlob(null);

@@ -73,6 +73,42 @@ export async function updateAlumniMember(id: string, patch: AlumniMemberUpdate) 
   return supabase.from("alumni_members").update(patch).eq("id", id);
 }
 
+export type OwnProfileUpdate = {
+  company?: string | null;
+  job_position?: string | null;
+  current_location?: string | null;
+  mobile_phone?: string | null;
+  secondary_email?: string | null;
+  professional_skills?: string | null;
+  industries_worked_in?: string | null;
+  linkedin_link?: string | null;
+  facebook_link?: string | null;
+  twitter_link?: string | null;
+  website_link?: string | null;
+  is_directory_visible?: boolean;
+  visibility_settings?: Record<string, boolean>;
+  profile_photo_path?: string | null;
+};
+
+export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
+  return supabase.rpc("update_own_alumni_profile", {
+    p_company: patch.company ?? null,
+    p_job_position: patch.job_position ?? null,
+    p_current_location: patch.current_location ?? null,
+    p_mobile_phone: patch.mobile_phone ?? null,
+    p_secondary_email: patch.secondary_email ?? null,
+    p_professional_skills: patch.professional_skills ?? null,
+    p_industries_worked_in: patch.industries_worked_in ?? null,
+    p_linkedin_link: patch.linkedin_link ?? null,
+    p_facebook_link: patch.facebook_link ?? null,
+    p_twitter_link: patch.twitter_link ?? null,
+    p_website_link: patch.website_link ?? null,
+    p_is_directory_visible: patch.is_directory_visible ?? null,
+    p_visibility_settings: patch.visibility_settings ?? null,
+    p_profile_photo_path: patch.profile_photo_path ?? null,
+  });
+}
+
 export async function fetchAlumniMemberByUserId(userId: string) {
   return supabase
     .from("alumni_members")
