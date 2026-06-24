@@ -30,6 +30,20 @@ const SALUTATION_DISPLAY: Record<string, string> = {
   smt: "Smt.",
 };
 
+/** Courtesy titles (Mr./Mrs./Ms.) stay in DB but are not shown in public UI. */
+const PUBLIC_HONORIFIC_KEYS = new Set([
+  "dr",
+  "prof",
+  "lt",
+  "lt col",
+  "col",
+  "capt",
+  "maj",
+  "gen",
+  "shri",
+  "smt",
+]);
+
 function lettersOnly(value: string): string {
   return value.replace(/[^a-zA-Z]/g, "");
 }
@@ -108,15 +122,15 @@ function normalizeSalutationKey(value: string): string {
   return value.trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ");
 }
 
-export function formatDisplaySalutation(salutation: string | null | undefined): string {
+/** Honorifics shown in directory/profile (not Mr./Mrs./Ms.). */
+function formatPublicHonorific(salutation: string | null | undefined): string {
   if (!salutation?.trim()) return "";
   const key = normalizeSalutationKey(salutation);
-  const mapped = SALUTATION_DISPLAY[key];
-  if (mapped) return mapped;
-  return formatDisplayText(salutation);
+  if (!PUBLIC_HONORIFIC_KEYS.has(key)) return "";
+  return SALUTATION_DISPLAY[key] ?? "";
 }
 
-/** Directory and profile hero — includes mapped salutation when present. */
+/** Directory and profile hero — name plus earned/professional honorific when applicable. */
 export function formatDisplayMemberName({
   name,
   salutation,
@@ -125,9 +139,9 @@ export function formatDisplayMemberName({
   salutation?: string | null;
 }): string {
   const formattedName = formatDisplayName(name);
-  const formattedSalutation = formatDisplaySalutation(salutation);
-  if (!formattedSalutation) return formattedName;
-  return `${formattedSalutation} ${formattedName}`;
+  const honorific = formatPublicHonorific(salutation);
+  if (!honorific) return formattedName;
+  return `${honorific} ${formattedName}`;
 }
 
 /** Share cards — formatted given name only (no salutation). */
