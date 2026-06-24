@@ -13,14 +13,11 @@ import {
   shareShareCardImage,
   whatsAppShareUrl,
 } from "@/lib/share-card-image";
+import { shareCardUrl } from "@/lib/site-url";
 import { ShareCardVisual } from "@/components/share/ShareCardVisual";
 import { Button } from "@/components/ui/Button";
 import { Alert, Card } from "@/components/ui/Card";
 import type { AlumniMember } from "@/types/database";
-
-function shareUrl(token: string) {
-  return `${window.location.origin}/card/${token}`;
-}
 
 function networkShareMessage(member: AlumniMember, url: string) {
   const house = formatHousesWithLabel(member.house);
@@ -76,7 +73,7 @@ function ShareLinkBlock({
     setPrepared(true);
   }, [linkType]);
 
-  const url = token ? shareUrl(token) : "";
+  const url = token ? shareCardUrl(token) : "";
   const shareText =
     linkType === "network"
       ? token

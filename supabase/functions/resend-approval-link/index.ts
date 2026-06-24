@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     }
 
     const redirectTo = email_redirect_to ??
-      `${Deno.env.get("APP_SITE_URL") ?? "https://ajeet-website.replit.app"}/pending`;
+      `${Deno.env.get("APP_SITE_URL") ?? "https://new.ajeets.org"}/pending`;
 
     const { error: otpError } = await anonClient.auth.signInWithOtp({
       email: request.submitted_email,

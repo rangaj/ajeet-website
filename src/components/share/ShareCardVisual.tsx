@@ -8,6 +8,7 @@ import { ShareCardAvatar } from "@/components/share/ShareCardAvatar";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
 import { parseHouses, getHouseColor } from "@/constants/houses";
+import { appSiteHostname } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import type { ShareLinkType } from "@/lib/data-access";
 
@@ -121,7 +122,7 @@ export function ShareCardVisual({
                 color: "#94a3b8",
               }}
             >
-              Verified alumni network · ajeetalumni.org
+              Verified alumni network · {appSiteHostname()}
             </div>
           </div>
         </>

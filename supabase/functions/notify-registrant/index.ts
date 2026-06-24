@@ -9,7 +9,7 @@ const corsHeaders = {
 type NotifyEvent = "submitted" | "approved" | "rejected" | "more_info";
 
 function appSiteUrl() {
-  return (Deno.env.get("APP_SITE_URL") ?? "https://ajeet-website.replit.app").replace(/\/$/, "");
+  return (Deno.env.get("APP_SITE_URL") ?? "https://new.ajeets.org").replace(/\/$/, "");
 }
 
 function templates(event: NotifyEvent, ctx: Record<string, string>) {
