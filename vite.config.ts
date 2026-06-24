@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -31,7 +33,23 @@ export default defineConfig({
         });
       },
     },
+    {
+      name: "verify-build-id",
+      closeBundle() {
+        const htmlPath = path.resolve("dist", "index.html");
+        if (!fs.existsSync(htmlPath)) return;
+        const html = fs.readFileSync(htmlPath, "utf8");
+        if (html.includes(BUILD_ID_PLACEHOLDER)) {
+          throw new Error(
+            `[build] ${BUILD_ID_PLACEHOLDER} was not replaced in dist/index.html`
+          );
+        }
+      },
+    },
   ],
+  define: {
+    __BUILD_SHA__: JSON.stringify(buildId),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
