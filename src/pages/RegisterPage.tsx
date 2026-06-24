@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { HouseSelector } from "@/components/register/HouseSelector";
+import { PolicyConsentCheckbox } from "@/components/register/PolicyConsentCheckbox";
 import { formatHouses } from "@/constants/houses";
 import { storePendingAvatar } from "@/lib/image";
 import { FunctionCallError, invokeFunction } from "@/lib/supabase";
@@ -128,6 +129,7 @@ export function RegisterPage() {
   const [result, setResult] = useState<{ status: string; message: string } | null>(null);
   const [error, setError] = useState("");
   const [errorCode, setErrorCode] = useState<string | undefined>();
+  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
   const update = <K extends keyof RegForm>(key: K, value: RegForm[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -174,8 +176,17 @@ export function RegisterPage() {
   const houseLabel = useMemo(() => formatHouses(form.houses), [form.houses]);
 
   const handleSubmit = async () => {
-    if (!validateStep(0) || !validateStep(1)) {
+    if (!validateStep(0)) {
       setStep(0);
+      return;
+    }
+    if (!validateStep(1)) {
+      setStep(1);
+      return;
+    }
+    if (!agreedToPolicies) {
+      setFieldErrors({ policies: "You must agree to the policies to register." });
+      setStep(3);
       return;
     }
 
@@ -460,6 +471,20 @@ export function RegisterPage() {
               A super admin will review your request manually. Check your email to verify, and then
               await approval.
             </Alert>
+            <PolicyConsentCheckbox
+              checked={agreedToPolicies}
+              onChange={(checked) => {
+                setAgreedToPolicies(checked);
+                if (checked) {
+                  setFieldErrors((errors) => {
+                    const next = { ...errors };
+                    delete next.policies;
+                    return next;
+                  });
+                }
+              }}
+              error={fieldErrors.policies}
+            />
           </div>
         )}
 

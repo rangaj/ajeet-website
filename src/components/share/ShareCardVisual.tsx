@@ -93,30 +93,36 @@ export function ShareCardVisual({
               </div>
             </div>
           </div>
-          <div className="border-t border-surface-border bg-warm-white px-6 py-4">
-            <div className="flex flex-col items-center gap-2.5">
+          <div
+            className="border-t border-surface-border bg-warm-white px-6 py-4"
+            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
               <BrandLogo size="sm" />
-              <div className="text-center">
-                <p
-                  className="font-display text-sm font-bold text-brand-900"
-                  style={{ display: "block", lineHeight: "1.4", margin: 0 }}
-                >
-                  Ajeet Alumni Association
-                </p>
-                <p
-                  className="text-xs text-brand-600"
-                  style={{ display: "block", lineHeight: "1.4", marginTop: 4 }}
-                >
-                  Sainik School Bijapur
-                </p>
+              <div
+                style={{
+                  margin: 0,
+                  textAlign: "center",
+                  fontSize: 12,
+                  lineHeight: "18px",
+                  fontWeight: 600,
+                  color: "#1e3a5f",
+                }}
+              >
+                Sainik School Bijapur · Ajeet Alumni Association
               </div>
             </div>
-            <p
-              className="mt-3 text-center text-[11px] text-slate-400"
-              style={{ display: "block", lineHeight: "1.4" }}
+            <div
+              style={{
+                marginTop: 12,
+                textAlign: "center",
+                fontSize: 11,
+                lineHeight: "16px",
+                color: "#94a3b8",
+              }}
             >
               Verified alumni network · ajeetalumni.org
-            </p>
+            </div>
           </div>
         </>
       )}

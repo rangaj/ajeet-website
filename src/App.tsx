@@ -15,6 +15,12 @@ import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminQueuePage } from "@/pages/admin/AdminQueuePage";
 import { AdminImportPage } from "@/pages/admin/AdminImportPage";
 import { ShareCardPage } from "@/pages/ShareCardPage";
+import { PolicyDocumentView } from "@/components/content/PolicyDocumentView";
+import {
+  directoryUsagePolicy,
+  privacyPolicy,
+  termsOfUse,
+} from "@/content/policies";
 
 export default function App() {
   return (
@@ -29,6 +35,12 @@ export default function App() {
         <Route path="claim" element={<ClaimPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="card/:token" element={<ShareCardPage />} />
+        <Route path="privacy" element={<PolicyDocumentView document={privacyPolicy} />} />
+        <Route path="terms" element={<PolicyDocumentView document={termsOfUse} />} />
+        <Route
+          path="directory-usage"
+          element={<PolicyDocumentView document={directoryUsagePolicy} />}
+        />
         <Route
           path="pending"
           element={

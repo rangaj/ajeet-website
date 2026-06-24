@@ -121,8 +121,9 @@ export function AppLayout() {
     { label: "Events", href: "/#why-join" },
     { label: "Stories", href: "/#legacy" },
     { label: "Contact Us", href: "/#heritage" },
-    { label: "Privacy Policy", href: "/#heritage" },
-    { label: "Terms of Use", href: "/#heritage" },
+    { label: "Privacy Policy", to: "/privacy" },
+    { label: "Terms of Use", to: "/terms" },
+    { label: "Directory Usage Policy", to: "/directory-usage" },
   ] as const;
 
   const navClass = marketingNavClass(isHome, homeScrolled);
