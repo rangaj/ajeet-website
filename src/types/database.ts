@@ -379,6 +379,32 @@ export type Database = {
         };
         Returns: boolean;
       };
+      list_recent_alumni: {
+        Args: { p_limit?: number | null };
+        Returns: SearchResult[];
+      };
+      get_public_share_card: {
+        Args: { p_token: string };
+        Returns: {
+          link_type: "contact" | "network";
+          name: string;
+          roll_number: string;
+          house: string | null;
+          course_end_year: number | null;
+          job_position: string | null;
+          company: string | null;
+          current_location: string | null;
+          has_photo: boolean;
+        }[];
+      };
+      get_or_create_share_link: {
+        Args: { p_link_type: "contact" | "network" };
+        Returns: string;
+      };
+      regenerate_share_link: {
+        Args: { p_link_type: "contact" | "network" };
+        Returns: string;
+      };
     };
     Enums: {
       app_role: AppRole;

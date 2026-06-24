@@ -173,3 +173,42 @@ export function filtersMatchHint(
     ([key, value]) => filters[key as keyof DirectoryFilters] === value
   );
 }
+
+export type ActiveFilterPill = {
+  key: keyof DirectoryFilters;
+  label: string;
+};
+
+/** Removable pills for active directory filters (results mode). */
+export function activeFilterPills(filters: DirectoryFilters): ActiveFilterPill[] {
+  const pills: ActiveFilterPill[] = [];
+
+  if (filters.house) pills.push({ key: "house", label: filters.house });
+  if (filters.location) pills.push({ key: "location", label: filters.location });
+  if (filters.industry) pills.push({ key: "industry", label: filters.industry });
+  if (filters.company) pills.push({ key: "company", label: filters.company });
+  if (filters.skills) pills.push({ key: "skills", label: filters.skills });
+  if (filters.course) pills.push({ key: "course", label: filters.course });
+  if (filters.stream) pills.push({ key: "stream", label: filters.stream });
+
+  if (filters.year_from || filters.year_to) {
+    const from = filters.year_from || "…";
+    const to = filters.year_to || "…";
+    pills.push({
+      key: "year_from",
+      label: from === to ? `Batch ${from}` : `${from}–${to}`,
+    });
+  }
+
+  return pills;
+}
+
+export function clearFilterKey(
+  filters: DirectoryFilters,
+  key: keyof DirectoryFilters
+): DirectoryFilters {
+  if (key === "year_from" || key === "year_to") {
+    return { ...filters, year_from: "", year_to: "" };
+  }
+  return { ...filters, [key]: "" };
+}

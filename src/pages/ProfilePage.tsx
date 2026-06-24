@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateAlumniMember } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
 import { parseStorageRef, profilePhotoPath as buildProfilePhotoPath } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
@@ -206,6 +207,13 @@ export function ProfilePage() {
           </a>
         )}
       </header>
+
+      <ProfileSection
+        title="Share"
+        description="Invite batchmates or share a professional alumni card."
+      >
+        <ProfileShareSection member={member} />
+      </ProfileSection>
 
       <ProfileSection title="Profile Photo" description="Shown in the directory when your profile is visible.">
         <AvatarUpload

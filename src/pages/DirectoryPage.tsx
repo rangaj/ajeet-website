@@ -12,7 +12,7 @@ import {
 } from "@/constants/directory-browse";
 import { useAuth } from "@/hooks/useAuth";
 import { adminMayViewDirectory } from "@/lib/admin-navigation";
-import { searchAlumni } from "@/lib/data-access";
+import { searchAlumni, listRecentAlumni } from "@/lib/data-access";
 import type { SearchResult } from "@/types/database";
 
 const PAGE_SIZE = 24;
@@ -32,6 +32,8 @@ export function DirectoryPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
+  const [recent, setRecent] = useState<SearchResult[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -89,6 +91,16 @@ export function DirectoryPage() {
     }
   }, [debouncedQuery, filters, search]);
 
+  useEffect(() => {
+    const active = shouldSearch(debouncedQuery, filters);
+    if (active) return;
+    setRecentLoading(true);
+    void listRecentAlumni(10).then(({ data, error: recentError }) => {
+      setRecentLoading(false);
+      if (!recentError && data) setRecent((data as SearchResult[]) ?? []);
+    });
+  }, [debouncedQuery, filters]);
+
   const handleBrowse = (nextFilters: DirectoryFilters) => {
     setQuery("");
     setFilters(nextFilters);
@@ -124,8 +136,35 @@ export function DirectoryPage() {
         filters={filters}
         onBrowse={handleBrowse}
         onFiltersChange={setFilters}
-        compact={showResults}
+        resultsMode={showResults}
       />
+
+      {!showResults && (
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="font-display text-lg font-semibold text-slate-900">Recently joined</h2>
+            <p className="text-sm text-slate-600">
+              Welcome fellow Ajeets who&apos;ve recently connected on the network.
+            </p>
+          </div>
+          {recentLoading && (
+            <p className="text-sm text-slate-500">Loading recent members…</p>
+          )}
+          {!recentLoading && recent.length === 0 && (
+            <p className="text-sm text-slate-500">No recent members to show yet.</p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {recent.map((member) => (
+              <DirectoryMemberCard
+                key={member.id}
+                member={member}
+                compact
+                onClick={() => setSelected(member)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {showResults && (
         <section className="space-y-4">

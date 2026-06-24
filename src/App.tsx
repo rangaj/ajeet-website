@@ -14,6 +14,7 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminQueuePage } from "@/pages/admin/AdminQueuePage";
 import { AdminImportPage } from "@/pages/admin/AdminImportPage";
+import { ShareCardPage } from "@/pages/ShareCardPage";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="claim" element={<ClaimPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="card/:token" element={<ShareCardPage />} />
         <Route
           path="pending"
           element={

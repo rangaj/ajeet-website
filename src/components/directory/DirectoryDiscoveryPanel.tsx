@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { DirectoryAdvancedFilters } from "@/components/directory/DirectoryAdvancedFilters";
 import { DirectoryExplore } from "@/components/directory/DirectoryExplore";
 import {
+  activeFilterPills,
+  clearFilterKey,
   DISCOVERY_HINTS,
   filtersMatchHint,
   hasDirectoryFilters,
@@ -18,7 +19,8 @@ interface DirectoryDiscoveryPanelProps {
   filters: DirectoryFilters;
   onBrowse: (filters: DirectoryFilters) => void;
   onFiltersChange: (filters: DirectoryFilters) => void;
-  compact?: boolean;
+  /** Results visible — slim strip only. */
+  resultsMode?: boolean;
 }
 
 function HintChip({
@@ -26,32 +28,25 @@ function HintChip({
   active,
   onClick,
   accentColor,
-  muted = false,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
   accentColor?: string;
-  muted?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border font-medium transition-colors",
-        muted ? "px-2.5 py-0.5 text-xs" : "px-3 py-1 text-xs sm:text-sm",
+        "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
         active
           ? "border-brand-600 bg-brand-600 text-white"
-          : muted
-            ? "border-surface-border/80 bg-white/80 text-slate-500 hover:border-brand-200 hover:bg-brand-50/80 hover:text-slate-700"
-            : "border-surface-border bg-white text-slate-700 hover:border-brand-200 hover:bg-brand-50"
+          : "border-surface-border bg-white text-slate-700 hover:border-brand-200 hover:bg-brand-50"
       )}
       style={
         !active && accentColor
-          ? muted
-            ? { borderColor: `${accentColor}33`, backgroundColor: `${accentColor}08` }
-            : { borderColor: `${accentColor}55`, backgroundColor: `${accentColor}10` }
+          ? { borderColor: `${accentColor}55`, backgroundColor: `${accentColor}10` }
           : active && accentColor
             ? { backgroundColor: accentColor, borderColor: accentColor }
             : undefined
@@ -63,57 +58,117 @@ function HintChip({
   );
 }
 
+function FilterPill({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="rounded-full p-0.5 hover:bg-brand-100"
+        aria-label={`Remove ${label} filter`}
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
 export function DirectoryDiscoveryPanel({
   query,
   onQueryChange,
   filters,
   onBrowse,
   onFiltersChange,
-  compact = false,
+  resultsMode = false,
 }: DirectoryDiscoveryPanelProps) {
   const [refineOpen, setRefineOpen] = useState(false);
   const filtersActive = hasDirectoryFilters(filters);
+  const pills = activeFilterPills(filters);
+
+  const searchInput = (
+    <div className="relative flex-1">
+      <Search
+        className={cn(
+          "absolute left-3 text-slate-400",
+          resultsMode ? "top-2.5 h-3.5 w-3.5" : "top-3 h-4 w-4"
+        )}
+        aria-hidden
+      />
+      <input
+        className={cn(
+          "w-full rounded-xl border border-surface-border bg-warm-white pl-9 pr-4 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
+          resultsMode ? "py-2 text-sm" : "py-2.5 text-sm sm:text-base"
+        )}
+        placeholder="Search Ajeets — name, roll, batch, house, company…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        aria-label="Search Ajeets"
+      />
+    </div>
+  );
+
+  if (resultsMode) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          {searchInput}
+          <button
+            type="button"
+            onClick={() => setRefineOpen((open) => !open)}
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
+              refineOpen || filtersActive
+                ? "border-brand-300 bg-brand-50 text-brand-800"
+                : "border-surface-border bg-white text-slate-600 hover:bg-brand-50"
+            )}
+            aria-expanded={refineOpen}
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">Refine</span>
+          </button>
+        </div>
+
+        {pills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {pills.map((pill) => (
+              <FilterPill
+                key={`${pill.key}-${pill.label}`}
+                label={pill.label}
+                onRemove={() => onFiltersChange(clearFilterKey(filters, pill.key))}
+              />
+            ))}
+          </div>
+        )}
+
+        {refineOpen && (
+          <div className="rounded-xl border border-surface-border bg-white p-4 shadow-card">
+            <DirectoryExplore embedded filters={filters} onBrowse={onBrowse} />
+            <DirectoryAdvancedFilters embedded filters={filters} onChange={onFiltersChange} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <Card className={cn("space-y-0", compact ? "p-3 sm:p-4" : "p-4 sm:p-5")}>
-      <div className="relative">
-        <Search
-          className={cn(
-            "absolute left-3.5 text-slate-400",
-            compact ? "top-2.5 h-3.5 w-3.5" : "top-3 h-4 w-4"
-          )}
-          aria-hidden
-        />
-        <input
-          className={cn(
-            "w-full rounded-xl border border-surface-border bg-warm-white pl-10 pr-4 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
-            compact ? "py-2 text-sm" : "py-2.5 text-sm sm:text-base"
-          )}
-          placeholder="Search Ajeets — name, roll number, batch, house, company…"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          aria-label="Search Ajeets"
-        />
-      </div>
+    <div className="space-y-3">
+      <div className="rounded-xl border border-surface-border bg-white p-3 sm:p-4">{searchInput}</div>
 
-      <div className={cn(compact ? "mt-2.5 space-y-1.5" : "mt-3 space-y-2")}>
-        {!compact && (
-          <p className="text-xs text-slate-500">
-            Try a batch, house, or city — or type a name, roll number, or abbreviation like{" "}
-            <span className="font-medium text-slate-600">HOY</span> or{" "}
-            <span className="font-medium text-slate-600">ADL</span>.
-          </p>
-        )}
-        {compact && (
-          <p className="text-[11px] text-slate-400">Quick browse</p>
-        )}
-        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-slate-500">Quick browse</p>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-thin">
           {DISCOVERY_HINTS.map((hint) => (
             <HintChip
               key={hint.id}
               label={hint.label}
               active={filtersMatchHint(filters, hint)}
-              muted={compact}
               accentColor={
                 hint.kind === "house" ? getHouseColor(hint.filters.house) : undefined
               }
@@ -123,7 +178,7 @@ export function DirectoryDiscoveryPanel({
         </div>
       </div>
 
-      <div className={cn("border-t border-surface-border", compact ? "mt-3 pt-2.5" : "mt-4 pt-3")}>
+      <div className="rounded-xl border border-surface-border bg-white px-3 py-2.5 sm:px-4">
         <button
           type="button"
           onClick={() => setRefineOpen((open) => !open)}
@@ -145,12 +200,12 @@ export function DirectoryDiscoveryPanel({
         </button>
 
         {refineOpen && (
-          <div className="mt-4 space-y-5 border-t border-surface-border pt-4">
+          <div className="mt-3 space-y-5 border-t border-surface-border pt-4">
             <DirectoryExplore embedded filters={filters} onBrowse={onBrowse} />
             <DirectoryAdvancedFilters embedded filters={filters} onChange={onFiltersChange} />
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
