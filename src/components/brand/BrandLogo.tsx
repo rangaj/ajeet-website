@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
+import { AAA_MOTTO } from "@/constants/brand";
+
 export const AAA_LOGO_SRC = "/aaa-logo.png";
-export const SCHOOL_MOTTO = "Ajeet Hain Abheet Hain";
+/** @deprecated Use AAA_MOTTO from @/constants/brand for new copy */
+export const SCHOOL_MOTTO = AAA_MOTTO.replace(/\.\s+/g, " ");
 
 const sizes = {
   sm: "h-10 w-auto max-h-10",

@@ -37,13 +37,13 @@ export const HOUSE_DEFINITIONS = [
     aliases: ["Wodeyar House", "Wod"],
   },
   {
-    canonical: "Rani Channamma",
+    canonical: "Rani Chenamma",
     color: "#BF712B",
     abbrev: "RAN",
     aliases: [
-      "Rani Chenamma",
-      "Rani Channamma House",
+      "Rani Channamma",
       "Rani Chenamma House",
+      "Rani Channamma House",
       "Chenamma",
       "Channamma",
       "RCM",
@@ -58,7 +58,7 @@ export const HOUSES = HOUSE_DEFINITIONS.map((d) => d.canonical) as unknown as re
   "Rashtrakoota",
   "Vijayanagar",
   "Wodeyar",
-  "Rani Channamma",
+  "Rani Chenamma",
 ];
 
 export type HouseName = (typeof HOUSES)[number];

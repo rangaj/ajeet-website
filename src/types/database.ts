@@ -122,6 +122,7 @@ export interface SearchResult {
   status: AlumniStatus;
   is_directory_visible: boolean;
   has_more: boolean;
+  total_count?: number;
 }
 
 export type AlumniMemberUpdate = {

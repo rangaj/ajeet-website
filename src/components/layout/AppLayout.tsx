@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
 import { allowAdminDirectoryView, clearAdminDirectoryView } from "@/lib/admin-navigation";
 import { BUILD_ID } from "@/lib/build-info";
+import { AAA_MOTTO } from "@/constants/brand";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -117,6 +118,10 @@ export function AppLayout() {
 
   const footerSections = [
     {
+      title: "About",
+      links: [{ label: "About AAA", to: "/about" }],
+    },
+    {
       title: "Platform",
       links: [
         { label: "Directory", to: "/directory" },
@@ -133,22 +138,19 @@ export function AppLayout() {
       ],
     },
     {
-      title: "Media",
+      title: "Listen & Watch",
       links: [
         {
           label: "YouTube",
           href: "https://www.youtube.com/@ajeetalumniassociation",
-          external: true,
         },
         {
           label: "The AEiF Podcast",
           href: "https://open.spotify.com/show/5MxQBL9UwP4IHcwcun3FZ3",
-          external: true,
         },
         {
           label: "The AKF Podcast",
           href: "https://open.spotify.com/show/1XPNpzdwDUJf0KICAlGkOE",
-          external: true,
         },
       ],
     },
@@ -179,9 +181,9 @@ export function AppLayout() {
           <nav className="hidden items-center gap-0.5 text-sm lg:flex">
             {!user && (
               <>
-                <MarketingNavLink href="/#about" className={navClass}>
+                <Link to="/about" className={navClass}>
                   About
-                </MarketingNavLink>
+                </Link>
                 <Link to="/directory" className={navClass}>
                   Directory
                 </Link>
@@ -264,9 +266,9 @@ export function AppLayout() {
             <div className="flex flex-col gap-1 text-sm">
               {!user && (
                 <>
-                  <MarketingNavLink href="/#about" className={navClass} onClick={closeMobile}>
+                  <Link to="/about" className={navClass} onClick={closeMobile}>
                     About
-                  </MarketingNavLink>
+                  </Link>
                   <Link to="/directory" className={navClass} onClick={closeMobile}>
                     Directory
                   </Link>
@@ -346,7 +348,7 @@ export function AppLayout() {
                 <p className="text-sm text-brand-200">Sainik School Bijapur</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
               {footerSections.map((section) => (
                 <div key={section.title}>
                   <p className="text-xs font-semibold uppercase tracking-wider text-gold-300">
@@ -379,10 +381,13 @@ export function AppLayout() {
               ))}
             </div>
           </div>
-          <p className="mt-8 border-t border-brand-800 pt-6 text-center text-sm text-brand-300 sm:text-left">
-            © Ajeet Alumni Association. All Rights Reserved.
-            <span className="mt-1 block text-xs text-brand-400/80">Build {BUILD_ID}</span>
-          </p>
+          <div className="mt-8 space-y-2 border-t border-brand-800 pt-6 text-center text-sm text-brand-300 sm:text-left">
+            <p>Managed by Ajeets Alumni Association (AAA)</p>
+            <p className="font-display italic text-gold-300">{AAA_MOTTO}</p>
+            <p className="text-brand-400">Official alumni platform of the Ajeet community.</p>
+            <p className="pt-2">© Ajeet Alumni Association. All Rights Reserved.</p>
+            <span className="block text-xs text-brand-400/80">Build {BUILD_ID}</span>
+          </div>
         </div>
       </footer>
     </div>

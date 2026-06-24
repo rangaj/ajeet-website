@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Linkedin } from "lucide-react";
+import {
+  formatProfileUpdated,
+  getProfileCompleteness,
+} from "@/lib/profile-display";
 import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
@@ -120,7 +125,12 @@ export function ProfilePage() {
     } else {
       setMessage("Profile updated.");
       setPhotoBlob(null);
-      if (nextPhotoPath) setMember({ ...member, profile_photo_path: nextPhotoPath });
+      const now = new Date().toISOString();
+      setMember({
+        ...member,
+        updated_at: now,
+        ...(photoBlob ? { profile_photo_path: nextPhotoPath } : {}),
+      });
     }
   };
 
@@ -154,9 +164,49 @@ export function ProfilePage() {
   const houses = parseHouses(member.house);
   const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : undefined;
   const initial = member.name.trim().charAt(0).toUpperCase();
+  const completeness = getProfileCompleteness(member);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-surface-border bg-white px-4 py-3 text-sm">
+        <div>
+          <p className="font-medium text-slate-900">Profile last updated</p>
+          <p className="text-slate-600">{formatProfileUpdated(member.updated_at)}</p>
+        </div>
+        <Link
+          to="/contact?category=directory_correction"
+          className="font-medium text-brand-600 hover:text-brand-700"
+        >
+          Report a correction
+        </Link>
+      </div>
+
+      {completeness.percent < 100 && (
+        <Card className="space-y-3 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-medium text-slate-900">
+              Profile completeness: {completeness.percent}%
+            </p>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-gold-500 transition-all"
+              style={{ width: `${completeness.percent}%` }}
+            />
+          </div>
+          <p className="text-sm text-slate-600">
+            Complete your profile to help fellow Ajeets reconnect with you.
+          </p>
+          <p className="text-xs text-slate-500">
+            Missing:{" "}
+            {completeness.fields
+              .filter((f) => !f.complete)
+              .map((f) => f.label)
+              .join(", ")}
+          </p>
+        </Card>
+      )}
+
       <header
         className="space-y-5 border-b border-surface-border pb-6"
         style={accentColor ? { borderBottomColor: `${accentColor}44` } : undefined}

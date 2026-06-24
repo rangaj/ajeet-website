@@ -4,6 +4,7 @@ import { invokeFunction, supabase } from "@/lib/supabase";
 import { dataUrlToBlob, takePendingAvatar } from "@/lib/image";
 import { registrationAssetPath } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
+import { ApprovedWelcome } from "@/components/auth/ApprovedWelcome";
 import { Card, Badge } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 import type { ApprovalRequest } from "@/types/database";
@@ -106,7 +107,7 @@ export function PendingPage() {
 
   if (ready && activeRequests.length === 0) {
     if (isAdmin) return <Navigate to="/admin" replace />;
-    if (canAccessDirectory) return <Navigate to="/directory" replace />;
+    if (canAccessDirectory) return <ApprovedWelcome />;
   }
 
   return (

@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { adminMayViewDirectory } from "@/lib/admin-navigation";
 import { searchAlumni, listRecentAlumni } from "@/lib/data-access";
+import { formatDirectoryResultCount } from "@/lib/profile-display";
 import type { SearchResult } from "@/types/database";
 
 const PAGE_SIZE = 24;
@@ -34,6 +35,7 @@ export function DirectoryPage() {
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [recent, setRecent] = useState<SearchResult[]>([]);
   const [recentLoading, setRecentLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -71,11 +73,16 @@ export function DirectoryPage() {
       if (rpcError) throw rpcError;
       const rows = (data ?? []) as SearchResult[];
       const more = rows.length > 0 && rows[0].has_more === true;
+      const total = rows[0]?.total_count != null ? Number(rows[0].total_count) : null;
       setHasMore(more);
+      setTotalCount(total);
       setResults(append ? (prev) => [...prev, ...rows] : rows);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
-      if (!append) setResults([]);
+      if (!append) {
+        setResults([]);
+        setTotalCount(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -88,6 +95,7 @@ export function DirectoryPage() {
     } else {
       setResults([]);
       setHasMore(false);
+      setTotalCount(null);
     }
   }, [debouncedQuery, filters, search]);
 
@@ -123,10 +131,12 @@ export function DirectoryPage() {
     <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">
-          Discover Ajeets
+          Alumni Directory
         </h1>
         <p className="text-sm text-slate-600 sm:text-base">
-          Reconnect with batchmates, housemates, and fellow alumni.
+          Search and discover verified members of the Ajeet community. Use the filters below to find
+          batchmates, fellow alumni, professionals, and Ajeets across locations, industries, and
+          generations.
         </p>
       </header>
 
@@ -169,9 +179,16 @@ export function DirectoryPage() {
       {showResults && (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-lg font-semibold text-slate-900">
-              {activeBrowse ? `Ajeets — ${activeBrowse}` : debouncedQuery ? "Search results" : "Results"}
-            </h2>
+            <div>
+              <h2 className="font-display text-lg font-semibold text-slate-900">
+                {activeBrowse ? `Ajeets — ${activeBrowse}` : debouncedQuery ? "Search results" : "Results"}
+              </h2>
+              {!loading && results.length > 0 && (
+                <p className="mt-0.5 text-sm text-slate-600">
+                  {formatDirectoryResultCount(results.length, totalCount)}
+                </p>
+              )}
+            </div>
             {hasDirectoryFilters(filters) && (
               <button
                 type="button"
@@ -188,9 +205,22 @@ export function DirectoryPage() {
             <p className="text-sm text-slate-500">Finding Ajeets…</p>
           )}
           {!loading && results.length === 0 && (
-            <p className="text-sm text-slate-500">
-              No Ajeets match your search. Try another hint or browse option above.
-            </p>
+            <div className="rounded-xl border border-surface-border bg-white p-5">
+              <h3 className="font-display text-base font-semibold text-slate-900">
+                No matching results
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                No Ajeets were found matching your current search criteria.
+              </p>
+              <p className="mt-3 text-sm font-medium text-slate-700">Try:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                <li>Removing some filters</li>
+                <li>Searching by roll number</li>
+                <li>Searching by batch year</li>
+                <li>Searching by surname</li>
+                <li>Using broader search terms</li>
+              </ul>
+            </div>
           )}
 
           <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">

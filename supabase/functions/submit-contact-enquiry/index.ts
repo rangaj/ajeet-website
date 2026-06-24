@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       enquiry_id: row.id,
       emailed,
       message:
-        "Thank you for contacting the Ajeets Alumni Association. Your message has been received and we will respond as soon as possible.",
+        "Thank you for contacting us. We have received your message and will get back to you soon.",
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

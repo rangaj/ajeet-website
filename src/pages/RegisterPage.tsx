@@ -256,19 +256,32 @@ export function RegisterPage() {
   if (result) {
     return (
       <div className="mx-auto max-w-lg">
-        <PageHeader title="Registration submitted" />
-        <Card>
-          <Alert variant={result.status === "conflict_review" || result.status === "already_pending" ? "warning" : "success"}>
-            {result.message}
-          </Alert>
-          <p className="mt-4 text-sm text-brand-600">
-            You must click the verification link in your email to finish registration — only then will
-            your request go to admin review. After that, check status on the{" "}
-            <Link to="/pending" className="font-semibold text-brand-700 hover:underline">
-              pending page
-            </Link>
-            .
-          </p>
+        <PageHeader title="Registration Submitted" />
+        <Card className="space-y-4">
+          {(result.status === "conflict_review" || result.status === "already_pending") && (
+            <Alert variant="warning">{result.message}</Alert>
+          )}
+          {result.status !== "conflict_review" && result.status !== "already_pending" && (
+            <>
+              <p className="text-sm leading-relaxed text-slate-700">
+                Thank you for registering with the Ajeet Alumni Platform. Please verify your email
+                address and complete any remaining steps required for profile activation. You will
+                receive further updates by email.
+              </p>
+            </>
+          )}
+          {(result.status === "conflict_review" || result.status === "already_pending") && (
+            <p className="text-sm text-brand-600">
+              Check status on the{" "}
+              <Link to="/pending" className="font-semibold text-brand-700 hover:underline">
+                pending page
+              </Link>
+              .
+            </p>
+          )}
+          <Link to="/">
+            <Button variant="secondary">Return to Home</Button>
+          </Link>
         </Card>
       </div>
     );

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { CONTACT_CATEGORIES, submitContactEnquiry } from "@/lib/contact";
 import { FunctionCallError } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,8 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Card } from "@/components/ui/Card";
 
+const VALID_CATEGORIES = new Set(
+  CONTACT_CATEGORIES.map((c) => c.value).filter(Boolean)
+);
+
 export function ContactPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [category, setCategory] = useState("");
@@ -22,9 +28,16 @@ export function ContactPage() {
     if (user?.email && !email) setEmail(user.email);
   }, [user, email]);
 
+  useEffect(() => {
+    const preset = searchParams.get("category");
+    if (preset && VALID_CATEGORIES.has(preset)) {
+      setCategory(preset);
+    }
+  }, [searchParams]);
+
   const validate = () => {
     const next: Record<string, string> = {};
-    if (!name.trim()) next.name = "Name is required.";
+    if (!name.trim()) next.name = "Full name is required.";
     if (!email.trim()) next.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       next.email = "Enter a valid email address.";
@@ -46,16 +59,18 @@ export function ContactPage() {
 
     setLoading(true);
     try {
-      const data = await submitContactEnquiry({
+      await submitContactEnquiry({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         category,
         message: message.trim(),
       });
-      setSuccess(data.message);
+      setSuccess(
+        "Thank you for contacting us. We have received your message and will get back to you soon."
+      );
       setName(user ? name : "");
       setEmail(user?.email ?? "");
-      setCategory("");
+      if (!searchParams.get("category")) setCategory("");
       setMessage("");
     } catch (err) {
       setError(
@@ -72,11 +87,12 @@ export function ContactPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-10">
-      <PageHeader title="Contact the Ajeets Alumni Association" />
+      <PageHeader title="Contact Us" />
       <p className="-mt-4 mb-6 text-sm leading-relaxed text-slate-600 sm:text-base">
-        Have a question, correction, or issue related to your profile, registration, claim request,
-        directory information, or the alumni platform? Please complete the form below and we will
-        respond as soon as possible.
+        We would be happy to hear from you. Whether you have a question about your profile, need help
+        with registration, wish to report incorrect information, or would like to get involved with
+        the Association, please use the form below. A member of the team will respond as soon as
+        possible.
       </p>
 
       {success ? (
@@ -90,7 +106,7 @@ export function ContactPage() {
         <Card>
           <form className="space-y-5" onSubmit={(e) => void handleSubmit(e)}>
             <Input
-              label="Name *"
+              label="Full name *"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}

@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, Handshake, Heart, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { AAA_MOTTO } from "@/constants/brand";
 import { SSBJ_BUILDING_SRC } from "@/components/brand/assets";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -264,7 +265,7 @@ export function HomePage() {
       >
         <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
           <p className="font-display text-3xl font-semibold italic text-brand-900 sm:text-4xl">
-            Ajeet Hain, Abheet Hain
+            {AAA_MOTTO}
           </p>
           <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-brand-600">
             A spirit of courage, character, and camaraderie that has united generations of Ajeets
