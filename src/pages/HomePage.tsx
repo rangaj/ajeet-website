@@ -40,8 +40,19 @@ function ClaimCtas({
 }: {
   variant?: "hero" | "footer";
 }) {
-  const { user, canAccessDirectory } = useAuth();
+  const { user, canAccessDirectory, isAdmin } = useAuth();
   const isHero = variant === "hero";
+
+  if (user && isAdmin) {
+    return (
+      <Link to="/admin">
+        <Button size="lg" variant="accent">
+          Open Admin Console
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  }
 
   if (user && canAccessDirectory) {
     return (
@@ -93,7 +104,11 @@ function ClaimCtas({
 }
 
 export function HomePage() {
-  const { loading, canAccessDirectory } = useAuth();
+  const { loading, canAccessDirectory, isAdmin } = useAuth();
+
+  if (!loading && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   if (!loading && canAccessDirectory) {
     return <Navigate to="/directory" replace />;

@@ -8,11 +8,14 @@ import type { DirectoryFilters } from "@/constants/directory-browse";
 interface DirectoryAdvancedFiltersProps {
   filters: DirectoryFilters;
   onChange: (filters: DirectoryFilters) => void;
+  /** Render field grid only — for use inside Refine search drawer. */
+  embedded?: boolean;
 }
 
 export function DirectoryAdvancedFilters({
   filters,
   onChange,
+  embedded = false,
 }: DirectoryAdvancedFiltersProps) {
   const [open, setOpen] = useState(false);
   const hasValues = Object.values(filters).some(Boolean);
@@ -21,27 +24,8 @@ export function DirectoryAdvancedFilters({
     onChange({ ...filters, [key]: value });
   };
 
-  return (
-    <div className="border-t border-surface-border pt-4">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-left text-sm font-medium text-brand-800"
-        aria-expanded={open}
-      >
-        <span>
-          Advanced Filters
-          {hasValues && !open && (
-            <span className="ml-2 text-xs font-normal text-slate-500">(active)</span>
-          )}
-        </span>
-        <ChevronDown
-          className={cn("h-4 w-4 text-slate-500 transition-transform", open && "rotate-180")}
-        />
-      </button>
-
-      {open && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  const fields = (
+    <div className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-3", embedded && "mt-0")}>
           <Input
             placeholder="Course"
             value={filters.course}
@@ -97,10 +81,42 @@ export function DirectoryAdvancedFilters({
                   {house}
                 </option>
               ))}
-            </select>
-          </label>
-        </div>
-      )}
+        </select>
+      </label>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="space-y-3 border-t border-surface-border pt-5">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Advanced filters
+        </h3>
+        {fields}
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-surface-border pt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between text-left text-sm font-medium text-brand-800"
+        aria-expanded={open}
+      >
+        <span>
+          Advanced Filters
+          {hasValues && !open && (
+            <span className="ml-2 text-xs font-normal text-slate-500">(active)</span>
+          )}
+        </span>
+        <ChevronDown
+          className={cn("h-4 w-4 text-slate-500 transition-transform", open && "rotate-180")}
+        />
+      </button>
+
+      {open && <div className="mt-4">{fields}</div>}
     </div>
   );
 }

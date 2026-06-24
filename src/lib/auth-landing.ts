@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
-/** Resolve where an authenticated user should land (directory vs pending). */
-export async function resolvePostAuthPath(): Promise<"/directory" | "/pending"> {
+/** Resolve where an authenticated user should land after sign-in. */
+export async function resolvePostAuthPath(): Promise<"/admin" | "/directory" | "/pending"> {
   try {
     await supabase.rpc("link_approved_alumni_self");
   } catch {
@@ -23,5 +23,7 @@ export async function resolvePostAuthPath(): Promise<"/directory" | "/pending"> 
   const isApproved =
     profile?.role === "alumni" && profile?.member_status === "approved";
 
-  return isAdmin || isApproved ? "/directory" : "/pending";
+  if (isAdmin) return "/admin";
+  if (isApproved) return "/directory";
+  return "/pending";
 }

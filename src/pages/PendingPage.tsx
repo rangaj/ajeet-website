@@ -104,8 +104,9 @@ export function PendingPage() {
     void load();
   }, [user, refreshProfile]);
 
-  if (ready && canAccessDirectory && activeRequests.length === 0) {
-    return <Navigate to="/directory" replace />;
+  if (ready && activeRequests.length === 0) {
+    if (isAdmin) return <Navigate to="/admin" replace />;
+    if (canAccessDirectory) return <Navigate to="/directory" replace />;
   }
 
   return (

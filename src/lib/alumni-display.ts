@@ -31,3 +31,26 @@ export function formatHousesWithLabel(value: string | null | undefined): string 
     .map((house) => formatHouseLabel(house))
     .join(", ");
 }
+
+/** Split pipe-delimited employer strings from imports or profile edits. */
+export function parseEmployers(value: string | null | undefined): string[] {
+  if (!value?.trim()) return [];
+  if (!value.includes("|")) return [value.trim()];
+  return value
+    .split(/\s*\|\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/** Most recent employer — last segment when pipe-delimited. */
+export function getLatestEmployer(value: string | null | undefined): string | null {
+  const employers = parseEmployers(value);
+  if (employers.length === 0) return null;
+  return employers[employers.length - 1];
+}
+
+export function getEarlierEmployers(value: string | null | undefined): string[] {
+  const employers = parseEmployers(value);
+  if (employers.length <= 1) return [];
+  return employers.slice(0, -1);
+}

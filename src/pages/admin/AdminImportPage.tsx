@@ -316,7 +316,9 @@ export function AdminImportPage() {
     <div className="space-y-6">
       <div className="space-y-3">
         <div>
-          <h2 className="text-lg font-semibold text-brand-900">Alumni CSV Import</h2>
+          <h2 className="font-display text-lg font-semibold text-slate-900 sm:text-xl">
+            Alumni CSV Import
+          </h2>
           <p className="mt-1 text-sm text-slate-600">
             Upload your member export, preview every row, then commit valid records. Skipped rows
             can be downloaded with a reason for cleanup.

@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Mail, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
 import { approveRegistration, rejectRegistration } from "@/lib/data-access";
-import { formatHouses, formatHousesDisplay } from "@/constants/houses";
+import { formatHouses, formatHousesDisplay, parseHouses } from "@/constants/houses";
 import { formatEmailLinkExpiry, isEmailLinkExpired } from "@/lib/approval-email";
+import { HouseColorDots, HouseColorStrip } from "@/components/house/HouseColorDots";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
 import { Badge, Alert } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
 import type {
   ApprovalRequest,
   ApprovalType,
@@ -151,6 +153,12 @@ function passingYear(request: QueueRequest): string {
   if (fromPayload) return fromPayload;
   if (request.member?.course_end_year != null) return String(request.member.course_end_year);
   return "—";
+}
+
+function houseRawValue(request: QueueRequest): string | null {
+  const fromPayload = houseLabelFromPayload(request.submitted_payload);
+  if (fromPayload) return fromPayload;
+  return request.member?.house ?? null;
 }
 
 function displayHouses(request: QueueRequest): string {
@@ -439,14 +447,16 @@ export function AdminQueuePage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Review Queue</h2>
-          <p className="text-sm text-slate-500">
+        <div className="space-y-1">
+          <h2 className="font-display text-lg font-semibold text-slate-900 sm:text-xl">
+            Review Queue
+          </h2>
+          <p className="text-sm text-slate-600">
             {isAwaitingEmailTab
               ? "Submitted but the verification email has not been opened yet. Links expire after 7 days — resend if needed."
-              : "Key fields at a glance. Expand a row for email, verification, and other details."}
+              : "Key fields at a glance. Expand a card for email, verification, and other details."}
           </p>
         </div>
         {isPendingTab && requests.length > 0 && (
@@ -456,15 +466,20 @@ export function AdminQueuePage() {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Queue filters">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
+            role="tab"
+            aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`rounded-lg px-3 py-1.5 text-sm ${
-              tab === t.key ? "bg-brand-100 text-brand-800 font-medium" : "text-slate-600 hover:bg-slate-100"
-            }`}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors sm:text-sm",
+              tab === t.key
+                ? "border-brand-600 bg-brand-600 text-white"
+                : "border-surface-border bg-white text-slate-700 hover:border-brand-200 hover:bg-brand-50"
+            )}
           >
             {t.label}
           </button>
@@ -472,7 +487,7 @@ export function AdminQueuePage() {
       </div>
 
       {isPendingTab && actionableIds.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-surface-border bg-white p-4 shadow-card">
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <input
               type="checkbox"
@@ -519,16 +534,28 @@ export function AdminQueuePage() {
           const actionable = r.status === "pending_review" || r.status === "more_info_required";
           const expired = isEmailLinkExpired(r);
           const expiryLabel = formatEmailLinkExpiry(r.email_verification_expires_at);
+          const houses = parseHouses(houseRawValue(r));
+          const batchLine = [
+            passingYear(r) !== "—" ? `Batch ${passingYear(r)}` : null,
+            r.roll_number ? `Roll ${r.roll_number}` : null,
+          ]
+            .filter(Boolean)
+            .join(" • ");
+
           return (
             <li
               key={r.id}
-              className={`rounded-xl border p-4 transition-colors ${
-                selected.has(r.id) ? "border-brand-300 bg-brand-50/30" : "border-slate-100"
-              }`}
+              className={cn(
+                "relative overflow-hidden rounded-xl border bg-white transition-colors",
+                selected.has(r.id)
+                  ? "border-brand-300 bg-brand-50/30 shadow-card"
+                  : "border-surface-border hover:border-brand-200"
+              )}
             >
-              <div className="flex gap-3">
+              <HouseColorStrip houses={houses} />
+              <div className="flex gap-3 py-4 pl-5 pr-4 sm:py-5 sm:pl-6 sm:pr-5">
                 {isPendingTab && actionable && (
-                  <div className="pt-1">
+                  <div className="pt-1.5">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
@@ -539,7 +566,16 @@ export function AdminQueuePage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-start gap-2">
+                    <h3 className="min-w-0 flex-1 font-display text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+                      {displayName(r)}
+                    </h3>
+                    <HouseColorDots houseValue={houseRawValue(r)} className="mt-1.5" />
+                  </div>
+
+                  {batchLine && <p className="mt-1 text-sm text-gold-700">{batchLine}</p>}
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge>{TYPE_LABELS[r.type]}</Badge>
                     <Badge
                       variant={
@@ -559,15 +595,16 @@ export function AdminQueuePage() {
                       <span className="text-sm text-slate-400">· Link expires {expiryLabel}</span>
                     )}
                     {expired && isAwaitingEmailTab && (
-                      <span className="text-sm text-red-600">· Email link expired — resend or user may claim again</span>
+                      <span className="text-sm text-red-600">
+                        · Email link expired — resend or user may claim again
+                      </span>
                     )}
                     {r.reviewed_at && (
                       <span className="text-sm text-slate-400">· Reviewed {formatDate(r.reviewed_at)}</span>
                     )}
                   </div>
 
-                  <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <SummaryField label="Full name" value={displayName(r)} />
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <SummaryField label="Roll number" value={formatValue(r.roll_number)} />
                     <SummaryField label="House(s)" value={displayHouses(r)} />
                     <SummaryField label="Year of passing" value={passingYear(r)} />
@@ -620,7 +657,11 @@ export function AdminQueuePage() {
             </li>
           );
         })}
-        {requests.length === 0 && <p className="text-slate-500">No requests in this tab.</p>}
+        {requests.length === 0 && (
+          <p className="rounded-xl border border-dashed border-surface-border bg-white px-4 py-10 text-center text-sm text-slate-500">
+            No requests in this tab.
+          </p>
+        )}
       </ul>
     </div>
   );
