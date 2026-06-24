@@ -18,7 +18,7 @@ export function Input({ label, hint, error, className, id, ...props }: InputProp
       <input
         id={inputId}
         className={cn(
-          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-base shadow-sm transition-colors sm:text-sm",
           "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           error && "border-red-300",
           className
@@ -47,7 +47,7 @@ export function Textarea({ label, className, id, ...props }: TextareaProps) {
       <textarea
         id={inputId}
         className={cn(
-          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-base shadow-sm transition-colors sm:text-sm",
           "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           className
         )}
@@ -75,7 +75,7 @@ export function Select({ label, options, className, id, error, ...props }: Selec
       <select
         id={inputId}
         className={cn(
-          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-sm shadow-sm transition-colors",
+          "w-full rounded-xl border border-surface-border bg-white px-3 py-2.5 text-base shadow-sm transition-colors sm:text-sm",
           "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-200",
           error && "border-red-300",
           className

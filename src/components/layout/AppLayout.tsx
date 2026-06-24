@@ -138,10 +138,15 @@ export function AppLayout() {
   const navClass = marketingNavClass(isHome, homeScrolled);
 
   return (
-    <div className={cn("flex min-h-screen flex-col", isHome ? "bg-warm-white" : "bg-surface-muted")}>
+    <div
+      className={cn(
+        "flex min-h-screen min-w-0 flex-col overflow-x-hidden",
+        isHome ? "bg-warm-white" : "bg-surface-muted"
+      )}
+    >
       <header className={headerClass}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div onClick={closeMobile}>
+        <div className="mx-auto flex w-full min-w-0 max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6">
+          <div className="min-w-0 shrink" onClick={closeMobile}>
             {!user ? (
               <MarketingNavBrand inverse={isHome} />
             ) : (
@@ -216,7 +221,7 @@ export function AppLayout() {
           <button
             type="button"
             className={cn(
-              "inline-flex items-center justify-center rounded-lg p-2 lg:hidden",
+              "inline-flex shrink-0 items-center justify-center rounded-lg p-2 lg:hidden",
               isHome ? "text-white hover:bg-white/10" : "text-brand-700 hover:bg-brand-50"
             )}
             onClick={() => setMobileOpen((open) => !open)}
@@ -296,12 +301,12 @@ export function AppLayout() {
         )}
       </header>
 
-      <main className={isHome ? undefined : "flex-1"}>
+      <main className={cn("min-w-0 overflow-x-hidden", isHome ? undefined : "flex-1")}>
         {showPasswordBanner && <PasswordSetupBanner />}
         {isFullBleed ? (
           <Outlet />
         ) : (
-          <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="mx-auto min-w-0 max-w-6xl px-4 py-8">
             <Outlet />
           </div>
         )}
@@ -319,9 +324,9 @@ export function AppLayout() {
                 <p className="text-sm text-brand-200">Sainik School Bijapur</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid min-w-0 grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
               {footerSections.map((section) => (
-                <div key={section.title}>
+                <div key={section.title} className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wider text-gold-300">
                     {section.title}
                   </p>
@@ -331,7 +336,7 @@ export function AppLayout() {
                         {"to" in link ? (
                           <Link
                             to={link.to}
-                            className="text-brand-200 transition-colors hover:text-white"
+                            className="break-words text-brand-200 transition-colors hover:text-white"
                           >
                             {link.label}
                           </Link>
@@ -340,7 +345,7 @@ export function AppLayout() {
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-brand-200 transition-colors hover:text-white"
+                            className="break-words text-brand-200 transition-colors hover:text-white"
                           >
                             {link.label}
                           </a>

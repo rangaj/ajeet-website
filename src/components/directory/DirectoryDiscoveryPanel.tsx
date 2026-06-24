@@ -104,7 +104,7 @@ export function DirectoryDiscoveryPanel({
       <input
         className={cn(
           "w-full rounded-xl border border-surface-border bg-warm-white pl-9 pr-4 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100",
-          resultsMode ? "py-2 text-sm" : "py-2.5 text-sm sm:text-base"
+          resultsMode ? "py-2 text-base sm:text-sm" : "py-2.5 text-base sm:text-sm"
         )}
         placeholder="Search Ajeets — name, roll, batch, house, company…"
         value={query}
@@ -163,7 +163,7 @@ export function DirectoryDiscoveryPanel({
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-slate-500">Quick browse</p>
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-thin">
+        <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
           {DISCOVERY_HINTS.map((hint) => (
             <HintChip
               key={hint.id}

@@ -71,18 +71,21 @@ export function BrandLockup({
       : "font-display text-sm font-bold text-brand-900 sm:text-base";
 
   const content = (
-    <div className="flex items-center gap-3">
-      <BrandLogo size={size === "auth" ? "md" : "sm"} />
-      <div className="leading-tight">
-        <p className={networkClass}>Ajeet Alumni Association</p>
-        <p className={schoolClass}>Sainik School Bijapur</p>
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <BrandLogo size={size === "auth" ? "md" : "sm"} className="shrink-0" />
+      <div className="min-w-0 leading-tight">
+        <p className={cn(networkClass, "break-words")}>Ajeet Alumni Association</p>
+        <p className={cn(schoolClass, "break-words")}>Sainik School Bijapur</p>
       </div>
     </div>
   );
 
   if (asLink) {
     return (
-      <Link to="/" className="rounded-lg outline-none ring-brand-500 focus-visible:ring-2">
+      <Link
+        to="/"
+        className="block min-w-0 rounded-lg outline-none ring-brand-500 focus-visible:ring-2"
+      >
         {content}
       </Link>
     );
