@@ -2,7 +2,11 @@ import { supabase } from "@/lib/supabase";
 
 /** Resolve where an authenticated user should land (directory vs pending). */
 export async function resolvePostAuthPath(): Promise<"/directory" | "/pending"> {
-  await supabase.rpc("link_approved_alumni_self");
+  try {
+    await supabase.rpc("link_approved_alumni_self");
+  } catch {
+    // Best-effort self-heal; landing path still resolves from profile.
+  }
 
   const {
     data: { session },
