@@ -4,7 +4,7 @@ import {
   formatRollNumber,
   getLatestEmployer,
 } from "@/lib/alumni-display";
-import { MemberAvatar } from "@/components/member/MemberAvatar";
+import { ShareCardAvatar } from "@/components/share/ShareCardAvatar";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { BrandLogo, BrandMotto } from "@/components/brand/BrandLogo";
 import { parseHouses, getHouseColor } from "@/constants/houses";
@@ -20,8 +20,7 @@ export type ShareCardVisualData = {
   jobPosition?: string | null;
   company?: string | null;
   currentLocation?: string | null;
-  profilePhotoPath?: string | null;
-  photoUrl?: string | null;
+  photoDataUrl?: string | null;
 };
 
 export function ShareCardVisual({
@@ -49,12 +48,11 @@ export function ShareCardVisual({
           <BrandLogo size="sm" className="mx-auto mb-3" />
           <p className="font-display text-lg font-semibold">Ajeet Alumni Network</p>
           <BrandMotto variant="subtle" className="mt-1 text-gold-300" />
-          <div className="mt-5 rounded-xl bg-white/10 px-4 py-5 backdrop-blur-sm">
-            <MemberAvatar
+          <div className="mt-5 rounded-xl bg-white/15 px-4 py-5">
+            <ShareCardAvatar
               name={data.name}
               houseValue={data.house}
-              profilePhotoPath={data.profilePhotoPath}
-              photoUrl={data.photoUrl}
+              photoDataUrl={data.photoDataUrl}
               size="xl"
               className="mx-auto"
             />
@@ -71,11 +69,10 @@ export function ShareCardVisual({
         <>
           <div className="px-6 py-7">
             <div className="flex items-start gap-4">
-              <MemberAvatar
+              <ShareCardAvatar
                 name={data.name}
                 houseValue={data.house}
-                profilePhotoPath={data.profilePhotoPath}
-                photoUrl={data.photoUrl}
+                photoDataUrl={data.photoDataUrl}
                 size="xl"
               />
               <div className="min-w-0 flex-1">

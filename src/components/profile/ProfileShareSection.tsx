@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Copy, Download, ExternalLink, RefreshCw, Share2 } from "lucide-react";
 import {
   getOrCreateShareLink,
@@ -6,6 +6,7 @@ import {
   type ShareLinkType,
 } from "@/lib/data-access";
 import { formatHousesWithLabel, formatRollNumber } from "@/lib/alumni-display";
+import { profilePhotoToDataUrl } from "@/lib/photo-data-url";
 import {
   captureShareCardImage,
   downloadShareCardImage,
@@ -44,13 +45,15 @@ function ShareLinkBlock({
   description,
   linkType,
   member,
-  photoUrl,
+  photoDataUrl,
+  photoLoading = false,
 }: {
   title: string;
   description: string;
   linkType: ShareLinkType;
   member: AlumniMember;
-  photoUrl?: string | null;
+  photoDataUrl?: string | null;
+  photoLoading?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -92,11 +95,13 @@ function ShareLinkBlock({
     jobPosition: member.job_position,
     company: member.company,
     currentLocation: member.current_location,
-    profilePhotoPath: member.profile_photo_path,
-    photoUrl,
+    photoDataUrl,
   };
 
   const captureCard = async () => {
+    if (photoLoading) {
+      throw new Error("Profile photo is still loading. Wait a moment and try again.");
+    }
     if (!cardRef.current) {
       throw new Error("Card preview not ready.");
     }
@@ -205,7 +210,7 @@ function ShareLinkBlock({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" onClick={() => void shareCardImage()} disabled={!token || imageBusy}>
+        <Button size="sm" onClick={() => void shareCardImage()} disabled={!token || imageBusy || photoLoading}>
           <Share2 className="mr-1.5 h-4 w-4" />
           {imageBusy ? "Preparing…" : "Share card image"}
         </Button>
@@ -213,7 +218,7 @@ function ShareLinkBlock({
           size="sm"
           variant="secondary"
           onClick={() => void downloadCardImage()}
-          disabled={!token || imageBusy}
+          disabled={!token || imageBusy || photoLoading}
         >
           <Download className="mr-1.5 h-4 w-4" />
           Download image
@@ -250,13 +255,30 @@ function ShareLinkBlock({
   );
 }
 
-export function ProfileShareSection({
-  member,
-  photoUrl,
-}: {
-  member: AlumniMember;
-  photoUrl?: string | null;
-}) {
+export function ProfileShareSection({ member }: { member: AlumniMember }) {
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(Boolean(member.profile_photo_path));
+
+  useEffect(() => {
+    if (!member.profile_photo_path) {
+      setPhotoDataUrl(null);
+      setPhotoLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPhotoLoading(true);
+    void profilePhotoToDataUrl(member.profile_photo_path).then((dataUrl) => {
+      if (cancelled) return;
+      setPhotoDataUrl(dataUrl);
+      setPhotoLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [member.profile_photo_path]);
+
   if (member.status !== "approved") return null;
 
   return (
@@ -266,14 +288,16 @@ export function ProfileShareSection({
         description="Visual network card for batch WhatsApp groups, reunions, and LinkedIn posts."
         linkType="network"
         member={member}
-        photoUrl={photoUrl}
+        photoDataUrl={photoDataUrl}
+        photoLoading={photoLoading}
       />
       <ShareLinkBlock
         title="Share contact card"
         description="Professional alumni card with your photo, batch, and career snapshot."
         linkType="contact"
         member={member}
-        photoUrl={photoUrl}
+        photoDataUrl={photoDataUrl}
+        photoLoading={photoLoading}
       />
     </div>
   );

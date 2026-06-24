@@ -214,7 +214,7 @@ export function ProfilePage() {
         title="Share"
         description="Create a visual alumni card to post on WhatsApp, LinkedIn, or other social apps."
       >
-        <ProfileShareSection member={member} photoUrl={photoPreview} />
+        <ProfileShareSection member={member} />
       </ProfileSection>
 
       <ProfileSection title="Profile Photo" description="Shown in the directory when your profile is visible.">

@@ -1,33 +1,34 @@
 import { toPng } from "html-to-image";
+import { sameOriginImageToDataUrl, waitForImages } from "@/lib/photo-data-url";
 
-async function inlineImages(root: HTMLElement) {
+async function inlineRemoteImages(root: HTMLElement) {
   const images = Array.from(root.querySelectorAll("img"));
   await Promise.all(
     images.map(async (img) => {
       if (!img.src || img.src.startsWith("data:")) return;
-      try {
-        const response = await fetch(img.src);
-        const blob = await response.blob();
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        img.src = dataUrl;
-      } catch {
-        // Keep remote src if inlining fails.
-      }
+      const dataUrl = await sameOriginImageToDataUrl(img.src);
+      if (dataUrl) img.src = dataUrl;
     })
   );
 }
 
+async function waitForPaint() {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
 export async function captureShareCardImage(node: HTMLElement): Promise<Blob> {
-  await inlineImages(node);
+  await waitForImages(node);
+  await inlineRemoteImages(node);
+  await waitForImages(node);
+  await waitForPaint();
+
   const dataUrl = await toPng(node, {
     cacheBust: true,
-    pixelRatio: 3,
+    pixelRatio: 2,
     backgroundColor: "#ffffff",
+    skipFonts: true,
   });
   const response = await fetch(dataUrl);
   return response.blob();
