@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { resolvePostAuthPath } from "@/lib/auth-landing";
+import { isRecoveryHash, isRecoveryPending } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -21,6 +22,10 @@ export function LoginPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
+    if (isRecoveryHash() || isRecoveryPending()) {
+      navigate("/reset-password", { replace: true });
+      return;
+    }
     void resolvePostAuthPath().then((path) => navigate(path, { replace: true }));
   }, [authLoading, user, navigate]);
 

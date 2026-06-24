@@ -3,6 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { invokeFunction, supabase } from "@/lib/supabase";
 import { dataUrlToBlob, takePendingAvatar } from "@/lib/image";
 import { registrationAssetPath } from "@/lib/storage";
+import { isRecoveryPending } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 import { ApprovedWelcome } from "@/components/auth/ApprovedWelcome";
 import { Card, Badge } from "@/components/ui/Card";
@@ -104,6 +105,10 @@ export function PendingPage() {
 
     void load();
   }, [user, refreshProfile]);
+
+  if (isRecoveryPending()) {
+    return <Navigate to="/reset-password" replace />;
+  }
 
   if (ready && activeRequests.length === 0) {
     if (isAdmin) return <Navigate to="/admin" replace />;

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { clearRecoveryPending } from "@/lib/auth-recovery";
 import type { Profile } from "@/types/database";
 
 export interface AuthState {
@@ -58,6 +59,7 @@ export function useAuth(): AuthState {
   const canAccessDirectory = isAdmin || isApprovedAlumni;
 
   const signOut = useCallback(async () => {
+    clearRecoveryPending();
     await supabase.auth.signOut();
     setProfile(null);
   }, []);

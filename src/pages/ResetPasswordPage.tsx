@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { resolvePostAuthPath } from "@/lib/auth-landing";
+import {
+  clearRecoveryPending,
+  isRecoveryHash,
+  isRecoveryPending,
+  markRecoveryPending,
+} from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -32,20 +38,28 @@ export function ResetPasswordPage() {
 
   useEffect(() => {
     const sync = (recovery: boolean, session: boolean) => {
+      if (recovery) markRecoveryPending();
       setIsRecovery(recovery);
       setHasSession(session);
       setReady(true);
     };
 
-    const recoveryFromHash = hashType() === "recovery";
+    const recoveryFromHash = hashType() === "recovery" || isRecoveryHash();
+    if (recoveryFromHash || isRecoveryPending()) {
+      markRecoveryPending();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const recovery = recoveryFromHash || event === "PASSWORD_RECOVERY" || hashType() === "recovery";
+      const recovery =
+        recoveryFromHash ||
+        isRecoveryPending() ||
+        event === "PASSWORD_RECOVERY" ||
+        hashType() === "recovery";
       sync(recovery, Boolean(session));
     });
 
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      sync(recoveryFromHash, Boolean(session));
+      sync(recoveryFromHash || isRecoveryPending(), Boolean(session));
     });
 
     return () => subscription.unsubscribe();
@@ -78,6 +92,7 @@ export function ResetPasswordPage() {
       await refreshProfile();
     }
 
+    clearRecoveryPending();
     const path = await resolvePostAuthPath();
     window.location.replace(path);
   };

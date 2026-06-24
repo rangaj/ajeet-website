@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { isRecoveryPending } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 
 export function ProtectedRoute({
@@ -16,6 +17,10 @@ export function ProtectedRoute({
     return (
       <div className="flex justify-center py-20 text-slate-500">Loading...</div>
     );
+  }
+
+  if (isRecoveryPending()) {
+    return <Navigate to="/reset-password" replace />;
   }
 
   if (!user) return <Navigate to="/login" replace />;

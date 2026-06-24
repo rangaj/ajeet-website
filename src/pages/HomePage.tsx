@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { AAA_MOTTO } from "@/constants/brand";
 import { SSBJ_BUILDING_SRC } from "@/components/brand/assets";
+import { isRecoveryHash, isRecoveryPending } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 
 const SNAPSHOT = [
@@ -106,6 +107,10 @@ function ClaimCtas({
 
 export function HomePage() {
   const { loading, canAccessDirectory, isAdmin } = useAuth();
+
+  if (isRecoveryHash() || isRecoveryPending()) {
+    return <Navigate to="/reset-password" replace />;
+  }
 
   if (!loading && isAdmin) {
     return <Navigate to="/admin" replace />;
