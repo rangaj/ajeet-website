@@ -94,14 +94,27 @@ export function ShareCardVisual({
             </div>
           </div>
           <div className="border-t border-surface-border bg-warm-white px-6 py-4">
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-col items-center gap-2.5">
               <BrandLogo size="sm" />
-              <div className="text-left leading-tight">
-                <p className="font-display text-sm font-bold text-brand-900">Ajeet Alumni Association</p>
-                <p className="text-xs text-brand-600">Sainik School Bijapur</p>
+              <div className="text-center">
+                <p
+                  className="font-display text-sm font-bold text-brand-900"
+                  style={{ display: "block", lineHeight: "1.4", margin: 0 }}
+                >
+                  Ajeet Alumni Association
+                </p>
+                <p
+                  className="text-xs text-brand-600"
+                  style={{ display: "block", lineHeight: "1.4", marginTop: 4 }}
+                >
+                  Sainik School Bijapur
+                </p>
               </div>
             </div>
-            <p className="mt-3 text-center text-[11px] text-slate-400">
+            <p
+              className="mt-3 text-center text-[11px] text-slate-400"
+              style={{ display: "block", lineHeight: "1.4" }}
+            >
               Verified alumni network · ajeetalumni.org
             </p>
           </div>
