@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CONTACT_CATEGORIES, submitContactEnquiry } from "@/lib/contact";
+import { CONTACT_CATEGORIES, isEnquiryCategory, submitContactEnquiry } from "@/lib/contact";
 import { FunctionCallError } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Card } from "@/components/ui/Card";
-
-const VALID_CATEGORIES = new Set<string>(
-  CONTACT_CATEGORIES.map((c) => c.value).filter(Boolean)
-);
 
 export function ContactPage() {
   const { user } = useAuth();
@@ -30,7 +26,7 @@ export function ContactPage() {
 
   useEffect(() => {
     const preset = searchParams.get("category");
-    if (preset && VALID_CATEGORIES.has(preset)) {
+    if (preset && isEnquiryCategory(preset)) {
       setCategory(preset);
     }
   }, [searchParams]);

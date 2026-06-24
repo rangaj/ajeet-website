@@ -13,6 +13,11 @@ export const CONTACT_CATEGORIES = [
 ] as const;
 
 export type ContactCategory = (typeof CONTACT_CATEGORIES)[number]["value"];
+export type EnquiryCategory = Exclude<ContactCategory, "">;
+
+export function isEnquiryCategory(value: string): value is EnquiryCategory {
+  return CONTACT_CATEGORIES.some((c) => c.value !== "" && c.value === value);
+}
 
 export async function submitContactEnquiry(payload: {
   name: string;
