@@ -5,6 +5,14 @@ import { parseStorageRef } from "@/lib/storage";
 const photoUrlCache = new Map<string, string>();
 const SIGNED_URL_TTL = 3600;
 
+export function invalidateProfilePhotoCache(profilePhotoPath?: string | null) {
+  if (profilePhotoPath) {
+    photoUrlCache.delete(profilePhotoPath);
+    return;
+  }
+  photoUrlCache.clear();
+}
+
 export async function resolveProfilePhotoUrl(
   profilePhotoPath: string | null | undefined
 ): Promise<string | null> {

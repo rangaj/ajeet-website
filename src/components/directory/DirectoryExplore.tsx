@@ -10,7 +10,7 @@ import {
   PROFESSION_PRESETS,
   type DirectoryFilters,
 } from "@/constants/directory-browse";
-import { getHouseColor } from "@/constants/houses";
+import { HOUSES, getHouseAbbrev, getHouseColor } from "@/constants/houses";
 
 interface DirectoryExploreProps {
   filters: DirectoryFilters;
@@ -108,6 +108,22 @@ export function DirectoryExplore({ filters, onBrowse, embedded = false }: Direct
             onClick={() => onBrowse(filtersFromHouse(house))}
           />
         ))}
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+          <span className="font-medium text-slate-600">House key:</span>
+          {HOUSES.map((house) => {
+            const color = getHouseColor(house);
+            return (
+              <span key={house} className="inline-flex items-center gap-1" title={house}>
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={color ? { backgroundColor: color } : undefined}
+                  aria-hidden
+                />
+                {getHouseAbbrev(house)}
+              </span>
+            );
+          })}
+        </p>
       </ExploreGroup>
 
       <ExploreGroup title="Browse by Location">

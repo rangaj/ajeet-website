@@ -8,7 +8,7 @@ import {
   parseEmployers,
 } from "@/lib/alumni-display";
 import { parseHouses } from "@/constants/houses";
-import { HouseColorDots, HouseColorStrip } from "@/components/house/HouseColorDots";
+import { HouseAbbrevPills, HouseColorStrip } from "@/components/house/HouseColorDots";
 import { MemberAvatar } from "@/components/member/MemberAvatar";
 import { cn } from "@/lib/utils";
 import {
@@ -93,7 +93,7 @@ export function DirectoryMemberCard({
           >
             {displayName}
           </h3>
-          <HouseColorDots houseValue={member.house} className="mt-1" />
+          <HouseAbbrevPills houseValue={member.house} className="mt-0.5" />
         </div>
 
         <p className={cn("text-gold-700", compact ? "text-xs" : "text-sm")}>

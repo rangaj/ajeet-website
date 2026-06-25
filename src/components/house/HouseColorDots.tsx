@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import {
   formatHouses,
+  getHouseAbbrev,
   getHouseColor,
   parseHouses,
   type HouseName,
@@ -40,6 +41,46 @@ export function HouseColorDots({
 interface HouseColorStripProps {
   houses: HouseName[];
   className?: string;
+}
+
+interface HouseAbbrevPillsProps {
+  houseValue: string | null | undefined;
+  className?: string;
+}
+
+/** Compact colored house labels for directory cards (color + readable abbrev). */
+export function HouseAbbrevPills({ houseValue, className }: HouseAbbrevPillsProps) {
+  const houses = parseHouses(houseValue);
+  if (houses.length === 0) return null;
+
+  return (
+    <span
+      className={cn("inline-flex shrink-0 items-center gap-1", className)}
+      aria-label={formatHouses(houses)}
+    >
+      {houses.map((house) => {
+        const color = getHouseColor(house);
+        return (
+          <span
+            key={house}
+            className="rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none tracking-wide"
+            style={
+              color
+                ? {
+                    borderColor: `${color}88`,
+                    backgroundColor: `${color}1a`,
+                    color,
+                  }
+                : undefined
+            }
+            title={house}
+          >
+            {getHouseAbbrev(house)}
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 export function HouseColorStrip({ houses, className }: HouseColorStripProps) {

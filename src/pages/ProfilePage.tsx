@@ -10,6 +10,7 @@ import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-ac
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
+import { invalidateProfilePhotoCache } from "@/lib/profile-photo";
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
@@ -98,7 +99,7 @@ export function ProfilePage() {
       await supabase.storage.from("profile-photos").remove([storagePath]);
       const { error: uploadErr } = await supabase.storage
         .from("profile-photos")
-        .upload(storagePath, photoBlob, { upsert: false, contentType: "image/webp" });
+        .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
       if (uploadErr) {
         setError(`Photo upload failed: ${uploadErr.message}`);
         setSaving(false);
@@ -129,13 +130,25 @@ export function ProfilePage() {
       setError(`Profile save failed: ${err.message}`);
     } else {
       setMessage("Profile updated.");
+      const savedPhotoPath = photoBlob ? nextPhotoPath : null;
       setPhotoBlob(null);
       const now = new Date().toISOString();
       setMember({
         ...member,
         updated_at: now,
-        ...(photoBlob ? { profile_photo_path: nextPhotoPath } : {}),
+        ...(savedPhotoPath ? { profile_photo_path: savedPhotoPath } : {}),
       });
+      if (savedPhotoPath) {
+        invalidateProfilePhotoCache(member.profile_photo_path);
+        invalidateProfilePhotoCache(savedPhotoPath);
+        const ref = parseStorageRef(savedPhotoPath);
+        if (ref) {
+          const { data: signed } = await supabase.storage
+            .from(ref.bucket)
+            .createSignedUrl(ref.path, 3600);
+          if (signed?.signedUrl) setPhotoPreview(signed.signedUrl);
+        }
+      }
     }
   };
 
@@ -285,8 +298,13 @@ export function ProfilePage() {
           onPreviewChange={setPhotoPreview}
           onBlobReady={setPhotoBlob}
           onRemove={() => void handleRemovePhoto()}
-          hint="JPG, PNG, or WebP · max 2 MB"
+          hint="JPG, PNG, or WebP · max 2 MB. After cropping, tap Save Changes at the bottom."
         />
+        {photoBlob && (
+          <Alert variant="warning">
+            New photo selected — tap <strong>Save Changes</strong> below to keep it.
+          </Alert>
+        )}
       </ProfileSection>
 
       <ProfileSection
