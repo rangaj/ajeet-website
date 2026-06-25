@@ -5,7 +5,7 @@ import { resolvePostAuthPath } from "@/lib/auth-landing";
 import { isRecoveryHash, isRecoveryPending } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input, PasswordInput } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Card";
 import { AuthCard, AuthLink, AuthShell } from "@/components/layout/AuthShell";
 import { cn } from "@/lib/utils";
@@ -122,9 +122,8 @@ export function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
           {mode === "password" && (
-            <Input
+            <PasswordInput
               label="Password"
-              type="password"
               required
               autoComplete="current-password"
               value={password}

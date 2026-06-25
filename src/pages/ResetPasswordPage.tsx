@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth-recovery";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Card";
 import { AuthCard, AuthLink, AuthShell } from "@/components/layout/AuthShell";
 
@@ -147,9 +147,8 @@ export function ResetPasswordPage() {
     >
       <AuthCard>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <Input
+          <PasswordInput
             label="New password"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
@@ -157,9 +156,8 @@ export function ResetPasswordPage() {
             onChange={(e) => setPassword(e.target.value)}
             hint="At least 8 characters."
           />
-          <Input
+          <PasswordInput
             label="Confirm password"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
