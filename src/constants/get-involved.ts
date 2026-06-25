@@ -54,7 +54,7 @@ export const GET_INVOLVED_CARD_INTEREST_LABEL = "Contributing to";
 
 export const GET_INVOLVED_CARD_SUBLINE = "Ajeet alumnus · Sainik School Bijapur";
 
-export const GET_INVOLVED_CARD_WIDTH_PX = 400;
+export const GET_INVOLVED_CARD_WIDTH_PX = 360;
 
 export const GET_INVOLVED_SHARE_TEXT = `I have opted in to get involved with the Ajeet Alumni Association and contribute to AAA initiatives.
 

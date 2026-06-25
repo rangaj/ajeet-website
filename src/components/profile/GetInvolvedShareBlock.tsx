@@ -25,6 +25,7 @@ function getInvolvedShareMessage(): string {
 export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoReady, setPhotoReady] = useState(!member.profile_photo_path);
   const [imageBusy, setImageBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -46,12 +47,16 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
   useEffect(() => {
     if (!member.profile_photo_path) {
       setPhotoDataUrl(null);
+      setPhotoReady(true);
       return;
     }
 
     let cancelled = false;
+    setPhotoReady(false);
     void profilePhotoToDataUrl(member.profile_photo_path).then((dataUrl) => {
-      if (!cancelled) setPhotoDataUrl(dataUrl);
+      if (cancelled) return;
+      setPhotoDataUrl(dataUrl);
+      setPhotoReady(true);
     });
 
     return () => {
@@ -62,6 +67,9 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
   const captureCard = async () => {
     if (!cardRef.current) {
       throw new Error("Card preview not ready.");
+    }
+    if (!photoReady) {
+      throw new Error("Profile photo is still loading. Try again in a moment.");
     }
     return captureShareCardImage(cardRef.current);
   };
@@ -121,9 +129,11 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-surface-border bg-slate-100 p-4">
-        <div ref={cardRef} className="mx-auto w-fit">
-          <GetInvolvedShareCardVisual data={cardData} />
+      <div className="w-full rounded-xl border border-surface-border bg-slate-100 p-3 sm:p-4">
+        <div className="mx-auto w-full max-w-[360px]">
+          <div ref={cardRef}>
+            <GetInvolvedShareCardVisual data={cardData} />
+          </div>
         </div>
       </div>
 
@@ -132,7 +142,7 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
           type="button"
           size="sm"
           variant="secondary"
-          disabled={imageBusy}
+          disabled={imageBusy || !photoReady}
           onClick={() => void downloadImage()}
         >
           <Download className="mr-1.5 h-4 w-4" />
@@ -147,7 +157,7 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
             type="button"
             size="sm"
             variant="secondary"
-            disabled={imageBusy}
+            disabled={imageBusy || !photoReady}
             onClick={() => void shareNative()}
           >
             <Share2 className="mr-1.5 h-4 w-4" />
