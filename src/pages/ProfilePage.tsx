@@ -61,6 +61,9 @@ export function ProfilePage() {
   const [member, setMember] = useState<AlumniMember | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMessage, setPhotoMessage] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -91,6 +94,66 @@ export function ProfilePage() {
     });
   };
 
+  const handleBlobReady = (blob: Blob | null) => {
+    setPhotoBlob(blob);
+    if (blob) {
+      setPhotoMessage(null);
+      setPhotoError(null);
+    }
+  };
+
+  const handleDiscardPendingPhoto = async () => {
+    if (!member) return;
+    setPhotoBlob(null);
+    setPhotoError(null);
+    setPhotoMessage(null);
+    if (member.profile_photo_path) {
+      const preview = await resolveProfilePhotoUrl(member.profile_photo_path);
+      setPhotoPreview(preview);
+    } else {
+      setPhotoPreview(null);
+    }
+  };
+
+  const handleSavePhoto = async () => {
+    if (!member || !user || !photoBlob) return;
+    setPhotoUploading(true);
+    setPhotoError(null);
+    setPhotoMessage(null);
+
+    const storagePath = profilePhotoPathForUser(user.id);
+    await supabase.storage.from("profile-photos").remove([storagePath]);
+    const { error: uploadErr } = await supabase.storage
+      .from("profile-photos")
+      .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
+
+    if (uploadErr) {
+      setPhotoError(`Photo upload failed: ${uploadErr.message}`);
+      setPhotoUploading(false);
+      return;
+    }
+
+    const { error: err } = await updateOwnAlumniProfile({ profile_photo_path: storagePath });
+    setPhotoUploading(false);
+
+    if (err) {
+      setPhotoError(`Could not save photo: ${err.message}`);
+      return;
+    }
+
+    invalidateProfilePhotoCache(member.profile_photo_path);
+    invalidateProfilePhotoCache(storagePath);
+    setPhotoBlob(null);
+    setMember({
+      ...member,
+      profile_photo_path: storagePath,
+      updated_at: new Date().toISOString(),
+    });
+    const preview = await resolveProfilePhotoUrl(storagePath);
+    if (preview) setPhotoPreview(preview);
+    setPhotoMessage("Photo saved.");
+  };
+
   const handleSave = async () => {
     if (!member || !user || !mentorshipForm) return;
     setSaving(true);
@@ -108,22 +171,6 @@ export function ProfilePage() {
 
     const mentorshipPayload = mentorshipPayloadFromForm(mentorshipForm);
 
-    let nextPhotoPath = member.profile_photo_path;
-
-    if (photoBlob) {
-      const storagePath = profilePhotoPathForUser(user.id);
-      await supabase.storage.from("profile-photos").remove([storagePath]);
-      const { error: uploadErr } = await supabase.storage
-        .from("profile-photos")
-        .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
-      if (uploadErr) {
-        setError(`Photo upload failed: ${uploadErr.message}`);
-        setSaving(false);
-        return;
-      }
-      nextPhotoPath = storagePath;
-    }
-
     const { error: err } = await updateOwnAlumniProfile({
       company: member.company,
       job_position: member.job_position,
@@ -139,7 +186,6 @@ export function ProfilePage() {
       is_directory_visible: member.is_directory_visible,
       visibility_settings: member.visibility_settings,
       ...mentorshipPayload,
-      ...(photoBlob ? { profile_photo_path: nextPhotoPath } : {}),
     });
 
     setSaving(false);
@@ -147,8 +193,6 @@ export function ProfilePage() {
       setError(`Profile save failed: ${err.message}`);
     } else {
       setMessage("Profile updated.");
-      const savedPhotoPath = photoBlob ? nextPhotoPath : null;
-      setPhotoBlob(null);
       const now = new Date().toISOString();
       const updatedMember: AlumniMember = {
         ...member,
@@ -162,30 +206,32 @@ export function ProfilePage() {
           mentorshipPayload.paid_session_links !== undefined
             ? mentorshipPayload.paid_session_links
             : member.paid_session_links,
-        ...(savedPhotoPath ? { profile_photo_path: savedPhotoPath } : {}),
       };
       setMember(updatedMember);
       setMentorshipForm(mentorshipFormFromMember(updatedMember));
-      if (savedPhotoPath) {
-        invalidateProfilePhotoCache(member.profile_photo_path);
-        invalidateProfilePhotoCache(savedPhotoPath);
-        const preview = await resolveProfilePhotoUrl(savedPhotoPath);
-        if (preview) setPhotoPreview(preview);
-      }
     }
   };
 
   const handleRemovePhoto = async () => {
-    if (!member?.profile_photo_path) return;
+    if (!member) return;
+    setPhotoBlob(null);
+    setPhotoError(null);
+    setPhotoMessage(null);
+
+    if (!member.profile_photo_path) {
+      setPhotoPreview(null);
+      return;
+    }
+
     const ref = parseStorageRef(member.profile_photo_path);
     if (ref) {
       await supabase.storage.from(ref.bucket).remove([ref.path]);
     }
     await updateOwnAlumniProfile({ clear_profile_photo: true });
+    invalidateProfilePhotoCache(member.profile_photo_path);
     setMember({ ...member, profile_photo_path: null });
     setPhotoPreview(null);
-    setPhotoBlob(null);
-    setMessage("Photo removed.");
+    setPhotoMessage("Photo removed.");
   };
 
   if (!member) {
@@ -319,15 +365,16 @@ export function ProfilePage() {
           name={member.name}
           previewUrl={photoPreview}
           onPreviewChange={setPhotoPreview}
-          onBlobReady={setPhotoBlob}
+          onBlobReady={handleBlobReady}
           onRemove={() => void handleRemovePhoto()}
-          hint="Any gallery photo is fine — we resize it automatically. After cropping, tap Save Changes at the bottom."
+          pendingPhoto={Boolean(photoBlob)}
+          onSavePhoto={() => void handleSavePhoto()}
+          onDiscardPending={() => void handleDiscardPendingPhoto()}
+          savingPhoto={photoUploading}
+          photoMessage={photoMessage}
+          photoError={photoError}
+          hint="Any gallery photo is fine — we resize it automatically. After cropping, tap ✓ Save photo."
         />
-        {photoBlob && (
-          <Alert variant="warning">
-            New photo selected — tap <strong>Save Changes</strong> below to keep it.
-          </Alert>
-        )}
       </ProfileSection>
 
       <ProfileSection
@@ -415,8 +462,8 @@ export function ProfilePage() {
 
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
-      <Button onClick={() => void handleSave()} disabled={saving}>
-        {saving ? "Saving…" : "Save Changes"}
+      <Button onClick={() => void handleSave()} disabled={saving || photoUploading}>
+        {saving ? "Saving…" : "Save profile details"}
       </Button>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
-import { Camera, X } from "lucide-react";
+import { Camera, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   AVATAR_FILE_ACCEPT,
@@ -18,6 +18,13 @@ interface AvatarUploadProps {
   onRemove?: () => void;
   disabled?: boolean;
   hint?: string;
+  /** Cropped photo waiting for inline save (not yet in storage). */
+  pendingPhoto?: boolean;
+  onSavePhoto?: () => void;
+  onDiscardPending?: () => void;
+  savingPhoto?: boolean;
+  photoMessage?: string | null;
+  photoError?: string | null;
 }
 
 export function AvatarUpload({
@@ -28,6 +35,12 @@ export function AvatarUpload({
   onRemove,
   disabled,
   hint = "Any gallery photo is fine — we crop and resize it for the directory.",
+  pendingPhoto = false,
+  onSavePhoto,
+  onDiscardPending,
+  savingPhoto = false,
+  photoMessage,
+  photoError,
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [cropOpen, setCropOpen] = useState(false);
@@ -122,6 +135,38 @@ export function AvatarUpload({
         <div className="min-w-0 flex-1 space-y-2 pt-1">
           <p className="text-sm font-medium text-brand-800">Profile photo (recommended)</p>
           <p className="text-xs text-brand-600">{hint}</p>
+          {pendingPhoto && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+              <p className="text-sm text-amber-950">
+                Tap <span className="font-semibold">✓ Save photo</span> to add this to your profile.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={onSavePhoto}
+                  disabled={disabled || savingPhoto}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  <Check className="h-4 w-4" aria-hidden />
+                  {savingPhoto ? "Saving…" : "Save photo"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={onDiscardPending}
+                  disabled={disabled || savingPhoto}
+                >
+                  Discard
+                </Button>
+              </div>
+            </div>
+          )}
+          {photoMessage && !pendingPhoto && (
+            <p className="text-sm font-medium text-emerald-700">{photoMessage}</p>
+          )}
+          {photoError && <p className="text-xs text-red-600">{photoError}</p>}
           {preparing && <p className="text-xs text-brand-700">Preparing photo…</p>}
           <div className="flex flex-wrap gap-2">
             <Button
@@ -134,7 +179,13 @@ export function AvatarUpload({
               {preparing ? "Preparing…" : previewUrl ? "Change photo" : "Add photo"}
             </Button>
             {previewUrl && (
-              <Button type="button" size="sm" variant="ghost" onClick={removePhoto} disabled={disabled}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={removePhoto}
+                disabled={disabled || savingPhoto}
+              >
                 Remove
               </Button>
             )}
@@ -199,7 +250,7 @@ export function AvatarUpload({
                 Cancel
               </Button>
               <Button type="button" onClick={() => void applyCrop()} disabled={saving || !croppedArea}>
-                {saving ? "Saving..." : "Use photo"}
+                {saving ? "Applying…" : "Use photo"}
               </Button>
             </div>
             <p className="mt-2 text-center text-xs text-slate-400">
