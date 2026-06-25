@@ -3,16 +3,26 @@ import { supabase } from "@/lib/supabase";
 import { parseStorageRef } from "@/lib/storage";
 
 const photoUrlCache = new Map<string, string>();
-const SIGNED_URL_TTL = 3600;
+
+function revokeCachedUrl(url: string | undefined) {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
 
 export function invalidateProfilePhotoCache(profilePhotoPath?: string | null) {
   if (profilePhotoPath) {
+    revokeCachedUrl(photoUrlCache.get(profilePhotoPath));
     photoUrlCache.delete(profilePhotoPath);
     return;
+  }
+  for (const url of photoUrlCache.values()) {
+    revokeCachedUrl(url);
   }
   photoUrlCache.clear();
 }
 
+/** Load via authenticated download (avoids signed-URL CORS issues in img tags). */
 export async function resolveProfilePhotoUrl(
   profilePhotoPath: string | null | undefined
 ): Promise<string | null> {
@@ -24,14 +34,13 @@ export async function resolveProfilePhotoUrl(
   const ref = parseStorageRef(profilePhotoPath);
   if (!ref) return null;
 
-  const { data, error } = await supabase.storage
-    .from(ref.bucket)
-    .createSignedUrl(ref.path, SIGNED_URL_TTL);
+  const { data, error } = await supabase.storage.from(ref.bucket).download(ref.path);
 
-  if (error || !data?.signedUrl) return null;
+  if (error || !data) return null;
 
-  photoUrlCache.set(profilePhotoPath, data.signedUrl);
-  return data.signedUrl;
+  const blobUrl = URL.createObjectURL(data);
+  photoUrlCache.set(profilePhotoPath, blobUrl);
+  return blobUrl;
 }
 
 export function useProfilePhotoUrl(profilePhotoPath: string | null | undefined) {

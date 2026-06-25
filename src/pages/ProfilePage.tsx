@@ -10,7 +10,7 @@ import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-ac
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
-import { invalidateProfilePhotoCache } from "@/lib/profile-photo";
+import { invalidateProfilePhotoCache, resolveProfilePhotoUrl } from "@/lib/profile-photo";
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
@@ -63,13 +63,8 @@ export function ProfilePage() {
     fetchAlumniMemberByUserId(user.id).then(async ({ data }) => {
       setMember(data);
       if (data?.profile_photo_path) {
-        const ref = parseStorageRef(data.profile_photo_path);
-        if (ref) {
-          const { data: signed } = await supabase.storage
-            .from(ref.bucket)
-            .createSignedUrl(ref.path, 3600);
-          if (signed?.signedUrl) setPhotoPreview(signed.signedUrl);
-        }
+        const preview = await resolveProfilePhotoUrl(data.profile_photo_path);
+        if (preview) setPhotoPreview(preview);
       }
     });
   }, [user]);
@@ -141,13 +136,8 @@ export function ProfilePage() {
       if (savedPhotoPath) {
         invalidateProfilePhotoCache(member.profile_photo_path);
         invalidateProfilePhotoCache(savedPhotoPath);
-        const ref = parseStorageRef(savedPhotoPath);
-        if (ref) {
-          const { data: signed } = await supabase.storage
-            .from(ref.bucket)
-            .createSignedUrl(ref.path, 3600);
-          if (signed?.signedUrl) setPhotoPreview(signed.signedUrl);
-        }
+        const preview = await resolveProfilePhotoUrl(savedPhotoPath);
+        if (preview) setPhotoPreview(preview);
       }
     }
   };
