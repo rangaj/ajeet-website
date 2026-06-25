@@ -1,5 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import {
+  logMemberEmailEvent,
+  notifyEmailType,
+  resendEmailStatus,
+} from "../_shared/member-email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +76,23 @@ async function passwordSetupLink(
   return data.properties?.action_link ?? redirectTo;
 }
 
+async function requireAdmin(userClient: ReturnType<typeof createClient>, adminClient: ReturnType<typeof createClient>) {
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return { error: "Unauthorized", status: 401 as const };
+
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.role !== "admin" && profile?.role !== "super_admin") {
+    return { error: "Admin access required", status: 403 as const };
+  }
+
+  return { user };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -79,19 +101,34 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
 
+    const authHeader = req.headers.get("Authorization");
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader ?? "" } },
+    });
     const adminClient = createClient(supabaseUrl, serviceKey);
+
     const body = await req.json();
-    const { request_id, event, note } = body as {
+    const { request_id, event, note, trigger_source } = body as {
       request_id: string;
       event: NotifyEvent;
       note?: string;
+      trigger_source?: string;
     };
 
     if (!request_id || !event) {
       return new Response(JSON.stringify({ error: "request_id and event required" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const adminCheck = await requireAdmin(userClient, adminClient);
+    if ("error" in adminCheck) {
+      return new Response(JSON.stringify({ error: adminCheck.error }), {
+        status: adminCheck.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -119,10 +156,15 @@ Deno.serve(async (req) => {
     }
 
     const template = templates(event, ctx);
+    const emailType = notifyEmailType(event, request.type);
+    const source = trigger_source ?? adminCheck.user.id;
+
+    let emailed = false;
+    let resendId: string | null = null;
 
     if (resendKey) {
       const from = Deno.env.get("NOTIFY_FROM_EMAIL") ?? "alumni@example.com";
-      await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${resendKey}`,
@@ -135,7 +177,42 @@ Deno.serve(async (req) => {
           text: template.text,
         }),
       });
+
+      emailed = res.ok;
+      if (res.ok) {
+        const payload = await res.json().catch(() => ({})) as { id?: string };
+        resendId = payload.id ?? null;
+      } else {
+        const errText = await res.text().catch(() => "Resend API error");
+        await logMemberEmailEvent(adminClient, {
+          alumniMemberId: request.alumni_member_id,
+          approvalRequestId: request.id,
+          emailType,
+          provider: "resend",
+          recipient: request.submitted_email,
+          status: "failed",
+          errorMessage: errText.slice(0, 500),
+          triggerSource: source,
+        });
+        return new Response(JSON.stringify({ error: "Unable to send email", detail: errText }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
+
+    const { status, messageId } = resendEmailStatus(emailed || !resendKey, resendId);
+    await logMemberEmailEvent(adminClient, {
+      alumniMemberId: request.alumni_member_id,
+      approvalRequestId: request.id,
+      emailType,
+      provider: "resend",
+      recipient: request.submitted_email,
+      status: resendKey ? status : "unknown",
+      messageId,
+      errorMessage: resendKey ? null : "RESEND_API_KEY not configured",
+      triggerSource: source,
+    });
 
     return new Response(JSON.stringify({
       ok: true,

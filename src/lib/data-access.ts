@@ -4,6 +4,12 @@ import type {
   AlumniMemberUpdate,
   SearchResult,
 } from "@/types/database";
+import type {
+  AdminMemberSearchRow,
+  MemberSupportSnapshot,
+  SupportDashboardFilter,
+  SupportDashboardMetrics,
+} from "@/types/member-support";
 
 export type SearchAlumniParams = {
   p_query?: string | null;
@@ -195,3 +201,44 @@ export async function fetchGetInvolvedAdminMembers(filter: GetInvolvedAdminFilte
 }
 
 export type { AlumniMember, AlumniMemberUpdate, SearchResult };
+
+export async function fetchSupportDashboardMetrics() {
+  return supabase.rpc("admin_support_dashboard_metrics").then(({ data, error }) => ({
+    data: data as SupportDashboardMetrics | null,
+    error,
+  }));
+}
+
+export async function searchSupportMembers(
+  query: string,
+  filter?: SupportDashboardFilter | null,
+  limit = 25
+) {
+  return supabase
+    .rpc("admin_search_members", {
+      p_query: query || null,
+      p_filter: filter ?? null,
+      p_limit: limit,
+    })
+    .then(({ data, error }) => ({
+      data: (data ?? []) as AdminMemberSearchRow[],
+      error,
+    }));
+}
+
+export async function fetchMemberSupportSnapshot(memberId: string) {
+  return supabase.rpc("admin_member_support_snapshot", { p_member_id: memberId }).then(
+    ({ data, error }) => ({
+      data: data as MemberSupportSnapshot | null,
+      error,
+    })
+  );
+}
+
+export async function addMemberSupportNote(memberId: string, body: string) {
+  return supabase.rpc("admin_add_support_note", {
+    p_member_id: memberId,
+    p_body: body,
+  });
+}
+

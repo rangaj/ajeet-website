@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { logMemberEmailEvent } from "../_shared/member-email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -104,20 +105,33 @@ Deno.serve(async (req) => {
         emailRedirectTo: redirectTo,
       },
     });
-    if (otpError) throw otpError;
 
     const expiresAt = emailVerificationExpiresAt();
 
-    const { error: updateError } = await adminClient
-      .from("approval_requests")
-      .update({
-        status: AWAITING_EMAIL_STATUS,
-        email_verification_expires_at: expiresAt,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", request_id);
+    if (!otpError) {
+      const { error: updateError } = await adminClient
+        .from("approval_requests")
+        .update({
+          status: AWAITING_EMAIL_STATUS,
+          email_verification_expires_at: expiresAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", request_id);
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
+    }
+
+    await logMemberEmailEvent(adminClient, {
+      alumniMemberId: request.alumni_member_id,
+      approvalRequestId: request.id,
+      emailType: request.type === "claim" ? "claim_verification" : "registration_verification",
+      provider: "auth_service",
+      recipient: request.submitted_email,
+      status: otpError ? "failed" : "sent_to_auth_service",
+      errorMessage: otpError?.message ?? null,
+      triggerSource: user.id,
+    });
+    if (otpError) throw otpError;
 
     return new Response(JSON.stringify({
       ok: true,

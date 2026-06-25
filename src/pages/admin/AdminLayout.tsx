@@ -1,10 +1,11 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { ClipboardList, HandHeart, Upload, Users } from "lucide-react";
+import { ClipboardList, HandHeart, LifeBuoy, Upload, Users } from "lucide-react";
 import { allowAdminDirectoryView } from "@/lib/admin-navigation";
 import { cn } from "@/lib/utils";
 
 const ADMIN_TABS = [
   { to: "/admin", end: true, label: "Review Queue", icon: ClipboardList },
+  { to: "/admin/member-support", label: "Member Support", icon: LifeBuoy },
   { to: "/admin/get-involved", label: "Get Involved", icon: HandHeart },
   { to: "/admin/import", label: "Data Import", icon: Upload },
 ] as const;

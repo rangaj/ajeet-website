@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { normalizeSchoolCourseYears } from "./normalize-course-years.ts";
+import { logMemberEmailEvent } from "../_shared/member-email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -205,6 +206,15 @@ Deno.serve(async (req) => {
       .single();
 
     if (reqError) throw reqError;
+
+    await logMemberEmailEvent(adminClient, {
+      approvalRequestId: request.id,
+      emailType: "registration_verification",
+      provider: "auth_service",
+      recipient: email,
+      status: "sent_to_auth_service",
+      triggerSource: user?.id ?? "member",
+    });
 
     return new Response(JSON.stringify({
       status: "awaiting_email",

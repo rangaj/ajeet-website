@@ -74,6 +74,8 @@ export interface AlumniMember {
   is_directory_visible: boolean;
   visibility_settings: Record<string, boolean>;
   admin_note: string | null;
+  pending_email: string | null;
+  email_change_requested_at: string | null;
   premium_membership: string | null;
   premium_number: string | null;
   created_at: string;
@@ -227,6 +229,8 @@ export type Database = {
           is_directory_visible: boolean;
           visibility_settings: Json;
           admin_note: string | null;
+          pending_email: string | null;
+          email_change_requested_at: string | null;
           premium_membership: string | null;
           premium_number: string | null;
           created_at: string;
@@ -460,6 +464,26 @@ export type Database = {
           p_comments?: string | null;
         };
         Returns: boolean;
+      };
+      admin_support_dashboard_metrics: {
+        Args: Record<string, never>;
+        Returns: import("@/types/member-support").SupportDashboardMetrics;
+      };
+      admin_search_members: {
+        Args: {
+          p_query?: string | null;
+          p_filter?: string | null;
+          p_limit?: number | null;
+        };
+        Returns: import("@/types/member-support").AdminMemberSearchRow[];
+      };
+      admin_member_support_snapshot: {
+        Args: { p_member_id: string };
+        Returns: import("@/types/member-support").MemberSupportSnapshot;
+      };
+      admin_add_support_note: {
+        Args: { p_member_id: string; p_body: string };
+        Returns: string;
       };
     };
     Enums: {

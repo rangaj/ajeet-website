@@ -16,6 +16,7 @@ import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminQueuePage } from "@/pages/admin/AdminQueuePage";
 import { AdminImportPage } from "@/pages/admin/AdminImportPage";
 import { AdminGetInvolvedPage } from "@/pages/admin/AdminGetInvolvedPage";
+import { AdminMemberSupportPage } from "@/pages/admin/AdminMemberSupportPage";
 import { ShareCardPage } from "@/pages/ShareCardPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { EventsPage } from "@/pages/EventsPage";
@@ -96,6 +97,7 @@ export default function App() {
           }
         >
           <Route index element={<AdminQueuePage />} />
+          <Route path="member-support" element={<AdminMemberSupportPage />} />
           <Route path="get-involved" element={<AdminGetInvolvedPage />} />
           <Route path="import" element={<AdminImportPage />} />
         </Route>
