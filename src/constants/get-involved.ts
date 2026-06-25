@@ -69,6 +69,23 @@ export function getInvolvedInterestLabel(value: string): string {
   );
 }
 
+export function getInvolvedGeographyLabel(value: string | null | undefined): string {
+  if (!value) return "—";
+  return (
+    GET_INVOLVED_GEOGRAPHY_OPTIONS.find((option) => option.value === value)?.label ?? value
+  );
+}
+
+export function getInvolvedTimeLabel(value: string | null | undefined): string {
+  if (!value) return "—";
+  return GET_INVOLVED_TIME_OPTIONS.find((option) => option.value === value)?.label ?? value;
+}
+
+export function formatGetInvolvedInterestLabels(areas: string[] | null | undefined): string {
+  if (!areas?.length) return "—";
+  return areas.map(getInvolvedInterestLabel).join("; ");
+}
+
 export function formatGetInvolvedAreasForCard(areas: string[]): {
   shown: string[];
   extraCount: number;

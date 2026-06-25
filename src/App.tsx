@@ -15,6 +15,7 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminQueuePage } from "@/pages/admin/AdminQueuePage";
 import { AdminImportPage } from "@/pages/admin/AdminImportPage";
+import { AdminGetInvolvedPage } from "@/pages/admin/AdminGetInvolvedPage";
 import { ShareCardPage } from "@/pages/ShareCardPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { EventsPage } from "@/pages/EventsPage";
@@ -95,6 +96,7 @@ export default function App() {
           }
         >
           <Route index element={<AdminQueuePage />} />
+          <Route path="get-involved" element={<AdminGetInvolvedPage />} />
           <Route path="import" element={<AdminImportPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -154,4 +154,44 @@ export async function fetchAlumniMemberByUserId(userId: string) {
     }));
 }
 
+export type GetInvolvedAdminMember = Pick<
+  AlumniMember,
+  | "id"
+  | "name"
+  | "roll_number"
+  | "email"
+  | "course_end_year"
+  | "house"
+  | "get_involved_wants_to_participate"
+  | "get_involved_interest_areas"
+  | "get_involved_geography"
+  | "get_involved_time_commitment"
+  | "get_involved_comments"
+  | "get_involved_updated_at"
+>;
+
+export type GetInvolvedAdminFilter = "opted_in" | "opted_out" | "all";
+
+export async function fetchGetInvolvedAdminMembers(filter: GetInvolvedAdminFilter = "opted_in") {
+  let query = supabase
+    .from("alumni_members")
+    .select(
+      "id, name, roll_number, email, course_end_year, house, get_involved_wants_to_participate, get_involved_interest_areas, get_involved_geography, get_involved_time_commitment, get_involved_comments, get_involved_updated_at"
+    )
+    .eq("status", "approved")
+    .not("get_involved_updated_at", "is", null)
+    .order("get_involved_updated_at", { ascending: false });
+
+  if (filter === "opted_in") {
+    query = query.eq("get_involved_wants_to_participate", true);
+  } else if (filter === "opted_out") {
+    query = query.eq("get_involved_wants_to_participate", false);
+  }
+
+  return query.then(({ data, error }) => ({
+    data: (data ?? []) as GetInvolvedAdminMember[],
+    error,
+  }));
+}
+
 export type { AlumniMember, AlumniMemberUpdate, SearchResult };
