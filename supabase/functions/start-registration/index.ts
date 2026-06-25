@@ -21,24 +21,13 @@ function normalizeRoll(roll: string) {
   return String(parseInt(trimmed, 10));
 }
 
-const REVIEW_QUEUE_STATUSES = ["pending_review", "more_info_required"] as const;
+const ACTIVE_REQUEST_STATUSES = [
+  AWAITING_EMAIL_STATUS,
+  "pending_review",
+  "more_info_required",
+] as const;
 
-async function findInReviewByRoll(
-  adminClient: ReturnType<typeof createClient>,
-  rollNumber: string
-) {
-  const { data } = await adminClient
-    .from("approval_requests")
-    .select("id, created_at, type, status")
-    .eq("roll_number", rollNumber)
-    .in("status", [...REVIEW_QUEUE_STATUSES])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
-}
-
-async function findAwaitingByRoll(
+async function findActiveRequestByRoll(
   adminClient: ReturnType<typeof createClient>,
   rollNumber: string
 ) {
@@ -46,22 +35,41 @@ async function findAwaitingByRoll(
     .from("approval_requests")
     .select("id, created_at, type, status, email_verification_expires_at")
     .eq("roll_number", rollNumber)
-    .eq("status", AWAITING_EMAIL_STATUS)
+    .in("status", [...ACTIVE_REQUEST_STATUSES])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (!data || data.status !== AWAITING_EMAIL_STATUS) {
+    return data;
+  }
+
+  const expiresAt = data.email_verification_expires_at
+    ? new Date(data.email_verification_expires_at)
+    : null;
+  if (!expiresAt || expiresAt < new Date()) {
+    return null;
+  }
+
   return data;
 }
 
-function inReviewResponse(rollNumber: string, pending: { id: string; created_at: string; type: string }) {
+function activeRequestResponse(
+  rollNumber: string,
+  pending: { id: string; created_at: string; type: string; status: string }
+) {
   const label = pending.type.replace(/_/g, " ");
+  const phase =
+    pending.status === AWAITING_EMAIL_STATUS
+      ? "awaiting email verification"
+      : "awaiting admin review";
   return new Response(
     JSON.stringify({
       error: "already_pending",
       status: "already_pending",
       message:
-        `A ${label} request for roll ${rollNumber} is already awaiting admin review. ` +
-        "Please wait for admin review or check your email — do not register again.",
+        `A ${label} request for roll ${rollNumber} is already ${phase}. ` +
+        "Please check your email or wait for an admin decision — do not register again.",
       request_id: pending.id,
       submitted_at: pending.created_at,
     }),
@@ -110,10 +118,6 @@ function registrationBlockedForMember(member: { status: string; user_id: string 
 const EMAIL_REQUIRED_MESSAGE =
   "We've sent a verification link to your email. You must click it to complete your registration — " +
   "only then will your request be sent for admin review. The link is valid for 7 days.";
-
-const EMAIL_RESENT_MESSAGE =
-  "A verification link was already sent. We've sent it again — you must click the link in your email " +
-  "to complete your registration. The link is valid for 7 days.";
 
 async function sendVerificationOtp(
   anonClient: ReturnType<typeof createClient>,
@@ -164,38 +168,8 @@ Deno.serve(async (req) => {
 
     await adminClient.rpc("expire_stale_email_verifications");
 
-    const inReview = await findInReviewByRoll(adminClient, rollNumber);
-    if (inReview) return inReviewResponse(rollNumber, inReview);
-
-    const awaiting = await findAwaitingByRoll(adminClient, rollNumber);
-    if (awaiting) {
-      const expiresAt = awaiting.email_verification_expires_at
-        ? new Date(awaiting.email_verification_expires_at)
-        : null;
-      if (expiresAt && expiresAt >= new Date()) {
-        await sendVerificationOtp(anonClient, email, emailRedirectTo);
-        await adminClient
-          .from("approval_requests")
-          .update({
-            submitted_email: email,
-            submitted_name: payload.name ?? null,
-            submitted_phone: payload.mobile_phone ?? null,
-            submitted_dob: payload.date_of_birth ?? null,
-            submitted_payload: payload,
-            email_verification_expires_at: emailVerificationExpiresAt(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", awaiting.id);
-
-        return new Response(JSON.stringify({
-          status: "otp_resent",
-          message: EMAIL_RESENT_MESSAGE,
-          request_id: awaiting.id,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+    const active = await findActiveRequestByRoll(adminClient, rollNumber);
+    if (active) return activeRequestResponse(rollNumber, active);
 
     const { data: existing } = await adminClient
       .from("alumni_members")

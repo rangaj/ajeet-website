@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthHashRedirect } from "@/components/auth/AuthHashRedirect";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
@@ -30,6 +31,7 @@ export default function App() {
   return (
     <>
       <AuthHashRedirect />
+      <ScrollToTop />
       <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />

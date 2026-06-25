@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
 import { PasswordSetupBanner } from "@/components/auth/PasswordSetupBanner";
+import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/BrandLogo";
 import { allowAdminDirectoryView, clearAdminDirectoryView } from "@/lib/admin-navigation";
 import { useBuildId } from "@/lib/build-info";
 import { AAA_MOTTO } from "@/constants/brand";
+import { SITE_NAV_SECTIONS } from "@/constants/site-nav";
 import { cn } from "@/lib/utils";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -87,53 +89,10 @@ export function AppLayout() {
     closeMobile();
   };
 
-  const footerSections = [
-    {
-      title: "About",
-      links: [{ label: "About AAA", to: "/about" }],
-    },
-    {
-      title: "Platform",
-      links: [
-        { label: "Directory", to: "/directory" },
-        { label: "Claim Profile", to: "/claim" },
-        { label: "Register", to: "/register" },
-        { label: "Contact Us", to: "/contact" },
-      ],
-    },
-    {
-      title: "Community",
-      links: [
-        { label: "Events", to: "/events" },
-        { label: "Stories", to: "/stories" },
-      ],
-    },
-    {
-      title: "Listen & Watch",
-      links: [
-        {
-          label: "YouTube",
-          href: "https://www.youtube.com/@ajeetalumniassociation",
-        },
-        {
-          label: "The AEiF Podcast",
-          href: "https://open.spotify.com/show/5MxQBL9UwP4IHcwcun3FZ3",
-        },
-        {
-          label: "The AKF Podcast",
-          href: "https://open.spotify.com/show/1XPNpzdwDUJf0KICAlGkOE",
-        },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { label: "Privacy Policy", to: "/privacy" },
-        { label: "Terms of Use", to: "/terms" },
-        { label: "Directory Usage Policy", to: "/directory-usage" },
-      ],
-    },
-  ] as const;
+  const mobileExcludeTo = [
+    ...(!user ? ["/claim"] : []),
+    ...(user && canAccessDirectory ? ["/directory"] : []),
+  ];
 
   const navClass = marketingNavClass(isHome, homeScrolled);
   const buildId = useBuildId();
@@ -246,24 +205,12 @@ export function AppLayout() {
             <div className="flex flex-col gap-1 text-sm">
               {!user && (
                 <>
-                  <Link to="/about" className={navClass} onClick={closeMobile}>
-                    About
-                  </Link>
-                  <Link to="/directory" className={navClass} onClick={closeMobile}>
-                    Directory
-                  </Link>
-                  <Link to="/events" className={navClass} onClick={closeMobile}>
-                    Events
-                  </Link>
-                  <Link to="/stories" className={navClass} onClick={closeMobile}>
-                    Stories
-                  </Link>
                   <Link
                     to="/claim"
-                    className="mt-1 rounded-lg bg-gold-500 px-3 py-2.5 text-center font-semibold text-brand-900"
+                    className="rounded-lg bg-gold-500 px-3 py-2.5 text-center text-sm font-semibold text-brand-900"
                     onClick={closeMobile}
                   >
-                    Claim ID
+                    Claim Profile
                   </Link>
                   <Link to="/login" className={navClass} onClick={closeMobile}>
                     Sign In
@@ -292,17 +239,32 @@ export function AppLayout() {
               )}
               {user && (
                 <>
-                  <p className="px-3 py-2 text-sm font-medium text-brand-700">{navDisplayName}</p>
+                  <p
+                    className={cn(
+                      "px-3 py-2 text-sm font-medium",
+                      isHome ? "text-white/90" : "text-brand-700"
+                    )}
+                  >
+                    {navDisplayName}
+                  </p>
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="mt-2 w-full justify-center"
+                    className="mb-1 w-full justify-center"
                     onClick={handleSignOut}
                   >
                     Sign Out
                   </Button>
                 </>
               )}
+
+              <MobileNavMenu
+                isHome={isHome}
+                linkClass={navClass}
+                onNavigate={closeMobile}
+                onOpenDirectory={openDirectory}
+                excludeTo={mobileExcludeTo}
+              />
             </div>
           </nav>
         )}
@@ -332,7 +294,7 @@ export function AppLayout() {
               </div>
             </div>
             <div className="grid min-w-0 grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
-              {footerSections.map((section) => (
+              {SITE_NAV_SECTIONS.map((section) => (
                 <div key={section.title} className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wider text-gold-300">
                     {section.title}
