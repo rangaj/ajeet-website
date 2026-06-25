@@ -4,7 +4,6 @@ import type {
   MemberEmailStatus,
   MemberEmailType,
   MemberSupportApprovalRequest,
-  MemberSupportEmailEvent,
   MemberSupportImportSnapshot,
   MemberSupportSnapshot,
   MemberSupportSnapshotMember,
@@ -93,21 +92,18 @@ export function deriveClaimStage(
     return "Awaiting approval";
   }
   if (latest?.status === "rejected") return "Rejected";
-  if (member.status === "imported_unclaimed" && !latest) return "Imported only";
-  if (member.status === "approved" && member.user_id) return "Completed";
+  if (member.status === "imported_unclaimed" && !latest) return "Imported only — not claimed";
+  if (member.status === "approved" && member.user_id) return "Completed on this platform";
   if (latest?.status === "approved") return "Approved";
   if (latest?.status === "expired") return "Verification expired";
   return member.status.replace(/_/g, " ");
 }
 
 export function deriveRegistrationStage(member: MemberSupportSnapshotMember): string {
-  if (member.registered && member.registered_at) return "Registration completed";
-  if (member.status === "approved" && !member.user_id) return "Verification pending";
-  if (member.status === "approved" && member.user_id && !member.registered) {
-    return "Registration started";
-  }
-  if (member.status === "imported_unclaimed") return "Not started";
-  return "Unknown";
+  if (member.user_id) return "Active on this platform";
+  if (member.status === "approved") return "Approved — no account yet";
+  if (member.status === "imported_unclaimed") return "Not started (legacy import)";
+  return member.status.replace(/_/g, " ");
 }
 
 type ImportField = {
@@ -188,98 +184,101 @@ export function buildImportComparison(
   ];
 }
 
-function hasLoggedVerification(events: MemberSupportEmailEvent[]): boolean {
-  return events.some((event) =>
-    event.email_type === "claim_verification" ||
-    event.email_type === "registration_verification" ||
-    event.email_type === "email_change_verification"
-  );
-}
-
+/**
+ * Build a strictly factual journey. Every event is backed by real data and tagged
+ * with its origin — `legacy` (from the old platform / import) or `platform`
+ * (activity on this app). Nothing is assumed or synthesized.
+ */
 export function buildMemberTimeline(snapshot: MemberSupportSnapshot): MemberSupportTimelineEvent[] {
   const events: MemberSupportTimelineEvent[] = [];
-  const { member, import_snapshot, approval_requests, email_events } = snapshot;
+  const { member, import_snapshot, approval_requests, email_events, auth_diagnostics } = snapshot;
 
+  // --- Legacy record (old platform / import) ---
   if (import_snapshot?.imported_at) {
     events.push({
       at: import_snapshot.imported_at,
-      label: "Profile Imported",
-      status: "Recorded",
-      source: "recorded",
+      label: "Imported from legacy records",
+      status: import_snapshot.file_name ? `Source: ${import_snapshot.file_name}` : "Recorded",
+      origin: "legacy",
     });
   }
 
-  const claimRequest = approval_requests.find((request) => request.type === "claim")
-    ?? approval_requests[0];
-
-  if (claimRequest) {
-    events.push({
-      at: claimRequest.created_at,
-      label: claimRequest.type === "claim" ? "Claim Requested" : "Registration Requested",
-      status: claimRequest.status.replace(/_/g, " "),
-      source: "recorded",
-    });
-  }
-
-  if (hasLoggedVerification(email_events)) {
-    const latestVerification = email_events.find((event) =>
-      event.email_type === "claim_verification" ||
-      event.email_type === "registration_verification"
-    );
-    if (latestVerification) {
-      events.push({
-        at: latestVerification.created_at,
-        label: "Verification Email Sent",
-        status: displayEmailStatus(latestVerification.provider, latestVerification.status),
-        source: "recorded",
-      });
-    }
-  } else if (claimRequest?.status !== "awaiting_email_verification") {
-    events.push({
-      at: claimRequest?.updated_at ?? member.created_at,
-      label: "Verification Email Sent",
-      status: "Historical email information unavailable",
-      source: "historical_unavailable",
-    });
-  }
-
-  if (
-    claimRequest &&
-    claimRequest.status !== "awaiting_email_verification" &&
-    claimRequest.status !== "expired" &&
-    claimRequest.updated_at
-  ) {
-    events.push({
-      at: claimRequest.updated_at,
-      label: "Email Verified",
-      status: "Email link verified",
-      source: "recorded",
-    });
-  }
-
-  const approvedRequest = approval_requests.find((request) => request.status === "approved");
-  if (approvedRequest?.reviewed_at) {
-    events.push({
-      at: approvedRequest.reviewed_at,
-      label: "Claim Approved",
-      status: "Approved",
-      source: "recorded",
-    });
-  } else if (member.approved_at) {
+  // Approval date carried in from the old platform (no admin approved it here).
+  if (member.approved_at && !member.approved_by) {
     events.push({
       at: member.approved_at,
-      label: "Profile Activated",
-      status: "Approved",
-      source: "recorded",
+      label: "Marked approved on legacy platform",
+      status: "Legacy record value",
+      origin: "legacy",
     });
   }
 
-  if (member.registered_at) {
+  // Registered flag carried in from the old platform (no account exists here).
+  if (member.registered_at && !member.user_id) {
     events.push({
       at: member.registered_at,
-      label: "Registration Completed",
+      label: "Marked registered on legacy platform",
+      status: "Legacy record value",
+      origin: "legacy",
+    });
+  }
+
+  // --- Activity on this platform (only real, recorded events) ---
+  for (const request of approval_requests) {
+    events.push({
+      at: request.created_at,
+      label: request.type === "claim" ? "Claim requested" : "Registration requested",
+      status: request.status.replace(/_/g, " "),
+      origin: "platform",
+    });
+  }
+
+  // Verification emails — only when an actual send was logged.
+  for (const event of email_events) {
+    if (
+      event.email_type === "claim_verification" ||
+      event.email_type === "registration_verification"
+    ) {
+      events.push({
+        at: event.created_at,
+        label: "Verification email sent",
+        status: displayEmailStatus(event.provider, event.status),
+        origin: "platform",
+      });
+    }
+  }
+
+  // Approved on this platform — only when an admin approved it (approved_by set).
+  if (member.approved_by) {
+    const approvedRequest = approval_requests.find((request) => request.status === "approved");
+    const approvedAt = approvedRequest?.reviewed_at ?? member.approved_at;
+    if (approvedAt) {
+      events.push({
+        at: approvedAt,
+        label: "Approved on this platform",
+        status: "Approved by admin",
+        origin: "platform",
+      });
+    }
+  }
+
+  // Password set on this platform.
+  if (auth_diagnostics?.password_set && auth_diagnostics.password_set_at) {
+    events.push({
+      at: auth_diagnostics.password_set_at,
+      label: "Password set",
       status: "Completed",
-      source: "recorded",
+      origin: "platform",
+    });
+  }
+
+  // Most recent sign-in on this platform.
+  if (auth_diagnostics?.last_login) {
+    events.push({
+      at: auth_diagnostics.last_login,
+      label: "Last sign-in",
+      status: "Recorded",
+      origin: "platform",
     });
   }
 

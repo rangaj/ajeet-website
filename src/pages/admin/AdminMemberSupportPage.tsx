@@ -4,6 +4,7 @@ import {
   Check,
   ClipboardCopy,
   ExternalLink,
+  History,
   LifeBuoy,
   Loader2,
   Mail,
@@ -40,6 +41,7 @@ import { cn } from "@/lib/utils";
 import type {
   AdminMemberSearchRow,
   MemberSupportSnapshot,
+  MemberSupportTimelineEvent,
   SupportDashboardFilter,
   SupportDashboardMetrics,
 } from "@/types/member-support";
@@ -54,6 +56,27 @@ function formatDateTime(value: string | null | undefined): string {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{children}</h3>;
+}
+
+function JourneyEvent({ event }: { event: MemberSupportTimelineEvent }) {
+  const isLegacy = event.origin === "legacy";
+  return (
+    <li className="flex gap-3">
+      <div
+        className={cn(
+          "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+          isLegacy ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+        )}
+      >
+        {isLegacy ? <History className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+      </div>
+      <div className="min-w-0">
+        <p className="break-words text-sm font-medium text-slate-900">{event.label}</p>
+        <p className="text-xs text-slate-500">{formatDateTime(event.at)}</p>
+        <p className="break-words text-xs text-slate-600">{event.status}</p>
+      </div>
+    </li>
+  );
 }
 
 function DetailRow({
@@ -193,6 +216,14 @@ export function AdminMemberSupportPage() {
     [snapshot]
   );
   const timeline = useMemo(() => (snapshot ? buildMemberTimeline(snapshot) : []), [snapshot]);
+  const platformEvents = useMemo(
+    () => timeline.filter((event) => event.origin === "platform"),
+    [timeline]
+  );
+  const legacyEvents = useMemo(
+    () => timeline.filter((event) => event.origin === "legacy"),
+    [timeline]
+  );
 
   const metricCount = (key: SupportDashboardFilter) => metrics?.[key] ?? 0;
 
@@ -611,27 +642,36 @@ export function AdminMemberSupportPage() {
                 )}
               </Card>
 
-              <Card className="space-y-3">
+              <Card className="space-y-4">
                 <SectionTitle>Member journey</SectionTitle>
-                <ol className="space-y-3">
-                  {timeline.map((event) => (
-                    <li key={`${event.label}-${event.at}`} className="flex gap-3">
-                      <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
-                        <Check className="h-3.5 w-3.5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{event.label}</p>
-                        <p className="text-xs text-slate-500">{formatDateTime(event.at)}</p>
-                        <p className="text-xs text-slate-600">{event.status}</p>
-                        {event.source === "historical_unavailable" && (
-                          <p className="text-xs italic text-slate-500">
-                            Email logging was introduced after this event.
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                    Activity on this platform
+                  </p>
+                  {platformEvents.length === 0 ? (
+                    <p className="text-sm text-slate-500">No activity on this platform yet.</p>
+                  ) : (
+                    <ol className="space-y-3">
+                      {platformEvents.map((event) => (
+                        <JourneyEvent key={`platform-${event.label}-${event.at}`} event={event} />
+                      ))}
+                    </ol>
+                  )}
+                </div>
+
+                {legacyEvents.length > 0 && (
+                  <div className="space-y-2 border-t border-surface-border pt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      Legacy record (from old platform / import)
+                    </p>
+                    <ol className="space-y-3">
+                      {legacyEvents.map((event) => (
+                        <JourneyEvent key={`legacy-${event.label}-${event.at}`} event={event} />
+                      ))}
+                    </ol>
+                  </div>
+                )}
               </Card>
 
               <Card className="space-y-3">

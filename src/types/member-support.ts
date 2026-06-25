@@ -157,5 +157,6 @@ export type MemberSupportTimelineEvent = {
   at: string;
   label: string;
   status: string;
-  source: "recorded" | "historical_unavailable";
+  /** Where the fact came from: the old platform/import, or activity on this platform. */
+  origin: "legacy" | "platform";
 };
