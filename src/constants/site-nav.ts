@@ -56,6 +56,7 @@ export const SITE_NAV_SECTIONS: readonly SiteNavSection[] = [
       { label: "Privacy Policy", to: "/privacy" },
       { label: "Terms of Use", to: "/terms" },
       { label: "Directory Usage Policy", to: "/directory-usage" },
+      { label: "Disclaimer", to: "/disclaimer" },
     ],
   },
 ];

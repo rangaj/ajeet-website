@@ -306,6 +306,22 @@ export const termsOfUse: PolicyDocument = {
   ],
 };
 
+export const disclaimer: PolicyDocument = {
+  title: "Disclaimer",
+  lastUpdated: POLICY_LAST_UPDATED,
+  intro: [
+    "The Ajeet Alumni Association website is intended to facilitate connections and engagement among members of the alumni community.",
+    "While reasonable efforts are made to maintain accurate and up-to-date information, the Association does not guarantee the completeness, accuracy, or reliability of any information, profiles, directory entries, announcements, or content published on this website.",
+    "Information contained within the alumni directory is provided by members and is intended solely for alumni networking, mentorship, community engagement, and Association-related activities.",
+    "Users are responsible for exercising their own judgment and verifying information independently where appropriate.",
+    "The Ajeet Alumni Association is not responsible for the actions, communications, opinions, or conduct of individual members, users, or third parties who access or use the platform.",
+    "Links to external websites, podcasts, videos, and social media channels are provided for convenience only and do not imply endorsement by the Association.",
+    "The Association reserves the right to modify, update, suspend, or discontinue any part of the platform without prior notice.",
+    "Use of this website constitutes acceptance of the Terms of Use, Privacy Policy, and Directory Usage Policy.",
+  ],
+  sections: [],
+};
+
 export const directoryUsagePolicy: PolicyDocument = {
   title: "Directory Usage Policy",
   lastUpdated: POLICY_LAST_UPDATED,
@@ -445,6 +461,7 @@ export const POLICY_ROUTES = {
   privacy: privacyPolicy,
   terms: termsOfUse,
   "directory-usage": directoryUsagePolicy,
+  disclaimer,
 } as const;
 
 export type PolicySlug = keyof typeof POLICY_ROUTES;

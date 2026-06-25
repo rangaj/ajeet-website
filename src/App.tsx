@@ -23,6 +23,7 @@ import { AboutPage } from "@/pages/AboutPage";
 import { PolicyDocumentView } from "@/components/content/PolicyDocumentView";
 import {
   directoryUsagePolicy,
+  disclaimer,
   privacyPolicy,
   termsOfUse,
 } from "@/content/policies";
@@ -51,6 +52,7 @@ export default function App() {
           path="directory-usage"
           element={<PolicyDocumentView document={directoryUsagePolicy} />}
         />
+        <Route path="disclaimer" element={<PolicyDocumentView document={disclaimer} />} />
         <Route
           path="pending"
           element={

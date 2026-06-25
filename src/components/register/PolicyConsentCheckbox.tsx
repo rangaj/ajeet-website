@@ -36,8 +36,8 @@ export function PolicyConsentCheckbox({
             className="font-semibold text-brand-700 hover:underline"
           >
             Terms of Use
-          </Link>{" "}
-          and{" "}
+          </Link>
+          ,{" "}
           <Link
             to="/directory-usage"
             target="_blank"
@@ -45,6 +45,15 @@ export function PolicyConsentCheckbox({
             className="font-semibold text-brand-700 hover:underline"
           >
             Directory Usage Policy
+          </Link>
+          , and{" "}
+          <Link
+            to="/disclaimer"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-brand-700 hover:underline"
+          >
+            Disclaimer
           </Link>
           .
         </span>
