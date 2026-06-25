@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 async function logMemberEmailEvent(
   adminClient: ReturnType<typeof createClient>,
-  params: {
+  p: {
     alumniMemberId?: string | null;
     approvalRequestId?: string | null;
     emailType: string;
@@ -14,19 +14,19 @@ async function logMemberEmailEvent(
     errorMessage?: string | null;
     triggerSource?: string;
   }
-): Promise<void> {
-  const { error } = await adminClient.from("member_email_events").insert({
-    alumni_member_id: params.alumniMemberId ?? null,
-    approval_request_id: params.approvalRequestId ?? null,
-    email_type: params.emailType,
-    provider: params.provider,
-    recipient: params.recipient,
-    status: params.status,
-    message_id: params.messageId ?? null,
-    error_message: params.errorMessage ?? null,
-    trigger_source: params.triggerSource ?? "system",
+) {
+  const { error } = await adminClient.rpc("log_member_email_event", {
+    p_email_type: p.emailType,
+    p_provider: p.provider,
+    p_recipient: p.recipient,
+    p_alumni_member_id: p.alumniMemberId ?? null,
+    p_approval_request_id: p.approvalRequestId ?? null,
+    p_status: p.status,
+    p_message_id: p.messageId ?? null,
+    p_error_message: p.errorMessage ?? null,
+    p_trigger_source: p.triggerSource ?? "system",
   });
-  if (error) console.error("member_email_events insert failed:", error.message);
+  if (error) console.error("log_member_email_event:", error.message);
 }
 
 function notifyEmailType(event: string, requestType: string): string {

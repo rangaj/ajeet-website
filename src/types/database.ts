@@ -485,6 +485,20 @@ export type Database = {
         Args: { p_member_id: string; p_body: string };
         Returns: string;
       };
+      log_member_email_event: {
+        Args: {
+          p_email_type: string;
+          p_provider: string;
+          p_recipient: string;
+          p_alumni_member_id?: string | null;
+          p_approval_request_id?: string | null;
+          p_status?: string | null;
+          p_message_id?: string | null;
+          p_error_message?: string | null;
+          p_trigger_source?: string | null;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       app_role: AppRole;
