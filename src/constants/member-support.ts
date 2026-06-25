@@ -1,5 +1,6 @@
 import type {
   EmailProvider,
+  ImportStoredPayload,
   MemberEmailStatus,
   MemberEmailType,
   MemberSupportApprovalRequest,
@@ -115,53 +116,74 @@ type ImportField = {
   original: string | null;
 };
 
-function pickImportValue(
-  raw: Record<string, string> | null | undefined,
+function pickFromObject(
+  obj: Record<string, unknown> | null | undefined,
   keys: string[]
 ): string | null {
-  if (!raw) return null;
+  if (!obj) return null;
   for (const key of keys) {
-    const value = raw[key];
+    const value = obj[key];
     if (value != null && String(value).trim() !== "") return String(value).trim();
   }
   return null;
+}
+
+/** Read import values from nested staging payload (mapped + raw CSV) or legacy flat rows. */
+function pickImportValue(
+  payload: ImportStoredPayload | null | undefined,
+  mappedKeys: string[],
+  rawKeys: string[]
+): string | null {
+  if (!payload) return null;
+
+  if (payload.mapped || payload.raw) {
+    const fromMapped = pickFromObject(payload.mapped, mappedKeys);
+    if (fromMapped) return fromMapped;
+    return pickFromObject(payload.raw, rawKeys);
+  }
+
+  return pickFromObject(payload, [...mappedKeys, ...rawKeys]);
 }
 
 export function buildImportComparison(
   member: MemberSupportSnapshotMember,
   importSnapshot: MemberSupportImportSnapshot
 ): ImportField[] {
-  const raw = importSnapshot?.raw_payload ?? null;
+  const payload = importSnapshot?.raw_payload ?? null;
   return [
     {
       label: "Name",
       current: member.name,
-      original: pickImportValue(raw, ["Name", "name"]),
+      original: pickImportValue(payload, ["name"], ["Name", "name"]),
     },
     {
       label: "Roll Number",
       current: member.roll_number,
-      original: pickImportValue(raw, ["Roll no", "Roll No", "roll_number"]),
+      original: pickImportValue(payload, ["roll_number"], ["Roll no", "Roll No"]),
     },
     {
       label: "Batch",
       current: member.course_end_year ? String(member.course_end_year) : null,
-      original: pickImportValue(raw, ["Course End Year", "course_end_year", "Batch"]),
+      original: pickImportValue(payload, ["course_end_year"], ["Course End Year", "Batch"]),
     },
     {
       label: "House",
       current: member.house,
-      original: pickImportValue(raw, ["House", "house"]),
+      original: pickImportValue(payload, ["house"], ["House", "house"]),
     },
     {
       label: "Email",
       current: member.email,
-      original: pickImportValue(raw, ["email_id", "Email", "email"]),
+      original: pickImportValue(payload, ["email"], ["email_id", "Email", "email"]),
     },
     {
       label: "Location",
       current: member.current_location,
-      original: pickImportValue(raw, ["Current Location", "current_location"]),
+      original: pickImportValue(
+        payload,
+        ["current_location"],
+        ["Current Location", "current_location"]
+      ),
     },
   ];
 }

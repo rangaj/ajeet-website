@@ -74,12 +74,19 @@ export type MemberSupportSnapshotMember = {
 };
 
 export type MemberSupportImportSnapshot = {
-  raw_payload: Record<string, string>;
+  raw_payload: ImportStoredPayload;
   import_batch_id: string;
   file_name: string;
   imported_at: string;
   row_number: number;
 } | null;
+
+/** Shape written by import-preview / import-commit into imported_records.raw_payload */
+export type ImportStoredPayload = {
+  source_line?: number;
+  raw?: Record<string, unknown>;
+  mapped?: Record<string, unknown>;
+} & Record<string, unknown>;
 
 export type MemberSupportApprovalRequest = {
   id: string;
