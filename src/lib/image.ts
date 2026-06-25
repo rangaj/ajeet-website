@@ -1,6 +1,20 @@
-export const AVATAR_MAX_INPUT_BYTES = 2 * 1024 * 1024;
+/** Safety cap for raw uploads — large files are downscaled before crop. */
+export const AVATAR_MAX_INPUT_BYTES = 20 * 1024 * 1024;
+export const AVATAR_MAX_INPUT_DIMENSION = 2048;
 export const AVATAR_OUTPUT_SIZE = 512;
 export const AVATAR_WEBP_QUALITY = 0.82;
+
+const AVATAR_INPUT_MIME_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+] as const;
+
+export const AVATAR_FILE_ACCEPT =
+  "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
 
 export type PixelCrop = {
   x: number;
@@ -25,6 +39,72 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     image.onerror = () => reject(new Error("Failed to load image"));
     image.src = src;
   });
+}
+
+function canvasToJpegDataUrl(canvas: HTMLCanvasElement, quality = 0.92): Promise<string> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Failed to encode image"));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error ?? new Error("Failed to read encoded image"));
+        reader.readAsDataURL(blob);
+      },
+      "image/jpeg",
+      quality
+    );
+  });
+}
+
+function isAllowedAvatarFile(file: File): boolean {
+  const type = file.type.toLowerCase();
+  if (AVATAR_INPUT_MIME_TYPES.includes(type as (typeof AVATAR_INPUT_MIME_TYPES)[number])) {
+    return true;
+  }
+  return /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+}
+
+export function validateAvatarFile(file: File): string | null {
+  if (!isAllowedAvatarFile(file)) {
+    return "Use a photo from your gallery (JPG, PNG, or WebP).";
+  }
+  if (file.size > AVATAR_MAX_INPUT_BYTES) {
+    const maxMb = Math.round(AVATAR_MAX_INPUT_BYTES / (1024 * 1024));
+    return `Image must be ${maxMb} MB or smaller.`;
+  }
+  return null;
+}
+
+/** Read and downscale very large photos so crop works on mobile browsers. */
+export async function prepareAvatarImageForCrop(file: File): Promise<string> {
+  const validationError = validateAvatarFile(file);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const dataUrl = await readFileAsDataUrl(file);
+  const image = await loadImage(dataUrl);
+  const maxDim = Math.max(image.naturalWidth, image.naturalHeight);
+
+  if (maxDim <= AVATAR_MAX_INPUT_DIMENSION) {
+    return dataUrl;
+  }
+
+  const scale = AVATAR_MAX_INPUT_DIMENSION / maxDim;
+  const width = Math.round(image.naturalWidth * scale);
+  const height = Math.round(image.naturalHeight * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+
+  ctx.drawImage(image, 0, 0, width, height);
+  return canvasToJpegDataUrl(canvas);
 }
 
 export async function getCroppedImageBlob(
@@ -58,17 +138,6 @@ export async function getCroppedImageBlob(
       AVATAR_WEBP_QUALITY
     );
   });
-}
-
-export function validateAvatarFile(file: File): string | null {
-  const allowed = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowed.includes(file.type)) {
-    return "Use a JPG, PNG, or WebP image.";
-  }
-  if (file.size > AVATAR_MAX_INPUT_BYTES) {
-    return "Image must be 2 MB or smaller.";
-  }
-  return null;
 }
 
 export function initialsFromName(name: string): string {

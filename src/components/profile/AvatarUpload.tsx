@@ -3,10 +3,10 @@ import Cropper, { type Area } from "react-easy-crop";
 import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
-  AVATAR_MAX_INPUT_BYTES,
+  AVATAR_FILE_ACCEPT,
   getCroppedImageBlob,
   initialsFromName,
-  validateAvatarFile,
+  prepareAvatarImageForCrop,
 } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function AvatarUpload({
   onBlobReady,
   onRemove,
   disabled,
-  hint = "Add a photo so classmates recognize you in the directory. JPG, PNG, or WebP · max 2 MB.",
+  hint = "Any gallery photo is fine — we crop and resize it for the directory.",
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [cropOpen, setCropOpen] = useState(false);
@@ -37,34 +37,34 @@ export function AvatarUpload({
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [preparing, setPreparing] = useState(false);
 
   const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
     setCroppedArea(areaPixels);
   }, []);
 
   const openPicker = () => {
-    if (disabled) return;
+    if (disabled || preparing) return;
     setError("");
     inputRef.current?.click();
   };
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
-    const validationError = validateAvatarFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
+    setPreparing(true);
+    setError("");
+    try {
+      const prepared = await prepareAvatarImageForCrop(file);
+      setImageSrc(prepared);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedArea(null);
+      setCropOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not read that image. Try another file.");
+    } finally {
+      setPreparing(false);
     }
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsDataURL(file);
-    });
-    setImageSrc(dataUrl);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setCropOpen(true);
   };
 
   const applyCrop = async () => {
@@ -100,11 +100,11 @@ export function AvatarUpload({
         <button
           type="button"
           onClick={openPicker}
-          disabled={disabled}
+          disabled={disabled || preparing}
           className={cn(
             "relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-brand-200 bg-brand-50 transition-colors",
-            !disabled && "hover:border-gold-400 hover:bg-gold-50",
-            disabled && "opacity-60"
+            !disabled && !preparing && "hover:border-gold-400 hover:bg-gold-50",
+            (disabled || preparing) && "opacity-60"
           )}
           aria-label={previewUrl ? "Change profile photo" : "Add profile photo"}
         >
@@ -113,7 +113,7 @@ export function AvatarUpload({
           ) : (
             <span className="text-xl font-bold text-brand-700">{initials}</span>
           )}
-          {!disabled && (
+          {!disabled && !preparing && (
             <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-700 text-white shadow-sm">
               <Camera className="h-4 w-4" />
             </span>
@@ -122,9 +122,16 @@ export function AvatarUpload({
         <div className="min-w-0 flex-1 space-y-2 pt-1">
           <p className="text-sm font-medium text-brand-800">Profile photo (recommended)</p>
           <p className="text-xs text-brand-600">{hint}</p>
+          {preparing && <p className="text-xs text-brand-700">Preparing photo…</p>}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={openPicker} disabled={disabled}>
-              {previewUrl ? "Change photo" : "Add photo"}
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={openPicker}
+              disabled={disabled || preparing}
+            >
+              {preparing ? "Preparing…" : previewUrl ? "Change photo" : "Add photo"}
             </Button>
             {previewUrl && (
               <Button type="button" size="sm" variant="ghost" onClick={removePhoto} disabled={disabled}>
@@ -138,7 +145,7 @@ export function AvatarUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={AVATAR_FILE_ACCEPT}
         className="hidden"
         onChange={(e) => {
           void handleFile(e.target.files?.[0] ?? null);
@@ -196,7 +203,7 @@ export function AvatarUpload({
               </Button>
             </div>
             <p className="mt-2 text-center text-xs text-slate-400">
-              Max upload {Math.round(AVATAR_MAX_INPUT_BYTES / (1024 * 1024))} MB · saved as WebP
+              We save a small WebP for the directory — large originals are resized automatically.
             </p>
           </div>
         </div>
