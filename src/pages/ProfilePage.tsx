@@ -288,7 +288,7 @@ export function ProfilePage() {
           onPreviewChange={setPhotoPreview}
           onBlobReady={setPhotoBlob}
           onRemove={() => void handleRemovePhoto()}
-          hint="Any gallery photo is fine — we resize it automatically. After cropping, tap Save Changes at the bottom."
+          hint="Use a clear, appropriate face photo — we resize it automatically. After cropping, tap Save Changes at the bottom."
         />
         {photoBlob && (
           <Alert variant="warning">

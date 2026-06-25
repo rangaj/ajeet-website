@@ -15,9 +15,11 @@
     "audit:security": "tsx scripts/security-audit.ts"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "@supabase/supabase-js": "^2.49.1",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.475.0",
+    "nsfwjs": "^4.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-easy-crop": "^5.4.1",
