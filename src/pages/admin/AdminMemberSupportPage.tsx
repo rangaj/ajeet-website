@@ -29,7 +29,7 @@ import {
   fetchSupportDashboardMetrics,
   searchSupportMembers,
 } from "@/lib/data-access";
-import { allowAdminDirectoryView } from "@/lib/admin-navigation";
+import { formatSupportError } from "@/lib/member-support-errors";
 import { formatBatch, formatHousesWithLabel } from "@/lib/alumni-display";
 import { invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
@@ -133,7 +133,11 @@ export function AdminMemberSupportPage() {
 
   const loadMetrics = useCallback(async () => {
     const { data, error: metricsError } = await fetchSupportDashboardMetrics();
-    if (!metricsError && data) setMetrics(data);
+    if (metricsError) {
+      setError(formatSupportError(metricsError));
+      return;
+    }
+    if (data) setMetrics(data);
   }, []);
 
   const runSearch = useCallback(async (searchQuery: string, filter: SupportDashboardFilter | null) => {
@@ -142,7 +146,7 @@ export function AdminMemberSupportPage() {
     const { data, error: searchError } = await searchSupportMembers(searchQuery, filter);
     setSearching(false);
     if (searchError) {
-      setError(searchError.message);
+      setError(formatSupportError(searchError));
       setResults([]);
       return;
     }
@@ -166,7 +170,7 @@ export function AdminMemberSupportPage() {
     const { data, error: snapshotError } = await fetchMemberSupportSnapshot(memberId);
     setLoadingSnapshot(false);
     if (snapshotError) {
-      setError(snapshotError.message);
+      setError(formatSupportError(snapshotError));
       setSnapshot(null);
       return;
     }
@@ -288,7 +292,7 @@ export function AdminMemberSupportPage() {
     const { error: noteError } = await addMemberSupportNote(selectedId, noteBody.trim());
     setNoteSaving(false);
     if (noteError) {
-      setError(noteError.message);
+      setError(formatSupportError(noteError));
       return;
     }
     setNoteBody("");
