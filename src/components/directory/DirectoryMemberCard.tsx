@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   formatBatch,
   formatRollNumber,
+  formatSchoolYears,
   getEarlierEmployers,
   getLatestEmployer,
   parseEmployers,
@@ -30,6 +31,7 @@ export function DirectoryMemberCard({
 }: DirectoryMemberCardProps) {
   const [employersExpanded, setEmployersExpanded] = useState(false);
   const batch = formatBatch(member.course_end_year);
+  const schoolYears = formatSchoolYears(member.course_start_year, member.course_end_year);
   const houses = parseHouses(member.house);
   const latestEmployer = getLatestEmployer(member.company);
   const earlierEmployers = getEarlierEmployers(member.company);
@@ -97,6 +99,10 @@ export function DirectoryMemberCard({
         <p className={cn("text-gold-700", compact ? "text-xs" : "text-sm")}>
           {[batch, formatRollNumber(member.roll_number)].filter(Boolean).join(" • ")}
         </p>
+
+        {schoolYears && (
+          <p className={cn("text-slate-500", compact ? "text-xs" : "text-sm")}>{schoolYears}</p>
+        )}
 
         {!compact && displayJob && (
           <p className="line-clamp-1 text-sm font-medium text-slate-800">{displayJob}</p>

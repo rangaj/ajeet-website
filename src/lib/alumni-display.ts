@@ -5,6 +5,23 @@ export function formatBatch(courseEndYear: number | null | undefined): string | 
   return `Batch ${courseEndYear}`;
 }
 
+/** Full school span — explains start vs passing-out year for directory search. */
+export function formatSchoolYears(
+  courseStartYear: number | null | undefined,
+  courseEndYear: number | null | undefined
+): string | null {
+  const start = courseStartYear ?? null;
+  const end = courseEndYear ?? null;
+
+  if (start != null && end != null) {
+    if (start === end) return `At SSBJ: ${start}`;
+    return `At SSBJ: ${start} – ${end}`;
+  }
+  if (start != null) return `At SSBJ: from ${start}`;
+  // End year alone is shown as "Batch YYYY" on the line above.
+  return null;
+}
+
 export function formatRollNumber(rollNumber: string): string {
   return `Roll No. ${rollNumber}`;
 }

@@ -3,6 +3,7 @@ import {
   formatBatch,
   formatHousesWithLabel,
   formatRollNumber,
+  formatSchoolYears,
   getEarlierEmployers,
   getLatestEmployer,
 } from "@/lib/alumni-display";
@@ -67,12 +68,11 @@ function SkillChips({ value }: { value: string }) {
 
 export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetailProps) {
   const batch = formatBatch(member.course_end_year);
+  const schoolYears = formatSchoolYears(member.course_start_year, member.course_end_year);
   const house = formatHousesWithLabel(member.house);
   const houses = parseHouses(member.house);
   const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : "#1e3a5f";
-  const courseLine = [member.course, member.stream, member.course_end_year]
-    .filter(Boolean)
-    .join(" · ");
+  const courseLine = [member.course, member.stream].filter(Boolean).join(" · ");
   const latestEmployer = getLatestEmployer(member.company);
   const earlierEmployers = getEarlierEmployers(member.company);
   const displayName = formatDisplayMemberName({
@@ -134,6 +134,9 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
+                  {schoolYears && (
+                    <p className="mt-1 text-sm text-slate-600">{schoolYears}</p>
+                  )}
                   {displayLocation && (
                     <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
                       <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
