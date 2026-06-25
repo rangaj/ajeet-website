@@ -44,11 +44,24 @@ export function LoginPage() {
     setMessage("");
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/pending` },
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/pending`,
+      },
     });
     setLoading(false);
-    if (err) setError(err.message);
-    else setMessage("Check your email for a magic link or OTP code.");
+    if (err) {
+      const noAccount = /signups?\s+not\s+allowed|not\s+allowed\s+for\s+otp|user\s+not\s+found/i.test(
+        err.message
+      );
+      setError(
+        noAccount
+          ? "No account found for this email. If you're an Ajeet, please Claim your ID or Register first — then sign in here."
+          : err.message
+      );
+    } else {
+      setMessage("Check your email for a magic link or OTP code.");
+    }
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {

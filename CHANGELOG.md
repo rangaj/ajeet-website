@@ -3,6 +3,24 @@
 All notable releases of the Ajeet Alumni App. Versions follow [Semantic Versioning](https://semver.org/).
 Frontend (`package.json`) and backend (`supabase/VERSION.json`) share the same release number.
 
+## [1.0.0-beta.4] - 2026-06-25
+
+Admin Member Support console plus onboarding-feedback UX fixes.
+
+### Frontend
+- **Admin → Member Support**: person-centric lookup to diagnose onboarding without SQL — member search, summary, imported-vs-current diff, lifecycle timeline, email activity, diagnostics, quick actions (resend approval, resend password reset), and support notes history
+- Password fields show a **show/hide eye toggle** on login and reset/set-password
+- Smoother **mobile profile editing** — keyboard-aware focus scroll, `interactive-widget` viewport handling, and scroll padding so fields stay visible while typing
+
+### Backend (Supabase)
+- Migrations `000028`–`000033`: Member Support tables/RPCs, centralized `log_member_email_event` RPC, snapshot auth fix, corrected "recently approved" and "incomplete registrations" metrics, hardened RPCs with clearer errors
+- Edge functions log email events via the `log_member_email_event` RPC; added `admin-update-member-email` and `admin-resend-password-reset`
+
+### Fixes
+- Login magic link no longer creates empty "shell" accounts for non-members (`shouldCreateUser: false`); unknown emails are guided to Claim/Register instead
+- Import comparison now reads the nested `raw_payload` shape ({ raw, mapped })
+- Build fixes: export `formatSupportError`, import `allowAdminDirectoryView`
+
 ## [1.0.0-beta.3] - 2026-06-23
 
 Email verification gate and approval auto-linking.
@@ -57,6 +75,7 @@ Phase 1 beta — claim, register, admin approval, and cleaned import data.
 ### Known limitations
 - Transactional email depends on placeholder sender until business domain is configured
 
+[1.0.0-beta.4]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/rangaj/ajeet-website/releases/tag/v1.0.0-beta.1
