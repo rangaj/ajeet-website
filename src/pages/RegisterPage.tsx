@@ -387,7 +387,7 @@ export function RegisterPage() {
               value={form.course_end_year}
               onChange={(e) => setBatchYear(e.target.value)}
               placeholder="e.g. 1987"
-              hint="Your passing-out year at Sainik School Bijapur. Join year is calculated automatically (7 years at school)."
+              hint="Your passing-out year at Sainik School Bijapur. Join year is calculated automatically (usually 7 years at school; Batch 1982 joined in 1974)."
               error={fieldErrors.course_end_year}
             />
             {form.course_start_year && form.course_end_year && (

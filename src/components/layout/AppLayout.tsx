@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
 import { PasswordSetupBanner } from "@/components/auth/PasswordSetupBanner";
+import { IdleSessionManager } from "@/components/auth/IdleSessionManager";
 import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
@@ -108,6 +109,7 @@ export function AppLayout() {
         isHome ? "bg-warm-white" : "bg-surface-muted"
       )}
     >
+      <IdleSessionManager />
       <header className={headerClass}>
         <div className="mx-auto flex w-full min-w-0 max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6">
           <div className="min-w-0 shrink" onClick={closeMobile}>

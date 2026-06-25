@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { resolvePostAuthPath } from "@/lib/auth-landing";
 import { isRecoveryHash, isRecoveryPending } from "@/lib/auth-recovery";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +20,13 @@ export function LoginPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const sessionMessage = (location.state as { sessionMessage?: string } | null)?.sessionMessage;
+    if (!sessionMessage) return;
+    setMessage(sessionMessage);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (authLoading || !user) return;
