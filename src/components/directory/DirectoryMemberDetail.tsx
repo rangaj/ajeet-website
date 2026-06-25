@@ -1,4 +1,4 @@
-import { BadgeCheck, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
+import { BadgeCheck, Globe, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
 import {
   formatBatch,
   formatHousesWithLabel,
@@ -69,6 +69,11 @@ function SkillChips({ value }: { value: string }) {
       ))}
     </div>
   );
+}
+
+function externalHref(url: string): string {
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetailProps) {
@@ -215,7 +220,7 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
             </DetailSection>
           )}
 
-          {(member.email || member.mobile_phone || member.linkedin_link) && (
+          {(member.email || member.mobile_phone || member.linkedin_link || member.website_link) && (
             <DetailSection title="Contact">
               <div className="flex flex-wrap gap-2">
                 {member.email && (
@@ -245,6 +250,17 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                   >
                     <Linkedin className="mr-1.5 h-4 w-4" />
                     LinkedIn
+                  </a>
+                )}
+                {member.website_link && (
+                  <a
+                    href={externalHref(member.website_link)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-xl border border-surface-border bg-white px-3 py-1.5 text-sm font-semibold text-brand-700 hover:border-brand-200 hover:bg-brand-50"
+                  >
+                    <Globe className="mr-1.5 h-4 w-4" />
+                    Website
                   </a>
                 )}
               </div>

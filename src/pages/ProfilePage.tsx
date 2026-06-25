@@ -17,7 +17,7 @@ import {
   type MentorshipFormState,
 } from "@/components/profile/ProfileMentorshipSection";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
-import { invalidateProfilePhotoCache, resolveProfilePhotoUrl } from "@/lib/profile-photo";
+import { invalidateProfilePhotoCache, primeProfilePhotoCache, resolveProfilePhotoUrl } from "@/lib/profile-photo";
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
@@ -121,11 +121,13 @@ export function ProfilePage() {
     setPhotoError(null);
     setPhotoMessage(null);
 
+    const blobToSave = photoBlob;
+    const oldPath = member.profile_photo_path;
     const storagePath = profilePhotoPathForUser(user.id);
-    await supabase.storage.from("profile-photos").remove([storagePath]);
+
     const { error: uploadErr } = await supabase.storage
       .from("profile-photos")
-      .upload(storagePath, photoBlob, { upsert: true, contentType: "image/webp" });
+      .upload(storagePath, blobToSave, { contentType: "image/webp" });
 
     if (uploadErr) {
       setPhotoError(`Photo upload failed: ${uploadErr.message}`);
@@ -137,20 +139,24 @@ export function ProfilePage() {
     setPhotoUploading(false);
 
     if (err) {
+      await supabase.storage.from("profile-photos").remove([storagePath]);
       setPhotoError(`Could not save photo: ${err.message}`);
       return;
     }
 
-    invalidateProfilePhotoCache(member.profile_photo_path);
-    invalidateProfilePhotoCache(storagePath);
+    if (oldPath && oldPath !== storagePath) {
+      await supabase.storage.from("profile-photos").remove([oldPath]);
+    }
+
+    invalidateProfilePhotoCache(oldPath);
+    const preview = primeProfilePhotoCache(storagePath, blobToSave);
     setPhotoBlob(null);
     setMember({
       ...member,
       profile_photo_path: storagePath,
       updated_at: new Date().toISOString(),
     });
-    const preview = await resolveProfilePhotoUrl(storagePath);
-    if (preview) setPhotoPreview(preview);
+    setPhotoPreview(preview);
     setPhotoMessage("Photo saved.");
   };
 

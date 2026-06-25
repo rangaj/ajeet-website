@@ -17,7 +17,7 @@ export function profilePhotoPath(memberId: string): string {
   return `${memberId}/avatar.webp`;
 }
 
-/** Preferred path — matches storage RLS (auth user id folder). */
+/** Preferred path — unique file per upload avoids stale CDN/cache on replace. */
 export function profilePhotoPathForUser(userId: string): string {
-  return `${userId}/avatar.webp`;
+  return `${userId}/avatar-${Date.now()}.webp`;
 }

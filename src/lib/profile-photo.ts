@@ -22,6 +22,14 @@ export function invalidateProfilePhotoCache(profilePhotoPath?: string | null) {
   photoUrlCache.clear();
 }
 
+/** After upload, show the saved bytes immediately without re-downloading storage. */
+export function primeProfilePhotoCache(profilePhotoPath: string, blob: Blob): string {
+  invalidateProfilePhotoCache(profilePhotoPath);
+  const blobUrl = URL.createObjectURL(blob);
+  photoUrlCache.set(profilePhotoPath, blobUrl);
+  return blobUrl;
+}
+
 /** Load via authenticated download (avoids signed-URL CORS issues in img tags). */
 export async function resolveProfilePhotoUrl(
   profilePhotoPath: string | null | undefined
