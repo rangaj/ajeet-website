@@ -140,6 +140,17 @@ export function DirectoryMemberCard({
           </div>
         )}
 
+        {member.open_to_mentorship && member.mentorship_blurb && (
+          <p
+            className={cn(
+              "rounded-lg border border-emerald-100 bg-emerald-50/90 px-2.5 py-1.5 leading-snug text-emerald-950",
+              compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm"
+            )}
+          >
+            {member.mentorship_blurb}
+          </p>
+        )}
+
         <div className="mt-auto">
           {displayLocation && (
             <p className={cn("line-clamp-1 text-slate-500", compact ? "text-xs" : "text-sm")}>

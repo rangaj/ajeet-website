@@ -64,6 +64,12 @@ export interface AlumniMember {
   open_to_mentorship: boolean;
   mentorship_blurb: string | null;
   paid_session_links: Json;
+  get_involved_wants_to_participate: boolean | null;
+  get_involved_interest_areas: string[];
+  get_involved_geography: string | null;
+  get_involved_time_commitment: string | null;
+  get_involved_comments: string | null;
+  get_involved_updated_at: string | null;
   status: AlumniStatus;
   is_directory_visible: boolean;
   visibility_settings: Record<string, boolean>;
@@ -211,6 +217,12 @@ export type Database = {
           open_to_mentorship: boolean;
           mentorship_blurb: string | null;
           paid_session_links: Json;
+          get_involved_wants_to_participate: boolean | null;
+          get_involved_interest_areas: string[];
+          get_involved_geography: string | null;
+          get_involved_time_commitment: string | null;
+          get_involved_comments: string | null;
+          get_involved_updated_at: string | null;
           status: AlumniStatus;
           is_directory_visible: boolean;
           visibility_settings: Json;
@@ -436,6 +448,16 @@ export type Database = {
           p_open_to_mentorship?: boolean | null;
           p_mentorship_blurb?: string | null;
           p_paid_session_links?: Json | null;
+        };
+        Returns: boolean;
+      };
+      update_get_involved_preferences: {
+        Args: {
+          p_wants_to_participate: boolean;
+          p_interest_areas?: string[] | null;
+          p_geography?: string | null;
+          p_time_commitment?: string | null;
+          p_comments?: string | null;
         };
         Returns: boolean;
       };

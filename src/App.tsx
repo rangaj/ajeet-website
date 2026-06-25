@@ -21,6 +21,7 @@ import { EventsPage } from "@/pages/EventsPage";
 import { StoriesPage } from "@/pages/StoriesPage";
 import { AboutPage } from "@/pages/AboutPage";
 import { PolicyDocumentView } from "@/components/content/PolicyDocumentView";
+import { GET_INVOLVED_PROFILE_PATH } from "@/constants/get-involved";
 import {
   directoryUsagePolicy,
   disclaimer,
@@ -66,6 +67,14 @@ export default function App() {
           element={
             <ProtectedRoute requireDirectory>
               <DirectoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="get-involved"
+          element={
+            <ProtectedRoute>
+              <Navigate to={GET_INVOLVED_PROFILE_PATH} replace />
             </ProtectedRoute>
           }
         />

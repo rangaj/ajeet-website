@@ -139,7 +139,7 @@ export function ProfileMentorshipSection({
             onChange={(e) => update({ mentorshipBlurb: e.target.value })}
             rows={4}
             maxLength={MENTORSHIP_BLURB_MAX_LENGTH}
-            placeholder="e.g. Product management for early-career Ajeets. Happy to chat over LinkedIn or email."
+            placeholder="e.g. Product management, defence transitions, startups — plus how fellow Ajeets can reach you."
           />
           <p className="text-xs text-slate-500">
             {blurbCount}/{MENTORSHIP_BLURB_MAX_LENGTH} characters. Mention how fellow Ajeets can reach you.

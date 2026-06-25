@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils";
 import {
   BATCH_PRESETS,
+  filtersForMentors,
   filtersFromBatch,
   filtersFromHouse,
   filtersFromLocation,
   filtersFromProfession,
   HOUSE_PRESETS,
+  isMentorsOnlyFilter,
   LOCATION_PRESETS,
   PROFESSION_PRESETS,
   type DirectoryFilters,
@@ -79,10 +81,22 @@ export function DirectoryExplore({ filters, onBrowse, embedded = false }: Direct
             Explore
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Browse by shared school identity — batch, house, location, or profession.
+            Browse by shared school identity — batch, house, location, profession, or mentors.
           </p>
         </div>
       )}
+
+      <ExploreGroup title="Mentorship">
+        <ExploreChip
+          label="Find mentors"
+          active={isMentorsOnlyFilter(filters)}
+          accentColor="#059669"
+          onClick={() => onBrowse(filtersForMentors())}
+        />
+        <p className="w-full text-xs text-slate-500">
+          Each mentor&apos;s expertise is shown on their card — open a profile for contact details.
+        </p>
+      </ExploreGroup>
 
       <ExploreGroup title="Browse by Batch">
         {BATCH_PRESETS.map((preset) => (

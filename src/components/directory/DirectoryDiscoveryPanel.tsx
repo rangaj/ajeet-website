@@ -170,7 +170,11 @@ export function DirectoryDiscoveryPanel({
               label={hint.label}
               active={filtersMatchHint(filters, hint)}
               accentColor={
-                hint.kind === "house" ? getHouseColor(hint.filters.house) : undefined
+                hint.kind === "house"
+                  ? getHouseColor(hint.filters.house)
+                  : hint.kind === "mentorship"
+                    ? "#059669"
+                    : undefined
               }
               onClick={() => onBrowse(hint.filters)}
             />

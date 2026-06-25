@@ -88,6 +88,28 @@ export function filtersFromProfession(profession: string): DirectoryFilters {
   };
 }
 
+export function filtersForMentors(): DirectoryFilters {
+  return {
+    ...EMPTY_DIRECTORY_FILTERS,
+    open_to_mentorship: true,
+  };
+}
+
+export function isMentorsOnlyFilter(filters: DirectoryFilters): boolean {
+  return (
+    filters.open_to_mentorship &&
+    !filters.house &&
+    !filters.location &&
+    !filters.industry &&
+    !filters.year_from &&
+    !filters.year_to &&
+    !filters.company &&
+    !filters.skills &&
+    !filters.course &&
+    !filters.stream
+  );
+}
+
 export function hasDirectoryFilters(filters: DirectoryFilters): boolean {
   if (filters.open_to_mentorship) return true;
   return Object.entries(filters).some(
@@ -120,6 +142,10 @@ export function describeActiveBrowse(
     return filters.industry;
   }
 
+  if (isMentorsOnlyFilter(filters)) {
+    return "Mentors";
+  }
+
   return null;
 }
 
@@ -127,11 +153,17 @@ export type DiscoveryHint = {
   id: string;
   label: string;
   filters: DirectoryFilters;
-  kind: "batch" | "house" | "location";
+  kind: "batch" | "house" | "location" | "mentorship";
 };
 
 /** Compact quick-start hints shown inside the discovery panel. */
 export const DISCOVERY_HINTS: DiscoveryHint[] = [
+  {
+    id: "mentors",
+    label: "Find mentors",
+    filters: filtersForMentors(),
+    kind: "mentorship",
+  },
   {
     id: "batch-2000",
     label: "Batch 2000",
@@ -189,7 +221,10 @@ export function activeFilterPills(filters: DirectoryFilters): ActiveFilterPill[]
   const pills: ActiveFilterPill[] = [];
 
   if (filters.open_to_mentorship) {
-    pills.push({ key: "open_to_mentorship", label: "Open to mentorship" });
+    pills.push({
+      key: "open_to_mentorship",
+      label: isMentorsOnlyFilter(filters) ? "Mentors" : "Open to mentorship",
+    });
   }
   if (filters.house) pills.push({ key: "house", label: filters.house });
   if (filters.location) pills.push({ key: "location", label: filters.location });

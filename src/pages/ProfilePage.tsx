@@ -17,6 +17,8 @@ import {
   type MentorshipFormState,
 } from "@/components/profile/ProfileMentorshipSection";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
+import { ProfileGetInvolvedSection } from "@/components/profile/ProfileGetInvolvedSection";
+import { GET_INVOLVED_PROFILE_HASH } from "@/constants/get-involved";
 import { invalidateProfilePhotoCache, primeProfilePhotoCache, resolveProfilePhotoUrl } from "@/lib/profile-photo";
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
@@ -37,16 +39,18 @@ import { Card, Alert } from "@/components/ui/Card";
 import type { AlumniMember } from "@/types/database";
 
 function ProfileSection({
+  id,
   title,
   description,
   children,
 }: {
+  id?: string;
   title: string;
   description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Card className="space-y-4 p-5 sm:p-6">
+    <Card id={id} className="space-y-4 p-5 sm:p-6 scroll-mt-24">
       <div>
         <h2 className="font-display text-lg font-semibold text-slate-900">{title}</h2>
         {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
@@ -80,6 +84,13 @@ export function ProfilePage() {
       }
     });
   }, [user]);
+
+  useEffect(() => {
+    if (!member) return;
+    if (window.location.hash !== `#${GET_INVOLVED_PROFILE_HASH}`) return;
+    const target = document.getElementById(GET_INVOLVED_PROFILE_HASH);
+    if (target) target.scrollIntoView();
+  }, [member]);
 
   const updateField = (key: keyof AlumniMember, value: string | boolean) => {
     if (!member) return;
@@ -443,6 +454,17 @@ export function ProfilePage() {
             onChange={setMentorshipForm}
           />
         )}
+      </ProfileSection>
+
+      <ProfileSection
+        id={GET_INVOLVED_PROFILE_HASH}
+        title="Get Involved"
+        description="Express your interest in contributing to AAA initiatives. Update your preferences at any time."
+      >
+        <ProfileGetInvolvedSection
+          member={member}
+          onMemberUpdate={(updated) => setMember(updated)}
+        />
       </ProfileSection>
 
       <ProfileSection title="Privacy">

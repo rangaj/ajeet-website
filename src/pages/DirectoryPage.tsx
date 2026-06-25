@@ -187,6 +187,7 @@ export function DirectoryPage() {
               {!loading && results.length > 0 && (
                 <p className="mt-0.5 text-sm text-slate-600">
                   {formatDirectoryResultCount(results.length, totalCount)}
+                  {filters.open_to_mentorship && " · Expertise shown on each card"}
                 </p>
               )}
             </div>

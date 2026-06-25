@@ -9,6 +9,7 @@ import { BrandLockup, BrandLogo, MarketingNavBrand } from "@/components/brand/Br
 import { allowAdminDirectoryView, clearAdminDirectoryView } from "@/lib/admin-navigation";
 import { useBuildId } from "@/lib/build-info";
 import { AAA_MOTTO } from "@/constants/brand";
+import { GET_INVOLVED_PROFILE_PATH } from "@/constants/get-involved";
 import { SITE_NAV_SECTIONS } from "@/constants/site-nav";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,9 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       ? "bg-brand-50 font-semibold text-brand-700"
       : "text-brand-800/80 hover:bg-brand-50 hover:text-brand-700"
   );
+
+const memberNavLinkClass =
+  "rounded-lg px-3 py-2 transition-colors text-brand-800/80 hover:bg-brand-50 hover:text-brand-700";
 
 const marketingNavOnDark =
   "rounded-lg px-2.5 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:px-3";
@@ -152,6 +156,11 @@ export function AppLayout() {
               </NavLink>
             )}
             {user && (
+              <Link to={GET_INVOLVED_PROFILE_PATH} className={memberNavLinkClass}>
+                Get Involved
+              </Link>
+            )}
+            {user && (
               <NavLink to="/profile" className={navLinkClass}>
                 Profile
               </NavLink>
@@ -221,6 +230,11 @@ export function AppLayout() {
                 <NavLink to="/directory" className={navLinkClass} onClick={openDirectory}>
                   Directory
                 </NavLink>
+              )}
+              {user && (
+                <Link to={GET_INVOLVED_PROFILE_PATH} className={memberNavLinkClass} onClick={closeMobile}>
+                  Get Involved
+                </Link>
               )}
               {user && (
                 <NavLink to="/profile" className={navLinkClass} onClick={closeMobile}>

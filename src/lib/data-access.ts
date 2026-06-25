@@ -95,6 +95,24 @@ export type OwnProfileUpdate = {
   paid_session_links?: { url: string }[];
 };
 
+export type GetInvolvedPreferencesUpdate = {
+  wants_to_participate: boolean;
+  interest_areas?: string[];
+  geography?: string | null;
+  time_commitment?: string | null;
+  comments?: string | null;
+};
+
+export async function updateGetInvolvedPreferences(patch: GetInvolvedPreferencesUpdate) {
+  return supabase.rpc("update_get_involved_preferences", {
+    p_wants_to_participate: patch.wants_to_participate,
+    p_interest_areas: patch.interest_areas ?? [],
+    p_geography: patch.geography ?? null,
+    p_time_commitment: patch.time_commitment ?? null,
+    p_comments: patch.comments ?? null,
+  });
+}
+
 export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
   return supabase.rpc("update_own_alumni_profile", {
     p_company: patch.company ?? null,
