@@ -15,7 +15,7 @@ hidden = [".config", "package-lock.json"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "rm -f package-lock.json && npm install && rm -rf dist && export VITE_BUILD_ID=$(node scripts/resolve-build-id.mjs) && npm run build"]
+build = ["sh", "-c", "rm -f package-lock.json src/lib/avatar-moderation.ts && npm install && rm -rf dist && export VITE_BUILD_ID=$(node scripts/resolve-build-id.mjs) && npm run build"]
 run = ["sh", "-c", "node scripts/serve-dist.mjs"]
 
 [nix]
