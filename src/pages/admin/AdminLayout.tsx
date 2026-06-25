@@ -42,7 +42,7 @@ function AdminNavChip({
 
 export function AdminLayout() {
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <header className="space-y-1">
         <h1 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">
           Admin Console

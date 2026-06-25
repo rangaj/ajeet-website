@@ -70,7 +70,7 @@ function DetailRow({
       <dt className="text-sm text-slate-500">{label}</dt>
       <dd
         className={cn(
-          "text-sm font-medium text-slate-900 sm:text-right",
+          "min-w-0 break-words text-sm font-medium text-slate-900 sm:text-right",
           highlight && "text-amber-700"
         )}
       >
@@ -352,8 +352,8 @@ export function AdminMemberSupportPage() {
       {error && <Alert variant="error">{error}</Alert>}
       {actionMessage && <Alert variant="info">{actionMessage}</Alert>}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(240px,320px)_1fr]">
-        <Card className="p-0">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
+        <Card className="min-w-0 p-0">
           <div className="border-b border-surface-border px-4 py-3">
             <p className="text-sm font-medium text-slate-900">
               {searching ? "Searching…" : `${results.length} result${results.length === 1 ? "" : "s"}`}
@@ -370,8 +370,8 @@ export function AdminMemberSupportPage() {
                     selectedId === row.id && "bg-brand-50"
                   )}
                 >
-                  <p className="font-medium text-slate-900">{row.name}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="break-words font-medium text-slate-900">{row.name}</p>
+                  <p className="break-words text-xs text-slate-500">
                     Roll {row.roll_number}
                     {row.email ? ` · ${row.email}` : ""}
                   </p>
@@ -389,7 +389,7 @@ export function AdminMemberSupportPage() {
           </ul>
         </Card>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {!selectedId && (
             <Card className="text-sm text-slate-600">
               Select a member to view diagnostics, email activity, and support actions.
@@ -678,8 +678,8 @@ export function AdminMemberSupportPage() {
                 )}
               </Card>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Card className="space-y-3">
+              <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+                <Card className="min-w-0 space-y-3">
                   <SectionTitle>Claim & approval diagnostics</SectionTitle>
                   <dl className="space-y-2">
                     <DetailRow
@@ -724,7 +724,7 @@ export function AdminMemberSupportPage() {
                   </dl>
                 </Card>
 
-                <Card className="space-y-3">
+                <Card className="min-w-0 space-y-3">
                   <SectionTitle>Authentication diagnostics</SectionTitle>
                   <dl className="space-y-2">
                     <DetailRow
@@ -775,7 +775,7 @@ export function AdminMemberSupportPage() {
                       className="rounded-xl border border-surface-border bg-slate-50 px-4 py-3"
                     >
                       <p className="text-sm text-slate-900">{note.body}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 break-words text-xs text-slate-500">
                         {formatDateTime(note.created_at)}
                         {note.author_email ? ` · ${note.author_email}` : ""}
                       </p>
@@ -792,9 +792,9 @@ export function AdminMemberSupportPage() {
                   <SectionTitle>Recent administrative actions</SectionTitle>
                   <ul className="space-y-2 text-sm">
                     {snapshot.audit_log.map((entry) => (
-                      <li key={entry.id} className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
-                        <span className="font-medium text-slate-800">{entry.action}</span>
-                        <span className="text-xs text-slate-500">
+                      <li key={entry.id} className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                        <span className="break-words font-medium text-slate-800">{entry.action}</span>
+                        <span className="break-words text-xs text-slate-500 sm:text-right">
                           {formatDateTime(entry.created_at)}
                           {entry.actor_email ? ` · ${entry.actor_email}` : ""}
                         </span>
