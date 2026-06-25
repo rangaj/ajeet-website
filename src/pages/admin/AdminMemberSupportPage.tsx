@@ -29,6 +29,7 @@ import {
   fetchSupportDashboardMetrics,
   searchSupportMembers,
 } from "@/lib/data-access";
+import { allowAdminDirectoryView } from "@/lib/admin-navigation";
 import { formatSupportError } from "@/lib/member-support-errors";
 import { formatBatch, formatHousesWithLabel } from "@/lib/alumni-display";
 import { invokeFunction } from "@/lib/supabase";
