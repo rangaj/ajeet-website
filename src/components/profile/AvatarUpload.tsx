@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { moderateAvatarBlob, preloadAvatarModerationModel } from "@/lib/avatar-moderation";
 import {
   AVATAR_FILE_ACCEPT,
   getCroppedImageBlob,
@@ -28,7 +27,7 @@ export function AvatarUpload({
   onBlobReady,
   onRemove,
   disabled,
-  hint = "Use a clear, appropriate face photo — we crop and resize it for the directory.",
+  hint = "Any gallery photo is fine — we crop and resize it for the directory.",
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [cropOpen, setCropOpen] = useState(false);
@@ -38,13 +37,7 @@ export function AvatarUpload({
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [preparing, setPreparing] = useState(false);
-
-  useEffect(() => {
-    if (!cropOpen) return;
-    preloadAvatarModerationModel();
-  }, [cropOpen]);
 
   const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
     setCroppedArea(areaPixels);
@@ -80,12 +73,6 @@ export function AvatarUpload({
     setError("");
     try {
       const blob = await getCroppedImageBlob(imageSrc, croppedArea);
-      setChecking(true);
-      const moderation = await moderateAvatarBlob(blob);
-      if (!moderation.allowed) {
-        setError(moderation.message);
-        return;
-      }
       const preview = URL.createObjectURL(blob);
       onPreviewChange(preview);
       onBlobReady?.(blob);
@@ -94,7 +81,6 @@ export function AvatarUpload({
     } catch {
       setError("Could not process that image. Try another file.");
     } finally {
-      setChecking(false);
       setSaving(false);
     }
   };
@@ -213,11 +199,11 @@ export function AvatarUpload({
                 Cancel
               </Button>
               <Button type="button" onClick={() => void applyCrop()} disabled={saving || !croppedArea}>
-                {checking ? "Checking…" : saving ? "Processing…" : "Use photo"}
+                {saving ? "Saving..." : "Use photo"}
               </Button>
             </div>
             <p className="mt-2 text-center text-xs text-slate-400">
-              Large photos are resized automatically. Only appropriate face photos are allowed.
+              We save a small WebP for the directory — large originals are resized automatically.
             </p>
           </div>
         </div>
