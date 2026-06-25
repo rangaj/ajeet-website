@@ -569,10 +569,11 @@ export function AdminMemberSupportPage() {
                         </thead>
                         <tbody>
                           {importComparison.map((row) => {
-                            const changed =
+                            const changed = Boolean(
                               row.original &&
-                              row.current &&
-                              row.original !== row.current;
+                                row.current &&
+                                row.original !== row.current
+                            );
                             return (
                               <tr
                                 key={row.label}

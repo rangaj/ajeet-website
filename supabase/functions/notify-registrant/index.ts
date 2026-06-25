@@ -1,10 +1,47 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import {
-  logMemberEmailEvent,
-  notifyEmailType,
-  resendEmailStatus,
-} from "../_shared/member-email-log.ts";
+
+async function logMemberEmailEvent(
+  adminClient: ReturnType<typeof createClient>,
+  params: {
+    alumniMemberId?: string | null;
+    approvalRequestId?: string | null;
+    emailType: string;
+    provider: "auth_service" | "resend";
+    recipient: string;
+    status: string;
+    messageId?: string | null;
+    errorMessage?: string | null;
+    triggerSource?: string;
+  }
+): Promise<void> {
+  const { error } = await adminClient.from("member_email_events").insert({
+    alumni_member_id: params.alumniMemberId ?? null,
+    approval_request_id: params.approvalRequestId ?? null,
+    email_type: params.emailType,
+    provider: params.provider,
+    recipient: params.recipient,
+    status: params.status,
+    message_id: params.messageId ?? null,
+    error_message: params.errorMessage ?? null,
+    trigger_source: params.triggerSource ?? "system",
+  });
+  if (error) console.error("member_email_events insert failed:", error.message);
+}
+
+function notifyEmailType(event: string, requestType: string): string {
+  if (event === "approved") {
+    return requestType === "claim" ? "claim_approved" : "registration_approved";
+  }
+  if (event === "rejected") return "request_rejected";
+  if (event === "more_info") return "more_info_required";
+  return "request_submitted";
+}
+
+function resendEmailStatus(ok: boolean, resendId?: string | null) {
+  if (!ok) return { status: "failed", messageId: null };
+  return { status: "sent", messageId: resendId ?? null };
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
