@@ -9,6 +9,13 @@ import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import {
+  mentorshipFormFromMember,
+  mentorshipPayloadFromForm,
+  ProfileMentorshipSection,
+  validateMentorshipForm,
+  type MentorshipFormState,
+} from "@/components/profile/ProfileMentorshipSection";
 import { ProfileShareSection } from "@/components/profile/ProfileShareSection";
 import { invalidateProfilePhotoCache, resolveProfilePhotoUrl } from "@/lib/profile-photo";
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
@@ -57,11 +64,13 @@ export function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [mentorshipForm, setMentorshipForm] = useState<MentorshipFormState | null>(null);
 
   useEffect(() => {
     if (!user) return;
     fetchAlumniMemberByUserId(user.id).then(async ({ data }) => {
       setMember(data);
+      if (data) setMentorshipForm(mentorshipFormFromMember(data));
       if (data?.profile_photo_path) {
         const preview = await resolveProfilePhotoUrl(data.profile_photo_path);
         if (preview) setPhotoPreview(preview);
@@ -83,9 +92,21 @@ export function ProfilePage() {
   };
 
   const handleSave = async () => {
-    if (!member || !user) return;
+    if (!member || !user || !mentorshipForm) return;
     setSaving(true);
     setError("");
+
+    const mentorshipError = validateMentorshipForm(
+      mentorshipForm,
+      member.is_directory_visible
+    );
+    if (mentorshipError) {
+      setError(mentorshipError);
+      setSaving(false);
+      return;
+    }
+
+    const mentorshipPayload = mentorshipPayloadFromForm(mentorshipForm);
 
     let nextPhotoPath = member.profile_photo_path;
 
@@ -117,6 +138,7 @@ export function ProfilePage() {
       website_link: member.website_link,
       is_directory_visible: member.is_directory_visible,
       visibility_settings: member.visibility_settings,
+      ...mentorshipPayload,
       ...(photoBlob ? { profile_photo_path: nextPhotoPath } : {}),
     });
 
@@ -128,11 +150,22 @@ export function ProfilePage() {
       const savedPhotoPath = photoBlob ? nextPhotoPath : null;
       setPhotoBlob(null);
       const now = new Date().toISOString();
-      setMember({
+      const updatedMember: AlumniMember = {
         ...member,
         updated_at: now,
+        open_to_mentorship: mentorshipPayload.open_to_mentorship ?? member.open_to_mentorship,
+        mentorship_blurb:
+          mentorshipPayload.mentorship_blurb !== undefined
+            ? mentorshipPayload.mentorship_blurb
+            : member.mentorship_blurb,
+        paid_session_links:
+          mentorshipPayload.paid_session_links !== undefined
+            ? mentorshipPayload.paid_session_links
+            : member.paid_session_links,
         ...(savedPhotoPath ? { profile_photo_path: savedPhotoPath } : {}),
-      });
+      };
+      setMember(updatedMember);
+      setMentorshipForm(mentorshipFormFromMember(updatedMember));
       if (savedPhotoPath) {
         invalidateProfilePhotoCache(member.profile_photo_path);
         invalidateProfilePhotoCache(savedPhotoPath);
@@ -346,11 +379,17 @@ export function ProfilePage() {
         />
       </ProfileSection>
 
-      <ProfileSection title="Mentorship" description="Mentorship matching will be available in a future release.">
-        <label className="flex items-center gap-2 text-sm text-slate-500">
-          <input type="checkbox" disabled className="rounded border-slate-300" />
-          Open to mentoring fellow Ajeets
-        </label>
+      <ProfileSection
+        title="Mentorship"
+        description="Help fellow Ajeets find you for guidance. Paid booking links open on external platforms."
+      >
+        {mentorshipForm && (
+          <ProfileMentorshipSection
+            isDirectoryVisible={member.is_directory_visible}
+            form={mentorshipForm}
+            onChange={setMentorshipForm}
+          />
+        )}
       </ProfileSection>
 
       <ProfileSection title="Privacy">

@@ -16,6 +16,7 @@ import {
   formatDisplayLocation,
   formatDisplayMemberName,
 } from "@/lib/display-text";
+import { MentorOpenBadge } from "@/components/mentorship/MentorDisplay";
 import type { SearchResult } from "@/types/database";
 
 interface DirectoryMemberCardProps {
@@ -93,6 +94,7 @@ export function DirectoryMemberCard({
           >
             {displayName}
           </h3>
+          {member.open_to_mentorship && <MentorOpenBadge />}
           <HouseAbbrevPills houseValue={member.house} className="mt-0.5" />
         </div>
 

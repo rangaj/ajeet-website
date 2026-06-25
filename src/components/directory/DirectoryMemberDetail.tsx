@@ -17,6 +17,11 @@ import {
   formatDisplayLocation,
   formatDisplayMemberName,
 } from "@/lib/display-text";
+import {
+  MentorOpenBadge,
+  MentorPaidSessionLinks,
+} from "@/components/mentorship/MentorDisplay";
+import { parsePaidSessionLinks } from "@/lib/mentorship-links";
 import type { SearchResult } from "@/types/database";
 
 interface DirectoryMemberDetailProps {
@@ -147,6 +152,11 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                     <BadgeCheck className="h-3.5 w-3.5 text-gold-600" aria-hidden />
                     Verified Ajeet
                   </p>
+                  {member.open_to_mentorship && (
+                    <div className="mt-2">
+                      <MentorOpenBadge className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-800" />
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -199,6 +209,12 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
             </DetailSection>
           )}
 
+          {member.open_to_mentorship && member.mentorship_blurb && (
+            <DetailSection title="Mentorship">
+              <p className="leading-relaxed text-slate-700">{member.mentorship_blurb}</p>
+            </DetailSection>
+          )}
+
           {(member.email || member.mobile_phone || member.linkedin_link) && (
             <DetailSection title="Contact">
               <div className="flex flex-wrap gap-2">
@@ -232,6 +248,13 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                   </a>
                 )}
               </div>
+            </DetailSection>
+          )}
+
+          {member.open_to_mentorship &&
+            parsePaidSessionLinks(member.paid_session_links).length > 0 && (
+            <DetailSection title="Paid sessions">
+              <MentorPaidSessionLinks links={member.paid_session_links} />
             </DetailSection>
           )}
         </div>

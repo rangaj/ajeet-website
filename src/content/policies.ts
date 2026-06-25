@@ -426,6 +426,19 @@ export const directoryUsagePolicy: PolicyDocument = {
       ],
     },
     {
+      heading: "Mentorship Listings",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Members may opt in to mentorship listings within the directory. Paid session links are provided by members and point to external booking platforms.",
+        },
+        {
+          type: "paragraph",
+          text: "The Ajeets Alumni Association does not screen, endorse or operate paid mentorship bookings. Scheduling, fees and disputes are handled solely on the external platform between the mentor and mentee.",
+        },
+      ],
+    },
+    {
       heading: "Enforcement",
       blocks: [
         {

@@ -18,7 +18,9 @@ export function DirectoryAdvancedFilters({
   embedded = false,
 }: DirectoryAdvancedFiltersProps) {
   const [open, setOpen] = useState(false);
-  const hasValues = Object.values(filters).some(Boolean);
+  const hasValues =
+    filters.open_to_mentorship ||
+    Object.entries(filters).some(([key, value]) => key !== "open_to_mentorship" && Boolean(value));
 
   const update = (key: keyof DirectoryFilters, value: string) => {
     onChange({ ...filters, [key]: value });
@@ -82,6 +84,17 @@ export function DirectoryAdvancedFilters({
                 </option>
               ))}
         </select>
+      </label>
+      <label className="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
+        <input
+          type="checkbox"
+          className="rounded border-slate-300"
+          checked={filters.open_to_mentorship}
+          onChange={(e) =>
+            onChange({ ...filters, open_to_mentorship: e.target.checked })
+          }
+        />
+        <span className="text-sm text-slate-700">Open to mentorship</span>
       </label>
     </div>
   );

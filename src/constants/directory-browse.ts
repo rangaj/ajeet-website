@@ -10,6 +10,7 @@ export type DirectoryFilters = {
   industry: string;
   skills: string;
   house: string;
+  open_to_mentorship: boolean;
 };
 
 export const EMPTY_DIRECTORY_FILTERS: DirectoryFilters = {
@@ -22,6 +23,7 @@ export const EMPTY_DIRECTORY_FILTERS: DirectoryFilters = {
   industry: "",
   skills: "",
   house: "",
+  open_to_mentorship: false,
 };
 
 export type BatchPreset = {
@@ -87,7 +89,10 @@ export function filtersFromProfession(profession: string): DirectoryFilters {
 }
 
 export function hasDirectoryFilters(filters: DirectoryFilters): boolean {
-  return Object.values(filters).some(Boolean);
+  if (filters.open_to_mentorship) return true;
+  return Object.entries(filters).some(
+    ([key, value]) => key !== "open_to_mentorship" && Boolean(value)
+  );
 }
 
 export function describeActiveBrowse(
@@ -183,6 +188,9 @@ export type ActiveFilterPill = {
 export function activeFilterPills(filters: DirectoryFilters): ActiveFilterPill[] {
   const pills: ActiveFilterPill[] = [];
 
+  if (filters.open_to_mentorship) {
+    pills.push({ key: "open_to_mentorship", label: "Open to mentorship" });
+  }
   if (filters.house) pills.push({ key: "house", label: filters.house });
   if (filters.location) pills.push({ key: "location", label: filters.location });
   if (filters.industry) pills.push({ key: "industry", label: filters.industry });
@@ -207,6 +215,9 @@ export function clearFilterKey(
   filters: DirectoryFilters,
   key: keyof DirectoryFilters
 ): DirectoryFilters {
+  if (key === "open_to_mentorship") {
+    return { ...filters, open_to_mentorship: false };
+  }
   if (key === "year_from" || key === "year_to") {
     return { ...filters, year_from: "", year_to: "" };
   }

@@ -16,6 +16,7 @@ export type SearchAlumniParams = {
   p_industry?: string | null;
   p_skills?: string | null;
   p_house?: string | null;
+  p_open_to_mentorship?: boolean | null;
   p_page?: number;
   p_page_size?: number;
   p_admin_mode?: boolean;
@@ -89,6 +90,9 @@ export type OwnProfileUpdate = {
   visibility_settings?: Record<string, boolean>;
   profile_photo_path?: string | null;
   clear_profile_photo?: boolean;
+  open_to_mentorship?: boolean;
+  mentorship_blurb?: string | null;
+  paid_session_links?: { url: string }[];
 };
 
 export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
@@ -108,6 +112,15 @@ export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
     p_visibility_settings: patch.visibility_settings ?? null,
     p_profile_photo_path: patch.profile_photo_path ?? null,
     p_clear_profile_photo: patch.clear_profile_photo ?? false,
+    ...(patch.open_to_mentorship !== undefined
+      ? { p_open_to_mentorship: patch.open_to_mentorship }
+      : {}),
+    ...(patch.mentorship_blurb !== undefined
+      ? { p_mentorship_blurb: patch.mentorship_blurb }
+      : {}),
+    ...(patch.paid_session_links !== undefined
+      ? { p_paid_session_links: patch.paid_session_links }
+      : {}),
   });
 }
 

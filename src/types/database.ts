@@ -61,6 +61,9 @@ export interface AlumniMember {
   twitter_link: string | null;
   website_link: string | null;
   profile_photo_path: string | null;
+  open_to_mentorship: boolean;
+  mentorship_blurb: string | null;
+  paid_session_links: Json;
   status: AlumniStatus;
   is_directory_visible: boolean;
   visibility_settings: Record<string, boolean>;
@@ -121,6 +124,9 @@ export interface SearchResult {
   visibility_settings: Json;
   status: AlumniStatus;
   is_directory_visible: boolean;
+  open_to_mentorship: boolean;
+  mentorship_blurb: string | null;
+  paid_session_links: Json;
   has_more: boolean;
   total_count?: number;
 }
@@ -202,6 +208,9 @@ export type Database = {
           twitter_link: string | null;
           website_link: string | null;
           profile_photo_path: string | null;
+          open_to_mentorship: boolean;
+          mentorship_blurb: string | null;
+          paid_session_links: Json;
           status: AlumniStatus;
           is_directory_visible: boolean;
           visibility_settings: Json;
@@ -338,6 +347,7 @@ export type Database = {
           p_industry?: string | null;
           p_skills?: string | null;
           p_house?: string | null;
+          p_open_to_mentorship?: boolean | null;
           p_page?: number | null;
           p_page_size?: number | null;
           p_admin_mode?: boolean | null;
@@ -423,6 +433,9 @@ export type Database = {
           p_visibility_settings?: Record<string, boolean> | null;
           p_profile_photo_path?: string | null;
           p_clear_profile_photo?: boolean | null;
+          p_open_to_mentorship?: boolean | null;
+          p_mentorship_blurb?: string | null;
+          p_paid_session_links?: Json | null;
         };
         Returns: boolean;
       };

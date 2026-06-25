@@ -65,6 +65,7 @@ export function DirectoryPage() {
         p_industry: filters.industry || null,
         p_skills: filters.skills || null,
         p_house: filters.house || null,
+        p_open_to_mentorship: filters.open_to_mentorship || null,
         p_page: pageNum,
         p_page_size: PAGE_SIZE,
         p_admin_mode: false,
