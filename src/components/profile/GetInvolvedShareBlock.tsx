@@ -6,6 +6,7 @@ import {
 } from "@/constants/get-involved";
 import { formatBatch, formatHousesWithLabel, formatRollNumber } from "@/lib/alumni-display";
 import { formatDisplayShareName } from "@/lib/display-text";
+import { profilePhotoToDataUrl } from "@/lib/photo-data-url";
 import {
   captureShareCardImage,
   downloadShareCardImage,
@@ -23,6 +24,7 @@ function getInvolvedShareMessage(): string {
 
 export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [imageBusy, setImageBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -35,9 +37,27 @@ export function GetInvolvedShareBlock({ member }: { member: AlumniMember }) {
     batch: formatBatch(member.course_end_year),
     rollNumber: formatRollNumber(member.roll_number),
     house: formatHousesWithLabel(member.house),
+    houseValue: member.house,
+    photoDataUrl,
     interestAreas: shown,
     extraAreaCount: extraCount,
   };
+
+  useEffect(() => {
+    if (!member.profile_photo_path) {
+      setPhotoDataUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    void profilePhotoToDataUrl(member.profile_photo_path).then((dataUrl) => {
+      if (!cancelled) setPhotoDataUrl(dataUrl);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [member.profile_photo_path]);
 
   const captureCard = async () => {
     if (!cardRef.current) {

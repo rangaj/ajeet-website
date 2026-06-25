@@ -44,6 +44,18 @@ export const GET_INVOLVED_PROFILE_PATH = `/profile#${GET_INVOLVED_PROFILE_HASH}`
 
 export const GET_INVOLVED_COMMENTS_MAX_LENGTH = 2000;
 
+/** Share card headline — two lines avoids clipping at 360px export width. */
+export const GET_INVOLVED_CARD_HEADLINE = {
+  line1: "Getting involved",
+  line2: "with AAA initiatives",
+} as const;
+
+export const GET_INVOLVED_CARD_INTEREST_LABEL = "Contributing to";
+
+export const GET_INVOLVED_CARD_SUBLINE = "Ajeet alumnus · Sainik School Bijapur";
+
+export const GET_INVOLVED_CARD_WIDTH_PX = 400;
+
 export const GET_INVOLVED_SHARE_TEXT = `I have opted in to get involved with the Ajeet Alumni Association and contribute to AAA initiatives.
 
 Ajeet Hain. Abheet Hain.
