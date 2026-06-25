@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { normalizeSchoolCourseYears } from "../_shared/normalize-course-years.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -156,7 +157,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const rollNumber = normalizeRoll(body.roll_number ?? "");
     const email = String(body.email ?? "").trim().toLowerCase();
-    const payload = body.payload ?? {};
+    const payload: Record<string, unknown> = { ...(body.payload ?? {}) };
+    normalizeSchoolCourseYears(payload);
     const emailRedirectTo = body.email_redirect_to ?? undefined;
 
     if (!rollNumber || !email) {

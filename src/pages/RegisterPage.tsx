@@ -5,6 +5,7 @@ import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { HouseSelector } from "@/components/register/HouseSelector";
 import { PolicyConsentCheckbox } from "@/components/register/PolicyConsentCheckbox";
 import { formatHouses } from "@/constants/houses";
+import { joinYearStringFromBatch } from "@/constants/school-years";
 import { storePendingAvatar } from "@/lib/image";
 import { FunctionCallError, invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +13,7 @@ import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 
-const STEPS = ["Identity", "School years", "Today", "Review"] as const;
+const STEPS = ["Identity", "Batch & house", "Today", "Review"] as const;
 
 const SALUTATION_OPTIONS = [
   { value: "", label: "—" },
@@ -140,6 +141,20 @@ export function RegisterPage() {
     });
   };
 
+  const setBatchYear = (batchYear: string) => {
+    setForm((f) => ({
+      ...f,
+      course_end_year: batchYear,
+      course_start_year: joinYearStringFromBatch(batchYear),
+    }));
+    setFieldErrors((e) => {
+      const next = { ...e };
+      delete next.course_end_year;
+      delete next.course_start_year;
+      return next;
+    });
+  };
+
   const validateStep = (index: number): boolean => {
     const errors: Record<string, string> = {};
 
@@ -152,14 +167,15 @@ export function RegisterPage() {
     }
 
     if (index === 1) {
-      if (!form.course_start_year.trim()) errors.course_start_year = "Start year is required.";
-      if (!form.course_end_year.trim()) errors.course_end_year = "End year is required.";
-      if (form.houses.length === 0) errors.houses = "Select at least one house.";
-      const start = Number(form.course_start_year);
-      const end = Number(form.course_end_year);
-      if (start && end && start > end) {
-        errors.course_end_year = "End year must be on or after start year.";
+      if (!form.course_end_year.trim()) {
+        errors.course_end_year = "Batch year (passing out) is required.";
+      } else {
+        const end = Number(form.course_end_year);
+        if (!Number.isFinite(end) || end < 1963 || end > 2030) {
+          errors.course_end_year = "Enter a valid batch year (e.g. 1987).";
+        }
       }
+      if (form.houses.length === 0) errors.houses = "Select at least one house.";
     }
 
     setFieldErrors(errors);
@@ -364,26 +380,22 @@ export function RegisterPage() {
 
         {step === 1 && (
           <div className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                label="Start year *"
-                type="number"
-                required
-                value={form.course_start_year}
-                onChange={(e) => update("course_start_year", e.target.value)}
-                placeholder="e.g. 2010"
-                error={fieldErrors.course_start_year}
-              />
-              <Input
-                label="End year *"
-                type="number"
-                required
-                value={form.course_end_year}
-                onChange={(e) => update("course_end_year", e.target.value)}
-                placeholder="e.g. 2015"
-                error={fieldErrors.course_end_year}
-              />
-            </div>
+            <Input
+              label="Batch year (passing out) *"
+              type="number"
+              required
+              value={form.course_end_year}
+              onChange={(e) => setBatchYear(e.target.value)}
+              placeholder="e.g. 1987"
+              hint="Your passing-out year at Sainik School Bijapur. Join year is calculated automatically (7 years at school)."
+              error={fieldErrors.course_end_year}
+            />
+            {form.course_start_year && form.course_end_year && (
+              <p className="rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
+                At SSBJ: <strong>{form.course_start_year} – {form.course_end_year}</strong>
+                {" "}(joined in {form.course_start_year})
+              </p>
+            )}
             <HouseSelector
               value={form.houses}
               onChange={(houses) => update("houses", houses)}
@@ -464,9 +476,17 @@ export function RegisterPage() {
               </div>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-              <h3 className="font-semibold text-brand-900">School years</h3>
+              <h3 className="font-semibold text-brand-900">Batch & house</h3>
               <div className="mt-2">
-                <SummaryRow label="Years" value={`${form.course_start_year} – ${form.course_end_year}`} />
+                <SummaryRow label="Batch" value={form.course_end_year} />
+                <SummaryRow
+                  label="At SSBJ"
+                  value={
+                    form.course_start_year && form.course_end_year
+                      ? `${form.course_start_year} – ${form.course_end_year}`
+                      : null
+                  }
+                />
                 <SummaryRow label="House(s)" value={houseLabel} />
               </div>
             </div>

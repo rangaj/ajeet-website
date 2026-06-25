@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { normalizeSchoolCourseYears } from "../_shared/normalize-course-years.ts";
 
 const MAX_ROLL_NUMBER = 7001;
 
@@ -206,6 +207,7 @@ function stageCsvRows(
   for (const raw of rows) {
     const sourceLine = Number(raw.__source_line ?? 0);
     const mapped = mapRow(raw, mapping);
+    normalizeSchoolCourseYears(mapped);
     const rollRaw = String(mapped.roll_number ?? raw["Roll no"] ?? "").trim();
     if (rollRaw && /^\d+$/.test(rollRaw)) {
       mapped.roll_number = normalizeRollForStorage(rollRaw);
