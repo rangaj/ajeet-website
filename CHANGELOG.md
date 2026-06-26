@@ -12,6 +12,7 @@ Sign-up & profile improvements (Phases 0–4).
 - **Profile**: added an **X (Twitter)** field; added an editable **Join year** under a new "School years" section; added an **Account** section to change the **login email** (sends a confirmation link to the new address)
 - **Phone with country code**: new `PhoneInput` (curated dial-code list, India-first) storing **E.164**, with light per-country validation — used at sign-up and in the profile
 - **Sign-up additions**: editable join year, social links (LinkedIn / X / Website), **directory-visibility consent**, and light **mentoring / Get Involved** interest opt-ins; work-history hint on the Organisation field (pipe-separated, newest last)
+- **Admin review queue**: a "⚠ Prior rejected attempt" flag when a roll number that was rejected before re-applies — context at a glance, no auto-blocking
 
 ### Backend (Supabase)
 - Migration `20250626000001`: `approve_registration` now maps the new sign-up payload fields (social links, directory-visibility consent, Get-Involved interest) onto the member at approval; new `update_own_join_year` RPC for self-service join-year correction

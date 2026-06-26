@@ -1,6 +1,6 @@
 // Admin review queue — synced with GitHub main (build >= pending-profile-fix)
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Mail, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Mail, XCircle } from "lucide-react";
 import { supabase, invokeFunction } from "@/lib/supabase";
 import { approveRegistration, rejectRegistration } from "@/lib/data-access";
 import { formatHouses, formatHousesDisplay, parseHouses } from "@/constants/houses";
@@ -285,6 +285,7 @@ function mergeQueueRequests(
 export function AdminQueuePage() {
   const [tab, setTab] = useState<string>("all");
   const [requests, setRequests] = useState<QueueRequest[]>([]);
+  const [rejectedByRoll, setRejectedByRoll] = useState<Map<string, number>>(new Map());
   const [note, setNote] = useState<Record<string, string>>({});
   const [bulkNote, setBulkNote] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -356,6 +357,28 @@ export function AdminQueuePage() {
 
     setRequests(mergeQueueRequests(approvals, memberById));
     setSelected(new Set());
+
+    // Flag rolls in this view that have a prior rejected attempt (context for re-applicants).
+    const rollsInView = [
+      ...new Set(
+        approvals
+          .filter((r) => r.status !== "rejected" && r.roll_number)
+          .map((r) => r.roll_number as string)
+      ),
+    ];
+    const rejectedCounts = new Map<string, number>();
+    if (rollsInView.length > 0) {
+      const { data: rejectedRows } = await supabase
+        .from("approval_requests")
+        .select("roll_number")
+        .eq("status", "rejected")
+        .in("roll_number", rollsInView);
+      for (const row of rejectedRows ?? []) {
+        if (!row.roll_number) continue;
+        rejectedCounts.set(row.roll_number, (rejectedCounts.get(row.roll_number) ?? 0) + 1);
+      }
+    }
+    setRejectedByRoll(rejectedCounts);
   };
 
   useEffect(() => {
@@ -588,6 +611,19 @@ export function AdminQueuePage() {
                         ? "expired"
                         : r.status.replace(/_/g, " ")}
                     </Badge>
+                    {r.status !== "rejected" &&
+                      r.roll_number &&
+                      (rejectedByRoll.get(r.roll_number) ?? 0) > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800"
+                          title="This roll number was rejected before. Review the Rejected tab for context."
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+                          {(rejectedByRoll.get(r.roll_number) ?? 0) > 1
+                            ? `${rejectedByRoll.get(r.roll_number)} prior rejected attempts`
+                            : "Prior rejected attempt"}
+                        </span>
+                      )}
                     <span className="text-sm text-slate-500">{formatDate(r.created_at)}</span>
                     {expiryLabel && isAwaitingEmailTab && !expired && (
                       <span className="text-sm text-slate-400">· Link expires {expiryLabel}</span>
