@@ -148,6 +148,12 @@ export async function updateOwnAlumniProfile(patch: OwnProfileUpdate) {
   });
 }
 
+export async function updateOwnJoinYear(courseStartYear: number | null) {
+  return supabase.rpc("update_own_join_year", {
+    p_course_start_year: courseStartYear,
+  });
+}
+
 export async function fetchAlumniMemberByUserId(userId: string) {
   return supabase
     .from("alumni_members")

@@ -9,7 +9,8 @@ import { joinYearStringFromBatch } from "@/constants/school-years";
 import { storePendingAvatar } from "@/lib/image";
 import { FunctionCallError, invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
-import { Input, Select, Textarea } from "@/components/ui/Input";
+import { Input, PhoneInput, Select, Textarea } from "@/components/ui/Input";
+import { validatePhoneNational, splitE164 } from "@/constants/country-codes";
 import { Alert, Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 
@@ -44,6 +45,12 @@ interface RegForm {
   work_experience_years: string;
   professional_skills: string;
   industries_worked_in: string;
+  linkedin_link: string;
+  twitter_link: string;
+  website_link: string;
+  is_directory_visible: boolean;
+  interested_in_mentoring: boolean;
+  interested_in_get_involved: boolean;
 }
 
 const emptyForm = (): RegForm => ({
@@ -64,6 +71,12 @@ const emptyForm = (): RegForm => ({
   work_experience_years: "",
   professional_skills: "",
   industries_worked_in: "",
+  linkedin_link: "",
+  twitter_link: "",
+  website_link: "",
+  is_directory_visible: true,
+  interested_in_mentoring: false,
+  interested_in_get_involved: false,
 });
 
 function SummaryRow({ label, value }: { label: string; value?: string | null }) {
@@ -176,6 +189,21 @@ export function RegisterPage() {
         }
       }
       if (form.houses.length === 0) errors.houses = "Select at least one house.";
+      if (form.course_start_year.trim()) {
+        const start = Number(form.course_start_year);
+        const end = Number(form.course_end_year);
+        if (!Number.isFinite(start) || start < 1955 || start > 2030) {
+          errors.course_start_year = "Enter a valid join year (e.g. 1980).";
+        } else if (Number.isFinite(end) && start > end) {
+          errors.course_start_year = "Join year cannot be after the passing-out year.";
+        }
+      }
+    }
+
+    if (index === 2) {
+      const { iso, national } = splitE164(form.mobile_phone);
+      const phoneError = validatePhoneNational(iso, national);
+      if (phoneError) errors.mobile_phone = phoneError;
     }
 
     setFieldErrors(errors);
@@ -198,6 +226,10 @@ export function RegisterPage() {
     }
     if (!validateStep(1)) {
       setStep(1);
+      return;
+    }
+    if (!validateStep(2)) {
+      setStep(2);
       return;
     }
     if (!agreedToPolicies) {
@@ -243,6 +275,12 @@ export function RegisterPage() {
           : null,
         professional_skills: form.professional_skills || null,
         industries_worked_in: form.industries_worked_in || null,
+        linkedin_link: form.linkedin_link.trim() || null,
+        twitter_link: form.twitter_link.trim() || null,
+        website_link: form.website_link.trim() || null,
+        is_directory_visible: form.is_directory_visible,
+        interested_in_mentoring: form.interested_in_mentoring,
+        interested_in_get_involved: form.interested_in_get_involved,
       };
 
       const data = await invokeFunction<{ status: string; message: string }>("start-registration", {
@@ -390,6 +428,15 @@ export function RegisterPage() {
               hint="Your passing-out year at Sainik School Bijapur. Join year is calculated automatically (usually 7 years at school; Batch 1982 joined in 1974)."
               error={fieldErrors.course_end_year}
             />
+            <Input
+              label="Join year"
+              type="number"
+              value={form.course_start_year}
+              onChange={(e) => update("course_start_year", e.target.value)}
+              placeholder="e.g. 1980"
+              hint="Auto-filled from your batch (≈7 years at school). Adjust it if your batch spent a different number of years."
+              error={fieldErrors.course_start_year}
+            />
             {form.course_start_year && form.course_end_year && (
               <p className="rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
                 At SSBJ: <strong>{form.course_start_year} – {form.course_end_year}</strong>
@@ -410,11 +457,15 @@ export function RegisterPage() {
               Optional — helps classmates find you. You can edit these anytime after approval.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                label="Mobile"
-                value={form.mobile_phone}
-                onChange={(e) => update("mobile_phone", e.target.value)}
-              />
+              <div className="sm:col-span-2">
+                <PhoneInput
+                  label="Mobile"
+                  value={form.mobile_phone}
+                  onChange={(value) => update("mobile_phone", value)}
+                  hint="Pick your country code, then enter the number without it."
+                  error={fieldErrors.mobile_phone}
+                />
+              </div>
               <Input
                 label="Secondary email"
                 type="email"
@@ -433,8 +484,10 @@ export function RegisterPage() {
               />
               <Input
                 label="Company"
+                className="sm:col-span-2"
                 value={form.company}
                 onChange={(e) => update("company", e.target.value)}
+                hint="To list more than one, separate them with “ | ” from oldest to newest — your most recent organisation last."
               />
               <Input
                 label="Position"
@@ -460,6 +513,73 @@ export function RegisterPage() {
               value={form.industries_worked_in}
               onChange={(e) => update("industries_worked_in", e.target.value)}
             />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label="LinkedIn"
+                value={form.linkedin_link}
+                onChange={(e) => update("linkedin_link", e.target.value)}
+                placeholder="https://linkedin.com/in/…"
+              />
+              <Input
+                label="X (Twitter)"
+                value={form.twitter_link}
+                onChange={(e) => update("twitter_link", e.target.value)}
+                placeholder="https://x.com/…"
+              />
+              <Input
+                label="Website"
+                className="sm:col-span-2"
+                value={form.website_link}
+                onChange={(e) => update("website_link", e.target.value)}
+                placeholder="https://…"
+              />
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-surface-border bg-warm-white p-4">
+              <label className="flex items-start gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 rounded border-slate-300"
+                  checked={form.is_directory_visible}
+                  onChange={(e) => update("is_directory_visible", e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium text-brand-800">Show me in the alumni directory</span>
+                  <span className="block text-xs text-slate-500">
+                    Other verified Ajeets can find your profile. You can fine-tune exactly which
+                    details are visible after you sign in.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 rounded border-slate-300"
+                  checked={form.interested_in_mentoring}
+                  onChange={(e) => update("interested_in_mentoring", e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium text-brand-800">I'm interested in mentoring fellow Ajeets</span>
+                  <span className="block text-xs text-slate-500">
+                    Just an expression of interest — you can set up your mentorship details later.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 rounded border-slate-300"
+                  checked={form.interested_in_get_involved}
+                  onChange={(e) => update("interested_in_get_involved", e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium text-brand-800">I'd like to "Get Involved" with alumni initiatives</span>
+                  <span className="block text-xs text-slate-500">
+                    We'll reach out with ways to contribute. You can update this anytime.
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         )}
 
@@ -498,6 +618,12 @@ export function RegisterPage() {
                 <SummaryRow label="Company" value={form.company} />
                 <SummaryRow label="Position" value={form.job_position} />
                 <SummaryRow label="Skills" value={form.professional_skills} />
+                <SummaryRow label="LinkedIn" value={form.linkedin_link} />
+                <SummaryRow label="X (Twitter)" value={form.twitter_link} />
+                <SummaryRow label="Website" value={form.website_link} />
+                <SummaryRow label="Show in directory" value={form.is_directory_visible ? "Yes" : "No"} />
+                <SummaryRow label="Interested in mentoring" value={form.interested_in_mentoring ? "Yes" : null} />
+                <SummaryRow label="Get Involved" value={form.interested_in_get_involved ? "Yes" : null} />
               </div>
             </div>
             <Alert variant="info">

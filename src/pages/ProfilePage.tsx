@@ -6,7 +6,7 @@ import {
   getProfileCompleteness,
 } from "@/lib/profile-display";
 import { supabase } from "@/lib/supabase";
-import { fetchAlumniMemberByUserId, updateOwnAlumniProfile } from "@/lib/data-access";
+import { fetchAlumniMemberByUserId, updateOwnAlumniProfile, updateOwnJoinYear } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import {
@@ -34,7 +34,8 @@ import {
   formatDisplayMemberName,
 } from "@/lib/display-text";
 import { Button } from "@/components/ui/Button";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, PhoneInput, Textarea } from "@/components/ui/Input";
+import { validatePhoneNational, splitE164 } from "@/constants/country-codes";
 import { Card, Alert } from "@/components/ui/Card";
 import type { AlumniMember } from "@/types/database";
 
@@ -72,11 +73,17 @@ export function ProfilePage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [mentorshipForm, setMentorshipForm] = useState<MentorshipFormState | null>(null);
+  const [joinYear, setJoinYear] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     fetchAlumniMemberByUserId(user.id).then(async ({ data }) => {
       setMember(data);
+      setJoinYear(data?.course_start_year ? String(data.course_start_year) : "");
       if (data) setMentorshipForm(mentorshipFormFromMember(data));
       if (data?.profile_photo_path) {
         const preview = await resolveProfilePhotoUrl(data.profile_photo_path);
@@ -171,6 +178,40 @@ export function ProfilePage() {
     setPhotoMessage("Photo saved.");
   };
 
+  const handleChangeEmail = async () => {
+    const target = newEmail.trim().toLowerCase();
+    setEmailNotice(null);
+    setEmailError(null);
+    if (!target) {
+      setEmailError("Enter the new email address.");
+      return;
+    }
+    if (target === (user?.email ?? "").toLowerCase()) {
+      setEmailError("That is already your login email.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+
+    setEmailSaving(true);
+    const { error: err } = await supabase.auth.updateUser(
+      { email: target },
+      { emailRedirectTo: `${window.location.origin}/profile` }
+    );
+    setEmailSaving(false);
+    if (err) {
+      setEmailError(err.message);
+      return;
+    }
+    setEmailNotice(
+      `We've sent a confirmation link to ${target}. Open it from that inbox to finish the change. ` +
+        "Until you confirm, keep signing in with your current email."
+    );
+    setNewEmail("");
+  };
+
   const handleSave = async () => {
     if (!member || !user || !mentorshipForm) return;
     setSaving(true);
@@ -185,6 +226,28 @@ export function ProfilePage() {
       setSaving(false);
       return;
     }
+
+    const { iso, national } = splitE164(member.mobile_phone ?? "");
+    const phoneError = validatePhoneNational(iso, national);
+    if (phoneError) {
+      setError(phoneError);
+      setSaving(false);
+      return;
+    }
+
+    const desiredJoinYear = joinYear.trim() ? Number(joinYear.trim()) : null;
+    if (desiredJoinYear !== null) {
+      const invalidRange =
+        !Number.isFinite(desiredJoinYear) || desiredJoinYear < 1955 || desiredJoinYear > 2030;
+      const afterBatch =
+        member.course_end_year != null && desiredJoinYear > member.course_end_year;
+      if (invalidRange || afterBatch) {
+        setError("Enter a valid join year (not after your passing-out year).");
+        setSaving(false);
+        return;
+      }
+    }
+    const joinYearChanged = desiredJoinYear !== (member.course_start_year ?? null);
 
     const mentorshipPayload = mentorshipPayloadFromForm(mentorshipForm);
 
@@ -205,14 +268,28 @@ export function ProfilePage() {
       ...mentorshipPayload,
     });
 
-    setSaving(false);
     if (err) {
+      setSaving(false);
       setError(`Profile save failed: ${err.message}`);
-    } else {
+      return;
+    }
+
+    if (joinYearChanged) {
+      const { error: yearErr } = await updateOwnJoinYear(desiredJoinYear);
+      if (yearErr) {
+        setSaving(false);
+        setError(`Could not update join year: ${yearErr.message}`);
+        return;
+      }
+    }
+
+    setSaving(false);
+    {
       setMessage("Profile updated.");
       const now = new Date().toISOString();
       const updatedMember: AlumniMember = {
         ...member,
+        course_start_year: desiredJoinYear,
         updated_at: now,
         open_to_mentorship: mentorshipPayload.open_to_mentorship ?? member.open_to_mentorship,
         mentorship_blurb:
@@ -395,6 +472,24 @@ export function ProfilePage() {
       </ProfileSection>
 
       <ProfileSection
+        title="School years"
+        description="Your batch is fixed. Adjust your join year if your batch spent a different number of years at school."
+      >
+        <div className="rounded-xl border border-surface-border bg-warm-white px-3 py-2.5 text-sm">
+          <span className="text-slate-500">Batch (passing out)</span>
+          <p className="font-medium text-brand-800">{member.course_end_year ?? "—"}</p>
+        </div>
+        <Input
+          label="Join year"
+          type="number"
+          value={joinYear}
+          onChange={(e) => setJoinYear(e.target.value)}
+          placeholder="e.g. 1980"
+          hint="Usually about 7 years before your passing-out year."
+        />
+      </ProfileSection>
+
+      <ProfileSection
         title="Professional"
         description="How fellow Ajeets will find you after your school identity."
       >
@@ -437,16 +532,48 @@ export function ProfilePage() {
       </ProfileSection>
 
       <ProfileSection title="Contact" description="Visible only when you allow it in privacy settings.">
-        <Input
+        <PhoneInput
           label="Mobile"
           value={member.mobile_phone ?? ""}
-          onChange={(e) => updateField("mobile_phone", e.target.value)}
+          onChange={(value) => updateField("mobile_phone", value)}
+          hint="Pick your country code, then enter the number without it."
         />
         <Input
           label="Secondary email"
           value={member.secondary_email ?? ""}
           onChange={(e) => updateField("secondary_email", e.target.value)}
         />
+      </ProfileSection>
+
+      <ProfileSection
+        title="Account"
+        description="Your login email. Changing it requires confirming the new address."
+      >
+        <div className="rounded-xl border border-surface-border bg-warm-white px-3 py-2.5 text-sm">
+          <span className="text-slate-500">Current login email</span>
+          <p className="break-words font-medium text-brand-800">{user?.email ?? "—"}</p>
+        </div>
+        <Input
+          label="New login email"
+          type="email"
+          value={newEmail}
+          onChange={(e) => {
+            setNewEmail(e.target.value);
+            setEmailError(null);
+            setEmailNotice(null);
+          }}
+          placeholder="you@example.com"
+          error={emailError ?? undefined}
+        />
+        {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => void handleChangeEmail()}
+          disabled={emailSaving || !newEmail.trim()}
+        >
+          {emailSaving ? "Sending confirmation…" : "Send confirmation link"}
+        </Button>
       </ProfileSection>
 
       <ProfileSection

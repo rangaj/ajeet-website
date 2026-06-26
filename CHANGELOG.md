@@ -3,6 +3,23 @@
 All notable releases of the Ajeet Alumni App. Versions follow [Semantic Versioning](https://semver.org/).
 Frontend (`package.json`) and backend (`supabase/VERSION.json`) share the same release number.
 
+## [1.0.0-beta.5] - 2026-06-26
+
+Sign-up & profile improvements (Phases 0–4).
+
+### Frontend
+- **Course/Stream hidden** from member-facing directory (advanced filters, pills, member detail) and the admin review queue diff; DB columns retained
+- **Profile**: added an **X (Twitter)** field; added an editable **Join year** under a new "School years" section; added an **Account** section to change the **login email** (sends a confirmation link to the new address)
+- **Phone with country code**: new `PhoneInput` (curated dial-code list, India-first) storing **E.164**, with light per-country validation — used at sign-up and in the profile
+- **Sign-up additions**: editable join year, social links (LinkedIn / X / Website), **directory-visibility consent**, and light **mentoring / Get Involved** interest opt-ins; work-history hint on the Organisation field (pipe-separated, newest last)
+
+### Backend (Supabase)
+- Migration `20250626000001`: `approve_registration` now maps the new sign-up payload fields (social links, directory-visibility consent, Get-Involved interest) onto the member at approval; new `update_own_join_year` RPC for self-service join-year correction
+
+### Notes
+- Login-email change uses Supabase's native verified email change (client-side); timeline logging of the change is not yet wired
+- Mentoring interest at sign-up is captured in the request payload for admins (it is not auto-set as a live mentor listing, which still requires a blurb + visibility)
+
 ## [1.0.0-beta.4] - 2026-06-25
 
 Admin Member Support console plus onboarding-feedback UX fixes.
