@@ -455,6 +455,12 @@ export type Database = {
         };
         Returns: boolean;
       };
+      update_own_join_year: {
+        Args: {
+          p_course_start_year?: number | null;
+        };
+        Returns: boolean;
+      };
       update_get_involved_preferences: {
         Args: {
           p_wants_to_participate: boolean;
