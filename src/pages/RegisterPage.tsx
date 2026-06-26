@@ -179,7 +179,7 @@ export function RegisterPage() {
     if (index === 0) {
       if (!form.name.trim()) errors.name = "Full name is required.";
       if (!/^\d+$/.test(form.roll_number.trim())) {
-        errors.roll_number = "Enter your school roll number using digits only.";
+        errors.roll_number = "Please enter your school roll number.";
       }
       if (!form.email.trim()) errors.email = "Email is required.";
     }
@@ -422,9 +422,8 @@ export function RegisterPage() {
                 required
                 value={form.roll_number}
                 onChange={(e) => update("roll_number", e.target.value.replace(/\D/g, ""))}
-                placeholder="e.g. 1247"
                 inputMode="numeric"
-                hint="Digits only, as issued at Sainik School Bijapur."
+                hint="The roll number on your school record."
                 error={fieldErrors.roll_number}
               />
               <Input
