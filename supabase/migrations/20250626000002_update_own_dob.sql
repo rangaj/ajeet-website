@@ -42,13 +42,13 @@ BEGIN
       RAISE EXCEPTION 'Enter a valid date of birth';
     END IF;
 
-    IF v_start IS NOT NULL THEN
-      IF (v_start - v_birth_year) < 8 OR (v_start - v_birth_year) > 15 THEN
-        RAISE EXCEPTION 'Date of birth does not line up with your join year';
-      END IF;
-    ELSIF v_end IS NOT NULL THEN
-      IF (v_end - v_birth_year) < 14 OR (v_end - v_birth_year) > 22 THEN
+    IF v_end IS NOT NULL THEN
+      IF (v_end - v_birth_year) < 15 OR (v_end - v_birth_year) > 19 THEN
         RAISE EXCEPTION 'Date of birth does not line up with your batch year';
+      END IF;
+    ELSIF v_start IS NOT NULL THEN
+      IF (v_start - v_birth_year) < 8 OR (v_start - v_birth_year) > 12 THEN
+        RAISE EXCEPTION 'Date of birth does not line up with your join year';
       END IF;
     END IF;
   END IF;

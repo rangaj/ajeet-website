@@ -229,15 +229,15 @@ export function RegisterPage() {
     const birthYear = dob.getFullYear();
     const start = Number(form.course_start_year);
     const end = Number(form.course_end_year);
-    if (Number.isFinite(start) && start > 0) {
-      const joinAge = start - birthYear;
-      if (joinAge < 8 || joinAge > 15) {
-        return "Please check your date of birth — students usually join SSBJ around age 10–11, so this doesn't line up with your join year.";
-      }
-    } else if (Number.isFinite(end) && end > 0) {
+    if (Number.isFinite(end) && end > 0) {
       const passAge = end - birthYear;
-      if (passAge < 14 || passAge > 22) {
-        return "Please check your date of birth — it doesn't line up with your batch (passing-out) year.";
+      if (passAge < 15 || passAge > 19) {
+        return "Please check your date of birth — students pass out of SSBJ around age 16–18, so this doesn't line up with your batch year.";
+      }
+    } else if (Number.isFinite(start) && start > 0) {
+      const joinAge = start - birthYear;
+      if (joinAge < 8 || joinAge > 12) {
+        return "Please check your date of birth — students join SSBJ around age 10–11, so this doesn't line up with your join year.";
       }
     }
     return null;

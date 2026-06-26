@@ -262,17 +262,17 @@ export function ProfilePage() {
         dobError = "Enter a valid date of birth.";
       } else if (dobDate > new Date()) {
         dobError = "Date of birth can't be in the future.";
-      } else if (effectiveStart != null) {
-        const joinAge = effectiveStart - birthYear;
-        if (joinAge < 8 || joinAge > 15) {
-          dobError =
-            "Please check your date of birth — students usually join SSBJ around age 10–11, so this doesn't line up with your join year.";
-        }
       } else if (effectiveEnd != null) {
         const passAge = effectiveEnd - birthYear;
-        if (passAge < 14 || passAge > 22) {
+        if (passAge < 15 || passAge > 19) {
           dobError =
-            "Please check your date of birth — it doesn't line up with your batch (passing-out) year.";
+            "Please check your date of birth — students pass out of SSBJ around age 16–18, so this doesn't line up with your batch year.";
+        }
+      } else if (effectiveStart != null) {
+        const joinAge = effectiveStart - birthYear;
+        if (joinAge < 8 || joinAge > 12) {
+          dobError =
+            "Please check your date of birth — students join SSBJ around age 10–11, so this doesn't line up with your join year.";
         }
       }
       if (dobError) {
