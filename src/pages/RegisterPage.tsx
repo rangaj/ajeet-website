@@ -14,7 +14,7 @@ import { validatePhoneNational, splitE164 } from "@/constants/country-codes";
 import { Alert, Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/brand/BrandLogo";
 
-const STEPS = ["Identity", "Batch & house", "Today", "Review"] as const;
+const STEPS = ["Identity", "School details", "Today", "Review"] as const;
 
 const SALUTATION_OPTIONS = [
   { value: "", label: "—" },
@@ -182,16 +182,6 @@ export function RegisterPage() {
         errors.roll_number = "Enter your school roll number using digits only.";
       }
       if (!form.email.trim()) errors.email = "Email is required.";
-      if (form.date_of_birth) {
-        const dob = new Date(form.date_of_birth);
-        if (Number.isNaN(dob.getTime())) {
-          errors.date_of_birth = "Enter a valid date of birth.";
-        } else if (dob > new Date()) {
-          errors.date_of_birth = "Date of birth can't be in the future.";
-        } else if (dob.getFullYear() < 1940) {
-          errors.date_of_birth = "Enter a valid date of birth.";
-        }
-      }
     }
 
     if (index === 1) {
@@ -213,6 +203,30 @@ export function RegisterPage() {
           errors.course_start_year = "Join year cannot be after the passing-out year.";
         }
       }
+      // DOB is optional, but validated here against the batch — SSBJ students
+      // pass out around age 16–18. Wide slack so genuine cases are never blocked.
+      if (form.date_of_birth) {
+        const dob = new Date(form.date_of_birth);
+        const birthYear = dob.getFullYear();
+        const start = Number(form.course_start_year);
+        const end = Number(form.course_end_year);
+        if (Number.isNaN(dob.getTime()) || birthYear < 1940) {
+          errors.date_of_birth = "Enter a valid date of birth.";
+        } else if (dob > new Date()) {
+          errors.date_of_birth = "Date of birth can't be in the future.";
+        } else if (Number.isFinite(end) && end > 0 && (end - birthYear < 15 || end - birthYear > 19)) {
+          errors.date_of_birth =
+            "Please check your date of birth — students pass out of SSBJ around age 16–18, so this doesn't line up with your batch year.";
+        } else if (
+          (!Number.isFinite(end) || end <= 0) &&
+          Number.isFinite(start) &&
+          start > 0 &&
+          (start - birthYear < 8 || start - birthYear > 12)
+        ) {
+          errors.date_of_birth =
+            "Please check your date of birth — students join SSBJ around age 10–11, so this doesn't line up with your join year.";
+        }
+      }
     }
 
     if (index === 2) {
@@ -223,29 +237,6 @@ export function RegisterPage() {
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  // Sanity-check DOB against the batch: SSBJ students join class VI around age
-  // 10–11 and pass out ~7 years later. Slack kept wide so it never blocks a real case.
-  const dobBatchError = (): string | null => {
-    if (!form.date_of_birth) return null;
-    const dob = new Date(form.date_of_birth);
-    if (Number.isNaN(dob.getTime())) return null;
-    const birthYear = dob.getFullYear();
-    const start = Number(form.course_start_year);
-    const end = Number(form.course_end_year);
-    if (Number.isFinite(end) && end > 0) {
-      const passAge = end - birthYear;
-      if (passAge < 15 || passAge > 19) {
-        return "Please check your date of birth — students pass out of SSBJ around age 16–18, so this doesn't line up with your batch year.";
-      }
-    } else if (Number.isFinite(start) && start > 0) {
-      const joinAge = start - birthYear;
-      if (joinAge < 8 || joinAge > 12) {
-        return "Please check your date of birth — students join SSBJ around age 10–11, so this doesn't line up with your join year.";
-      }
-    }
-    return null;
   };
 
   const goNext = () => {
@@ -268,12 +259,6 @@ export function RegisterPage() {
     }
     if (!validateStep(2)) {
       setStep(2);
-      return;
-    }
-    const dobErr = dobBatchError();
-    if (dobErr) {
-      setFieldErrors({ date_of_birth: dobErr });
-      setStep(0);
       return;
     }
     if (!agreedToPolicies) {
@@ -433,15 +418,6 @@ export function RegisterPage() {
                 onChange={(e) => update("salutation", e.target.value)}
               />
               <Input
-                label="Date of birth"
-                type="date"
-                value={form.date_of_birth}
-                onChange={(e) => update("date_of_birth", e.target.value)}
-                min="1940-01-01"
-                max={new Date().toISOString().split("T")[0]}
-                error={fieldErrors.date_of_birth}
-              />
-              <Input
                 label="School roll number *"
                 required
                 value={form.roll_number}
@@ -455,6 +431,7 @@ export function RegisterPage() {
                 label="Email *"
                 type="email"
                 required
+                className="sm:col-span-2"
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
                 error={fieldErrors.email}
@@ -494,6 +471,16 @@ export function RegisterPage() {
               value={form.houses}
               onChange={(houses) => update("houses", houses)}
               error={fieldErrors.houses}
+            />
+            <Input
+              label="Date of birth"
+              type="date"
+              value={form.date_of_birth}
+              onChange={(e) => update("date_of_birth", e.target.value)}
+              min="1940-01-01"
+              max={new Date().toISOString().split("T")[0]}
+              hint="Optional. Should line up with your batch (pass-out age ~16–18)."
+              error={fieldErrors.date_of_birth}
             />
           </div>
         )}
@@ -638,12 +625,11 @@ export function RegisterPage() {
                 <SummaryRow label="Name" value={form.salutation ? `${form.salutation} ${form.name}` : form.name} />
                 <SummaryRow label="Roll" value={form.roll_number} />
                 <SummaryRow label="Email" value={form.email} />
-                <SummaryRow label="Date of birth" value={form.date_of_birth} />
                 <SummaryRow label="Photo" value={photoPreview ? "Added" : "Not added"} />
               </div>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-              <h3 className="font-semibold text-brand-900">Batch & house</h3>
+              <h3 className="font-semibold text-brand-900">School details</h3>
               <div className="mt-2">
                 <SummaryRow label="Batch" value={form.course_end_year} />
                 <SummaryRow
@@ -655,6 +641,7 @@ export function RegisterPage() {
                   }
                 />
                 <SummaryRow label="House(s)" value={houseLabel} />
+                <SummaryRow label="Date of birth" value={form.date_of_birth} />
               </div>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">

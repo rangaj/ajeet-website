@@ -13,6 +13,7 @@ Sign-up & profile improvements (Phases 0–4).
 - **Phone with country code**: new `PhoneInput` (curated dial-code list, India-first) storing **E.164**, with light per-country validation — used at sign-up and in the profile
 - **Sign-up additions**: editable join year, social links (LinkedIn / X / Website), **directory-visibility consent**, and light **mentoring / Get Involved** interest opt-ins; work-history hint on the Organisation field (pipe-separated, newest last)
 - **Admin review queue**: a "⚠ Prior rejected attempt" flag when a roll number that was rejected before re-applies — context at a glance, no auto-blocking
+- **Sign-up step order**: Identity (photo, name, salutation, roll, email) → School details (batch, join year, house, DOB) → Today → Review. DOB now sits with the batch so it's validated inline against it. Wizard also scrolls to the top of each step.
 - **DOB checks (sign-up + profile)**: date picker bounded to past dates; DOB (still optional) is sanity-checked against the batch — flags entries that don't fit a student joining SSBJ around age 10–11 / passing out ~17–18. Members can now also correct their DOB in the profile (new `update_own_dob` RPC enforces the same checks server-side)
 
 ### Backend (Supabase)
