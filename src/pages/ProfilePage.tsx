@@ -6,7 +6,7 @@ import {
   getProfileCompleteness,
 } from "@/lib/profile-display";
 import { supabase } from "@/lib/supabase";
-import { fetchAlumniMemberByUserId, updateOwnAlumniProfile, updateOwnJoinYear } from "@/lib/data-access";
+import { fetchAlumniMemberByUserId, updateOwnAlumniProfile, updateOwnJoinYear, updateOwnDob } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import {
@@ -74,6 +74,7 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [mentorshipForm, setMentorshipForm] = useState<MentorshipFormState | null>(null);
   const [joinYear, setJoinYear] = useState("");
+  const [dob, setDob] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
@@ -84,6 +85,7 @@ export function ProfilePage() {
     fetchAlumniMemberByUserId(user.id).then(async ({ data }) => {
       setMember(data);
       setJoinYear(data?.course_start_year ? String(data.course_start_year) : "");
+      setDob(data?.date_of_birth ? String(data.date_of_birth).slice(0, 10) : "");
       if (data) setMentorshipForm(mentorshipFormFromMember(data));
       if (data?.profile_photo_path) {
         const preview = await resolveProfilePhotoUrl(data.profile_photo_path);
@@ -249,6 +251,38 @@ export function ProfilePage() {
     }
     const joinYearChanged = desiredJoinYear !== (member.course_start_year ?? null);
 
+    const desiredDob = dob.trim() || null;
+    if (desiredDob) {
+      const dobDate = new Date(desiredDob);
+      const birthYear = dobDate.getFullYear();
+      const effectiveStart = desiredJoinYear;
+      const effectiveEnd = member.course_end_year ?? null;
+      let dobError: string | null = null;
+      if (Number.isNaN(dobDate.getTime()) || birthYear < 1930) {
+        dobError = "Enter a valid date of birth.";
+      } else if (dobDate > new Date()) {
+        dobError = "Date of birth can't be in the future.";
+      } else if (effectiveStart != null) {
+        const joinAge = effectiveStart - birthYear;
+        if (joinAge < 8 || joinAge > 15) {
+          dobError =
+            "Please check your date of birth — students usually join SSBJ around age 10–11, so this doesn't line up with your join year.";
+        }
+      } else if (effectiveEnd != null) {
+        const passAge = effectiveEnd - birthYear;
+        if (passAge < 14 || passAge > 22) {
+          dobError =
+            "Please check your date of birth — it doesn't line up with your batch (passing-out) year.";
+        }
+      }
+      if (dobError) {
+        setError(dobError);
+        setSaving(false);
+        return;
+      }
+    }
+    const dobChanged = desiredDob !== ((member.date_of_birth ?? "") ? String(member.date_of_birth).slice(0, 10) : null);
+
     const mentorshipPayload = mentorshipPayloadFromForm(mentorshipForm);
 
     const { error: err } = await updateOwnAlumniProfile({
@@ -283,6 +317,15 @@ export function ProfilePage() {
       }
     }
 
+    if (dobChanged) {
+      const { error: dobErr } = await updateOwnDob(desiredDob);
+      if (dobErr) {
+        setSaving(false);
+        setError(`Could not update date of birth: ${dobErr.message}`);
+        return;
+      }
+    }
+
     setSaving(false);
     {
       setMessage("Profile updated.");
@@ -290,6 +333,7 @@ export function ProfilePage() {
       const updatedMember: AlumniMember = {
         ...member,
         course_start_year: desiredJoinYear,
+        date_of_birth: desiredDob,
         updated_at: now,
         open_to_mentorship: mentorshipPayload.open_to_mentorship ?? member.open_to_mentorship,
         mentorship_blurb:
@@ -473,7 +517,7 @@ export function ProfilePage() {
 
       <ProfileSection
         title="School years"
-        description="Your batch is fixed. Adjust your join year if your batch spent a different number of years at school."
+        description="Your batch is fixed. Adjust your join year or date of birth if a detail was recorded incorrectly."
       >
         <div className="rounded-xl border border-surface-border bg-warm-white px-3 py-2.5 text-sm">
           <span className="text-slate-500">Batch (passing out)</span>
@@ -486,6 +530,15 @@ export function ProfilePage() {
           onChange={(e) => setJoinYear(e.target.value)}
           placeholder="e.g. 1980"
           hint="Usually about 7 years before your passing-out year."
+        />
+        <Input
+          label="Date of birth"
+          type="date"
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          min="1930-01-01"
+          max={new Date().toISOString().split("T")[0]}
+          hint="Optional. Should line up with joining SSBJ around age 10–11."
         />
       </ProfileSection>
 

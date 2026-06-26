@@ -154,6 +154,12 @@ export async function updateOwnJoinYear(courseStartYear: number | null) {
   });
 }
 
+export async function updateOwnDob(dateOfBirth: string | null) {
+  return supabase.rpc("update_own_dob", {
+    p_date_of_birth: dateOfBirth,
+  });
+}
+
 export async function fetchAlumniMemberByUserId(userId: string) {
   return supabase
     .from("alumni_members")

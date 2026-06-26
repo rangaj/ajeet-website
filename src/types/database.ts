@@ -461,6 +461,12 @@ export type Database = {
         };
         Returns: boolean;
       };
+      update_own_dob: {
+        Args: {
+          p_date_of_birth?: string | null;
+        };
+        Returns: boolean;
+      };
       update_get_involved_preferences: {
         Args: {
           p_wants_to_participate: boolean;
