@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
@@ -144,6 +144,11 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [errorCode, setErrorCode] = useState<string | undefined>();
   const [agreedToPolicies, setAgreedToPolicies] = useState(false);
+
+  // Land at the top when moving between wizard steps or showing the result.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [step, result]);
 
   const update = <K extends keyof RegForm>(key: K, value: RegForm[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
