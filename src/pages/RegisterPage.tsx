@@ -177,6 +177,16 @@ export function RegisterPage() {
         errors.roll_number = "Enter your school roll number using digits only.";
       }
       if (!form.email.trim()) errors.email = "Email is required.";
+      if (form.date_of_birth) {
+        const dob = new Date(form.date_of_birth);
+        if (Number.isNaN(dob.getTime())) {
+          errors.date_of_birth = "Enter a valid date of birth.";
+        } else if (dob > new Date()) {
+          errors.date_of_birth = "Date of birth can't be in the future.";
+        } else if (dob.getFullYear() < 1930) {
+          errors.date_of_birth = "Enter a valid date of birth.";
+        }
+      }
     }
 
     if (index === 1) {
@@ -210,6 +220,29 @@ export function RegisterPage() {
     return Object.keys(errors).length === 0;
   };
 
+  // Sanity-check DOB against the batch: SSBJ students join class VI around age
+  // 10–11 and pass out ~7 years later. Slack kept wide so it never blocks a real case.
+  const dobBatchError = (): string | null => {
+    if (!form.date_of_birth) return null;
+    const dob = new Date(form.date_of_birth);
+    if (Number.isNaN(dob.getTime())) return null;
+    const birthYear = dob.getFullYear();
+    const start = Number(form.course_start_year);
+    const end = Number(form.course_end_year);
+    if (Number.isFinite(start) && start > 0) {
+      const joinAge = start - birthYear;
+      if (joinAge < 8 || joinAge > 15) {
+        return "Please check your date of birth — students usually join SSBJ around age 10–11, so this doesn't line up with your join year.";
+      }
+    } else if (Number.isFinite(end) && end > 0) {
+      const passAge = end - birthYear;
+      if (passAge < 14 || passAge > 22) {
+        return "Please check your date of birth — it doesn't line up with your batch (passing-out) year.";
+      }
+    }
+    return null;
+  };
+
   const goNext = () => {
     if (!validateStep(step)) return;
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -230,6 +263,12 @@ export function RegisterPage() {
     }
     if (!validateStep(2)) {
       setStep(2);
+      return;
+    }
+    const dobErr = dobBatchError();
+    if (dobErr) {
+      setFieldErrors({ date_of_birth: dobErr });
+      setStep(0);
       return;
     }
     if (!agreedToPolicies) {
@@ -393,6 +432,9 @@ export function RegisterPage() {
                 type="date"
                 value={form.date_of_birth}
                 onChange={(e) => update("date_of_birth", e.target.value)}
+                min="1930-01-01"
+                max={new Date().toISOString().split("T")[0]}
+                error={fieldErrors.date_of_birth}
               />
               <Input
                 label="School roll number *"
