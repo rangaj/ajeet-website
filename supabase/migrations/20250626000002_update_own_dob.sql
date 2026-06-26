@@ -38,7 +38,7 @@ BEGIN
     END IF;
 
     v_birth_year := EXTRACT(YEAR FROM p_date_of_birth)::int;
-    IF v_birth_year < 1930 THEN
+    IF v_birth_year < 1940 THEN
       RAISE EXCEPTION 'Enter a valid date of birth';
     END IF;
 

@@ -183,7 +183,7 @@ export function RegisterPage() {
           errors.date_of_birth = "Enter a valid date of birth.";
         } else if (dob > new Date()) {
           errors.date_of_birth = "Date of birth can't be in the future.";
-        } else if (dob.getFullYear() < 1930) {
+        } else if (dob.getFullYear() < 1940) {
           errors.date_of_birth = "Enter a valid date of birth.";
         }
       }
@@ -432,7 +432,7 @@ export function RegisterPage() {
                 type="date"
                 value={form.date_of_birth}
                 onChange={(e) => update("date_of_birth", e.target.value)}
-                min="1930-01-01"
+                min="1940-01-01"
                 max={new Date().toISOString().split("T")[0]}
                 error={fieldErrors.date_of_birth}
               />

@@ -258,7 +258,7 @@ export function ProfilePage() {
       const effectiveStart = desiredJoinYear;
       const effectiveEnd = member.course_end_year ?? null;
       let dobError: string | null = null;
-      if (Number.isNaN(dobDate.getTime()) || birthYear < 1930) {
+      if (Number.isNaN(dobDate.getTime()) || birthYear < 1940) {
         dobError = "Enter a valid date of birth.";
       } else if (dobDate > new Date()) {
         dobError = "Date of birth can't be in the future.";
@@ -536,7 +536,7 @@ export function ProfilePage() {
           type="date"
           value={dob}
           onChange={(e) => setDob(e.target.value)}
-          min="1930-01-01"
+          min="1940-01-01"
           max={new Date().toISOString().split("T")[0]}
           hint="Optional. Should line up with joining SSBJ around age 10–11."
         />
