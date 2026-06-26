@@ -407,6 +407,7 @@ export function ProfilePage() {
           label="Organisation"
           value={member.company ?? ""}
           onChange={(e) => updateField("company", e.target.value)}
+          hint="To list more than one, separate them with “ | ” from oldest to newest — your most recent organisation last."
         />
         <Input
           label="Location"
@@ -422,6 +423,11 @@ export function ProfilePage() {
           label="LinkedIn"
           value={member.linkedin_link ?? ""}
           onChange={(e) => updateField("linkedin_link", e.target.value)}
+        />
+        <Input
+          label="X (Twitter)"
+          value={member.twitter_link ?? ""}
+          onChange={(e) => updateField("twitter_link", e.target.value)}
         />
         <Input
           label="Website"

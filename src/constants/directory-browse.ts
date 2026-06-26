@@ -231,8 +231,6 @@ export function activeFilterPills(filters: DirectoryFilters): ActiveFilterPill[]
   if (filters.industry) pills.push({ key: "industry", label: filters.industry });
   if (filters.company) pills.push({ key: "company", label: filters.company });
   if (filters.skills) pills.push({ key: "skills", label: filters.skills });
-  if (filters.course) pills.push({ key: "course", label: filters.course });
-  if (filters.stream) pills.push({ key: "stream", label: filters.stream });
 
   if (filters.year_from || filters.year_to) {
     const from = filters.year_from || "…";

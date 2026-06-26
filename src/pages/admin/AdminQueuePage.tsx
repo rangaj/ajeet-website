@@ -228,8 +228,6 @@ function RequestExtraDetails({ request }: { request: QueueRequest }) {
                   emphasize
                 />
               ) : null}
-              <DetailRow label="Course" submitted={payloadString(payload, "course")} onFile={member.course} />
-              <DetailRow label="Stream" submitted={payloadString(payload, "stream")} onFile={member.stream} />
               <DetailRow label="Start year" submitted={payloadString(payload, "course_start_year")} onFile={member.course_start_year} />
               <DetailRow label="Company" submitted={payloadString(payload, "company")} onFile={member.company} />
               <DetailRow label="Location" submitted={payloadString(payload, "current_location")} onFile={member.current_location} />

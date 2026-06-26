@@ -29,16 +29,6 @@ export function DirectoryAdvancedFilters({
   const fields = (
     <div className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-3", embedded && "mt-0")}>
           <Input
-            placeholder="Course"
-            value={filters.course}
-            onChange={(e) => update("course", e.target.value)}
-          />
-          <Input
-            placeholder="Stream"
-            value={filters.stream}
-            onChange={(e) => update("stream", e.target.value)}
-          />
-          <Input
             placeholder="From year"
             type="number"
             value={filters.year_from}

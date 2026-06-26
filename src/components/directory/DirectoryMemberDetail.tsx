@@ -82,7 +82,6 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
   const house = formatHousesWithLabel(member.house);
   const houses = parseHouses(member.house);
   const accentColor = houses.length === 1 ? getHouseColor(houses[0]) : "#1e3a5f";
-  const courseLine = [member.course, member.stream].filter(Boolean).join(" · ");
   const latestEmployer = getLatestEmployer(member.company);
   const earlierEmployers = getEarlierEmployers(member.company);
   const displayName = formatDisplayMemberName({
@@ -199,12 +198,6 @@ export function DirectoryMemberDetail({ member, onClose }: DirectoryMemberDetail
                   </div>
                 )}
               </div>
-            </DetailSection>
-          )}
-
-          {courseLine && (
-            <DetailSection title="Academic">
-              <p>{courseLine}</p>
             </DetailSection>
           )}
 
