@@ -23,6 +23,7 @@ import { invalidateProfilePhotoCache, primeProfilePhotoCache, resolveProfilePhot
 import { parseStorageRef, profilePhotoPathForUser } from "@/lib/storage";
 import { HouseColorDots } from "@/components/house/HouseColorDots";
 import { parseHouses, getHouseColor } from "@/constants/houses";
+import { MAX_SCHOOL_YEAR, MIN_BIRTH_YEAR, SCHOOL_FOUNDED_YEAR } from "@/constants/school-years";
 import {
   formatBatch,
   formatHousesWithLabel,
@@ -240,7 +241,9 @@ export function ProfilePage() {
     const desiredJoinYear = joinYear.trim() ? Number(joinYear.trim()) : null;
     if (desiredJoinYear !== null) {
       const invalidRange =
-        !Number.isFinite(desiredJoinYear) || desiredJoinYear < 1955 || desiredJoinYear > 2030;
+        !Number.isFinite(desiredJoinYear) ||
+        desiredJoinYear < SCHOOL_FOUNDED_YEAR ||
+        desiredJoinYear > MAX_SCHOOL_YEAR;
       const afterBatch =
         member.course_end_year != null && desiredJoinYear > member.course_end_year;
       if (invalidRange || afterBatch) {
@@ -258,7 +261,7 @@ export function ProfilePage() {
       const effectiveStart = desiredJoinYear;
       const effectiveEnd = member.course_end_year ?? null;
       let dobError: string | null = null;
-      if (Number.isNaN(dobDate.getTime()) || birthYear < 1940) {
+      if (Number.isNaN(dobDate.getTime()) || birthYear < MIN_BIRTH_YEAR) {
         dobError = "Enter a valid date of birth.";
       } else if (dobDate > new Date()) {
         dobError = "Date of birth can't be in the future.";
@@ -536,7 +539,7 @@ export function ProfilePage() {
           type="date"
           value={dob}
           onChange={(e) => setDob(e.target.value)}
-          min="1940-01-01"
+          min={`${MIN_BIRTH_YEAR}-01-01`}
           max={new Date().toISOString().split("T")[0]}
           hint="Optional. Should line up with joining SSBJ around age 10–11."
         />

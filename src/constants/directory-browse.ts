@@ -33,7 +33,7 @@ export type BatchPreset = {
 };
 
 export const BATCH_PRESETS: BatchPreset[] = [
-  { label: "1963", yearFrom: 1963, yearTo: 1963 },
+  { label: "1960s", yearFrom: 1967, yearTo: 1969 },
   { label: "1970", yearFrom: 1970, yearTo: 1979 },
   { label: "1980", yearFrom: 1980, yearTo: 1989 },
   { label: "1990", yearFrom: 1990, yearTo: 1999 },

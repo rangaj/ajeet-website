@@ -1,6 +1,6 @@
 # AAA Membership, Fees & Payments — Plan
 
-_Status: DECISIONS LOCKED 28 Jun 2026. Not built yet — awaiting build go-ahead._
+_Status: DECISIONS LOCKED 28 Jun 2026. **Phase A (founding/first-batch correction) built 28 Jun 2026** (v1.0.0-beta.6); Phases B–D awaiting build go-ahead._
 _Source: MOA & Rules of the Ajeet Alumni Association v1.8 (Karnataka Societies Registration Act, 1960; legal-comments version dated 2 Nov 2023) + product discussion 28 Jun 2026._
 
 This plan operationalizes the Association's constitution. It introduces a paid

@@ -3,6 +3,26 @@
 All notable releases of the Ajeet Alumni App. Versions follow [Semantic Versioning](https://semver.org/).
 Frontend (`package.json`) and backend (`supabase/VERSION.json`) share the same release number.
 
+## [1.0.0-beta.6] - 2026-06-28
+
+Founding/first-batch date correction (Phase A of the membership plan).
+
+The school was founded in **1963**, but its **first batch passed out in 1967**
+(MOA & Rules, Art 19(a)). The app previously treated 1963 as a valid batch year
+and allowed pre-founding join years; this aligns all batch/join/DOB bounds with
+the facts.
+
+### Frontend
+- Single source of truth for the dates in `constants/school-years.ts` (`SCHOOL_FOUNDED_YEAR` 1963, `FIRST_PASSOUT_BATCH_YEAR` 1967, `MIN_BIRTH_YEAR` 1947, `MAX_SCHOOL_YEAR`)
+- **Batch (passing-out) year** floor is now **1967** (was 1963); **join year** floor is **1963** (was 1955) at sign-up and in the profile
+- Join-year auto-calc is **clamped to ≥ 1963**, so founding batches no longer derive an impossible pre-founding join year (e.g. Batch 1967 no longer suggests 1960)
+- **DOB** lower bound tightened to **1947** (date picker `min` + validation), consistent with a first pass-out of 1967
+- Directory **batch filter**: the stray single-year "1963" preset is replaced with a **1960s (1967–1969)** founding-era bucket
+- Heritage copy ("Founded 1963 / Since 1963") is unchanged — that's the founding year and is correct
+
+### Backend (Supabase)
+- Migration `20250628000001`: `update_own_dob` birth-year floor 1940 → **1947**; `update_own_join_year` floor 1955 → **1963**; one-time data fix clamping any legacy `course_start_year` below 1963 up to 1963
+
 ## [1.0.0-beta.5] - 2026-06-26
 
 Sign-up & profile improvements (Phases 0–4).

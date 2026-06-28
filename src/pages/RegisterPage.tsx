@@ -5,7 +5,13 @@ import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { HouseSelector } from "@/components/register/HouseSelector";
 import { PolicyConsentCheckbox } from "@/components/register/PolicyConsentCheckbox";
 import { formatHouses } from "@/constants/houses";
-import { joinYearStringFromBatch } from "@/constants/school-years";
+import {
+  FIRST_PASSOUT_BATCH_YEAR,
+  joinYearStringFromBatch,
+  MAX_SCHOOL_YEAR,
+  MIN_BIRTH_YEAR,
+  SCHOOL_FOUNDED_YEAR,
+} from "@/constants/school-years";
 import { storePendingAvatar } from "@/lib/image";
 import { FunctionCallError, invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
@@ -189,7 +195,7 @@ export function RegisterPage() {
         errors.course_end_year = "Batch year (passing out) is required.";
       } else {
         const end = Number(form.course_end_year);
-        if (!Number.isFinite(end) || end < 1963 || end > 2030) {
+        if (!Number.isFinite(end) || end < FIRST_PASSOUT_BATCH_YEAR || end > MAX_SCHOOL_YEAR) {
           errors.course_end_year = "Enter a valid batch year (e.g. 1987).";
         }
       }
@@ -197,7 +203,7 @@ export function RegisterPage() {
       if (form.course_start_year.trim()) {
         const start = Number(form.course_start_year);
         const end = Number(form.course_end_year);
-        if (!Number.isFinite(start) || start < 1955 || start > 2030) {
+        if (!Number.isFinite(start) || start < SCHOOL_FOUNDED_YEAR || start > MAX_SCHOOL_YEAR) {
           errors.course_start_year = "Enter a valid join year (e.g. 1980).";
         } else if (Number.isFinite(end) && start > end) {
           errors.course_start_year = "Join year cannot be after the passing-out year.";
@@ -210,7 +216,7 @@ export function RegisterPage() {
         const birthYear = dob.getFullYear();
         const start = Number(form.course_start_year);
         const end = Number(form.course_end_year);
-        if (Number.isNaN(dob.getTime()) || birthYear < 1940) {
+        if (Number.isNaN(dob.getTime()) || birthYear < MIN_BIRTH_YEAR) {
           errors.date_of_birth = "Enter a valid date of birth.";
         } else if (dob > new Date()) {
           errors.date_of_birth = "Date of birth can't be in the future.";
@@ -476,7 +482,7 @@ export function RegisterPage() {
               type="date"
               value={form.date_of_birth}
               onChange={(e) => update("date_of_birth", e.target.value)}
-              min="1940-01-01"
+              min={`${MIN_BIRTH_YEAR}-01-01`}
               max={new Date().toISOString().split("T")[0]}
               hint="Optional. Should line up with your batch (pass-out age ~16–18)."
               error={fieldErrors.date_of_birth}
