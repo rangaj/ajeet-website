@@ -25,6 +25,9 @@ throughout the app.
 | 6 | Concession handling (Art 7(e)(ii)) | ✅ Never block the vote for <8-yr-grad or 70+; still invite payment. Revisit later |
 | 7 | Gating line | ✅ Gate governance + member publications/schemes/voting; **directory stays open** |
 | 8 | Receipts | ✅ Build **both** (`plain` + `80g`); super-admin chooses active mode at setup |
+| 9 | Member-facing rollout | ✅ **Fully dark** (no teaser/banner) until `live` |
+| 10 | Preview while hidden | ✅ Super-admins always; plus a **trusted-tester allowlist** (`membership_preview_user_ids`) |
+| 11 | Go-live authority | ✅ Single super-admin operates the toggle, **but `live` requires a recorded EC resolution reference** (audited per Art 6, 7, 25) |
 
 ## Membership model (MOA-grounded)
 
@@ -117,6 +120,34 @@ Three principles so the AAA gets value immediately and the gateway is a later to
 - Fee schedule: registration / initial / renewal amounts + currency (INR).
 - `receipt_mode`: `plain | 80g`; receipt-number series.
 - Gateway: `provider`, keys (in Supabase secrets, **never** in repo), `payments_enabled` flag.
+- Rollout controls: `membership_module_state`, `membership_preview_user_ids`,
+  `membership_ec_resolution_ref` (see below).
+
+### Rollout state machine, preview & go-live authority (decisions #9–11)
+The master control is an **in-app `aaa_settings` field a super-admin flips** — no redeploy,
+no developer needed to greenlight. Member-facing state:
+
+- **`hidden`** (default) — no member-facing surface at all (no nav item, no banner, no mention).
+- **`coming_soon`** — reserved for later; not used for the initial rollout (decision #9 = fully dark).
+- **`live`** — full module: offline payment recording, receipts, status, gating active.
+
+**Preview while hidden (decision #10):** super-admins can always see and *exercise* the module
+(record a test offline payment, generate a test receipt, view the draft Roll). A
+`membership_preview_user_ids` allowlist additionally grants a few **trusted testers**
+(e.g. Treasurer / an EC member) preview access without exposing members. This keeps the
+code exercised in production, avoiding dormant-code rot.
+
+**Go-live authority (decision #11):** a single super-admin operates the toggle, **but the
+transition to `live` is blocked unless `membership_ec_resolution_ref` is filled** (resolution
+no. + date / note). Reverting to `hidden` is always allowed (de-risking). Every state change
+records actor + timestamp + resolution reference in `admin_audit_log` — so the greenlight is
+auditable and traces to the body empowered to set fees (Art 6, 7) and to the records duty (Art 25).
+Multi-party approval is deferred; the recorded resolution reference is the accountability anchor.
+
+**Server-side enforcement (not cosmetic):** while not `live`, payment/receipt RPCs **refuse to
+run** and gating checks **default to open** (never lock members out). When `live`, gating is
+enforced in **RLS/RPCs**, not by hiding UI. Optional sub-toggles allow incremental enablement:
+`payments_offline_enabled`, `gateway_enabled`, `gating_enforced`.
 
 ## Receipts (decision #8)
 - **`plain`** — simple numbered money receipt; always valid (Art 21(b)). Default.
