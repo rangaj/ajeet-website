@@ -156,6 +156,96 @@ export type AlumniMemberUpdate = {
   profile_photo_path?: string | null;
 };
 
+// --- AAA Membership (Phase B) ------------------------------------------------
+export type MembershipModuleState = "hidden" | "coming_soon" | "live";
+export type MemberType = "ajeet" | "honorary" | "patron";
+export type PaymentFeeKind = "registration" | "initial" | "renewal";
+export type PaymentSource = "offline" | "razorpay";
+export type PaymentStatus = "recorded" | "captured" | "failed" | "refunded";
+export type ReceiptMode = "plain" | "80g";
+export type MemberStanding = "none" | "registered" | "active" | "in_default";
+
+export interface AaaSettings {
+  id: number;
+  entity_name: string;
+  registration_number: string | null;
+  registered_office: string;
+  pan: string | null;
+  reg_12a: string | null;
+  reg_80g: string | null;
+  financial_year_start_month: number;
+  currency: string;
+  fee_registration: number | null;
+  fee_initial: number | null;
+  fee_renewal: number | null;
+  receipt_mode: ReceiptMode;
+  receipt_prefix: string;
+  module_state: MembershipModuleState;
+  preview_user_ids: string[];
+  ec_resolution_ref: string | null;
+  payments_offline_enabled: boolean;
+  gateway_provider: string;
+  gateway_enabled: boolean;
+  gating_enforced: boolean;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface MembershipRollRow {
+  alumni_member_id: string;
+  roll_number: string;
+  name: string;
+  course_end_year: number | null;
+  house: string | null;
+  member_type: MemberType;
+  standing: MemberStanding;
+  registration_fee_paid: boolean;
+  valid_through: string | null;
+  voting_exempt: boolean;
+}
+
+export interface ElectoralRollRow {
+  alumni_member_id: string;
+  roll_number: string;
+  name: string;
+  course_end_year: number | null;
+  house: string | null;
+  standing: MemberStanding;
+  voting_exempt: boolean;
+  eligible_reason: string;
+}
+
+export interface MembershipPaymentRow {
+  id: string;
+  alumni_member_id: string;
+  fee_kind: PaymentFeeKind;
+  period_fy: number | null;
+  amount: number;
+  currency: string;
+  source: PaymentSource;
+  method: string | null;
+  reference: string | null;
+  status: PaymentStatus;
+  receipt_id: string | null;
+  notes: string | null;
+  recorded_by: string | null;
+  created_at: string;
+}
+
+export interface MembershipReceiptRow {
+  id: string;
+  receipt_no: string;
+  mode: ReceiptMode;
+  financial_year: number;
+  alumni_member_id: string;
+  payment_id: string | null;
+  amount: number;
+  currency: string;
+  entity_snapshot: Json;
+  issued_by: string | null;
+  issued_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -348,6 +438,76 @@ export type Database = {
           },
         ];
       };
+      aaa_settings: {
+        Row: AaaSettings;
+        Insert: Partial<AaaSettings> & { id?: number };
+        Update: Partial<AaaSettings>;
+        Relationships: [];
+      };
+      memberships: {
+        Row: {
+          id: string;
+          alumni_member_id: string;
+          member_type: MemberType;
+          registration_fee_paid: boolean;
+          registration_paid_at: string | null;
+          current_period_fy: number | null;
+          valid_from: string | null;
+          valid_through: string | null;
+          fund: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          alumni_member_id: string;
+          member_type?: MemberType;
+          registration_fee_paid?: boolean;
+          registration_paid_at?: string | null;
+          current_period_fy?: number | null;
+          valid_from?: string | null;
+          valid_through?: string | null;
+          fund?: string;
+          notes?: string | null;
+        };
+        Update: {
+          member_type?: MemberType;
+          registration_fee_paid?: boolean;
+          registration_paid_at?: string | null;
+          current_period_fy?: number | null;
+          valid_from?: string | null;
+          valid_through?: string | null;
+          fund?: string;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      membership_payments: {
+        Row: MembershipPaymentRow & {
+          gateway_order_id: string | null;
+          gateway_payment_id: string | null;
+          idempotency_key: string | null;
+        };
+        Insert: Partial<MembershipPaymentRow> & {
+          alumni_member_id: string;
+          fee_kind: PaymentFeeKind;
+          amount: number;
+        };
+        Update: Partial<MembershipPaymentRow>;
+        Relationships: [];
+      };
+      membership_receipts: {
+        Row: MembershipReceiptRow;
+        Insert: Partial<MembershipReceiptRow> & {
+          receipt_no: string;
+          mode: ReceiptMode;
+          financial_year: number;
+          alumni_member_id: string;
+          amount: number;
+        };
+        Update: Partial<MembershipReceiptRow>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -511,6 +671,68 @@ export type Database = {
         };
         Returns: string;
       };
+      membership_is_live: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      can_preview_membership: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      can_manage_membership: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      aaa_current_fy: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      aaa_financial_year_for: {
+        Args: { p_date: string };
+        Returns: number;
+      };
+      aaa_fy_start: {
+        Args: { p_fy: number };
+        Returns: string;
+      };
+      aaa_fy_end: {
+        Args: { p_fy: number };
+        Returns: string;
+      };
+      member_voting_exempt: {
+        Args: { p_alumni_member_id: string; p_as_of?: string | null };
+        Returns: boolean;
+      };
+      member_standing: {
+        Args: { p_alumni_member_id: string; p_as_of?: string | null };
+        Returns: MemberStanding;
+      };
+      record_offline_payment: {
+        Args: {
+          p_alumni_member_id: string;
+          p_fee_kind: PaymentFeeKind;
+          p_amount: number;
+          p_period_fy?: number | null;
+          p_method?: string | null;
+          p_reference?: string | null;
+          p_issue_receipt?: boolean | null;
+          p_idempotency_key?: string | null;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+      set_member_type: {
+        Args: { p_alumni_member_id: string; p_member_type: MemberType };
+        Returns: boolean;
+      };
+      membership_roll: {
+        Args: { p_as_of?: string | null };
+        Returns: MembershipRollRow[];
+      };
+      membership_electoral_roll: {
+        Args: { p_record_date?: string | null };
+        Returns: ElectoralRollRow[];
+      };
     };
     Enums: {
       app_role: AppRole;
@@ -519,6 +741,12 @@ export type Database = {
       approval_type: ApprovalType;
       approval_status: ApprovalStatus;
       import_row_status: "valid" | "invalid" | "duplicate" | "imported";
+      membership_module_state: MembershipModuleState;
+      member_type: MemberType;
+      payment_fee_kind: PaymentFeeKind;
+      payment_source: PaymentSource;
+      payment_status: PaymentStatus;
+      receipt_mode: ReceiptMode;
     };
     CompositeTypes: Record<string, never>;
   };
