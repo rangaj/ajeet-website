@@ -232,6 +232,30 @@ export interface MembershipPaymentRow {
   created_at: string;
 }
 
+export interface MembershipSummary {
+  has_member: boolean;
+  module_state: MembershipModuleState;
+  member_type?: MemberType;
+  standing?: MemberStanding;
+  registration_fee_paid?: boolean;
+  valid_through?: string | null;
+  current_period_fy?: number | null;
+  voting_exempt?: boolean;
+  currency?: string;
+  fee_registration?: number | null;
+  fee_initial?: number | null;
+  fee_renewal?: number | null;
+}
+
+export interface AdminMembershipSummary {
+  member_type: MemberType;
+  standing: MemberStanding;
+  registration_fee_paid: boolean;
+  valid_through: string | null;
+  current_period_fy: number | null;
+  voting_exempt: boolean;
+}
+
 export interface MembershipReceiptRow {
   id: string;
   receipt_no: string;
@@ -732,6 +756,14 @@ export type Database = {
       membership_electoral_roll: {
         Args: { p_record_date?: string | null };
         Returns: ElectoralRollRow[];
+      };
+      my_membership_summary: {
+        Args: Record<string, never>;
+        Returns: MembershipSummary;
+      };
+      admin_member_membership: {
+        Args: { p_alumni_member_id: string };
+        Returns: AdminMembershipSummary;
       };
     };
     Enums: {

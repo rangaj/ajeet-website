@@ -3,6 +3,27 @@
 All notable releases of the Ajeet Alumni App. Versions follow [Semantic Versioning](https://semver.org/).
 Frontend (`package.json`) and backend (`supabase/VERSION.json`) share the same release number.
 
+## [1.0.0-beta.7] - 2026-06-28
+
+AAA Membership module — Phase B (ships **fully dark**).
+
+The MOA-grounded membership system (registration/initial/renewal fees, the Roll
+of Members, and an electoral roll) is built end-to-end but invisible to members.
+It becomes visible only to super-admins and approved preview testers until the
+Executive Committee greenlights go-live. There is **no payment gateway yet** — the
+system is gateway-agnostic and records offline payments today; a provider can be
+switched on later from settings.
+
+### Backend (Supabase)
+- Migration `20250628000002`: `aaa_settings` (entity, FY, fee schedule, receipt mode, rollout controls), `memberships`, `membership_payments`, `membership_receipts`, per-FY receipt counter; RLS scoped to owner + `can_manage_membership()`. A guard trigger enforces the go-live gate (a recorded **EC resolution reference** is required for `coming_soon`/`live`) and audit-logs every state change.
+- Migration `20250628000003`: financial-year helpers, `member_voting_exempt` (within 8 years of graduation or 70+, Art 7(e)(ii)), `member_standing`, `record_offline_payment` (numbered plain/80G receipts + standing update, idempotent), `set_member_type` (Honorary/Patron), `membership_roll`, `membership_electoral_roll` (Ajeet members in good standing or exempt).
+- Migration `20250628000004`: `my_membership_summary` (own) and `admin_member_membership` (managers); the internal standing/exemption helpers are locked down so members can't probe each other.
+
+### Frontend
+- New super-admin **Membership** admin console (`/admin/membership`): rollout switch (hidden / coming soon / live + EC resolution + preview allowlist + sub-toggles), association & fee settings, receipt-format choice, offline payment recorder with member search, and Roll-of-Members + electoral-roll exports (CSV). The admin tab is hidden unless you can manage the module.
+- Member-facing membership card on the profile and a membership panel in Member Support — both render only when permitted/live, so nothing leaks while dark.
+- `member_type` distinguishes the free "verified Ajeet" identity from a paid "AAA Member"; the directory stays open (no gating applied yet).
+
 ## [1.0.0-beta.6] - 2026-06-28
 
 Founding/first-batch date correction (Phase A of the membership plan).

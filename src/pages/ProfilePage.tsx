@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAlumniMemberByUserId, updateOwnAlumniProfile, updateOwnJoinYear, updateOwnDob } from "@/lib/data-access";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { MembershipStatusCard } from "@/components/membership/MembershipStatusCard";
 import {
   mentorshipFormFromMember,
   mentorshipPayloadFromForm,
@@ -414,6 +415,8 @@ export function ProfilePage() {
           Report a correction
         </Link>
       </div>
+
+      <MembershipStatusCard />
 
       {completeness.percent < 100 && (
         <Card className="space-y-3 p-4">

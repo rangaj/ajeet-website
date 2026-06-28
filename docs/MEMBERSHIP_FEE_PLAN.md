@@ -1,6 +1,6 @@
 # AAA Membership, Fees & Payments — Plan
 
-_Status: DECISIONS LOCKED 28 Jun 2026. **Phase A (founding/first-batch correction) built 28 Jun 2026** (v1.0.0-beta.6); Phases B–D awaiting build go-ahead._
+_Status: DECISIONS LOCKED 28 Jun 2026. **Phase A (founding/first-batch correction) built 28 Jun 2026** (v1.0.0-beta.6). **Phase B (membership core, no gateway) built 28 Jun 2026** (v1.0.0-beta.7), ships fully dark. Phases C–D awaiting build go-ahead._
 _Source: MOA & Rules of the Ajeet Alumni Association v1.8 (Karnataka Societies Registration Act, 1960; legal-comments version dated 2 Nov 2023) + product discussion 28 Jun 2026._
 
 This plan operationalizes the Association's constitution. It introduces a paid
@@ -177,14 +177,15 @@ Alumni Chapter dues (Art 16–17, own bank accounts) drop in later without migra
 ### Phase A — Founding/first-batch correction (low effort, low risk)
 Apply the §"Founding/first-batch correction" table. Independent of payments; ship anytime.
 
-### Phase B — Membership core, no gateway (ships fully usable)
-- `aaa_settings` + super-admin setup screen (entity, fees, FY, receipt mode; gateway off).
-- `member_type`, `memberships`, `payments`, `receipts` schema + RLS.
-- **Offline payment recording** (Treasurer) → status + numbered receipt (both modes).
-- Membership status surfaced in profile + Member Support console (status, history, comp/override).
-- **Gating** wired but inert until enabled; "Become a member" benefits page (dark/coming-soon).
-- **Roll of Members** + **electoral-roll as-of-date** export.
-- Computed `voting_exempt` (8-yr-grad / 70+).
+### Phase B — Membership core, no gateway (BUILT, ships fully dark — v1.0.0-beta.7)
+- ✅ `aaa_settings` + super-admin setup screen (entity, fees, FY, receipt mode; gateway off). _Migrations `20250628000002-04`; `/admin/membership`._
+- ✅ `member_type`, `memberships`, `membership_payments`, `membership_receipts` schema + RLS.
+- ✅ **Offline payment recording** (Treasurer) → standing + numbered receipt (both plain/80G modes), idempotent.
+- ✅ Membership status surfaced in profile (`MembershipStatusCard`, live-only) + Member Support console (`MemberMembershipPanel`, manager-only).
+- ◻️ **Gating** helpers/flags present (`gating_enforced`, `can_manage_membership`), inert; directory stays open. A "Become a member" benefits page is not built yet (decision #9: fully dark, no teaser).
+- ✅ **Roll of Members** + **electoral-roll as-of-date** export (CSV).
+- ✅ Computed `voting_exempt` (8-yr-grad / 70+).
+- **Rollout:** `module_state` (`hidden`/`coming_soon`/`live`) defaults to `hidden`; go-live guarded by a trigger requiring `ec_resolution_ref`; preview allowlist for trusted testers.
 
 ### Phase C — Gateway adapter (flip the switch)
 - Razorpay adapter: hosted checkout, signed webhook (idempotent edge function), auto-receipt.

@@ -1,11 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import type {
   AaaSettings,
+  AdminMembershipSummary,
   ElectoralRollRow,
   MemberType,
   MembershipPaymentRow,
   MembershipReceiptRow,
   MembershipRollRow,
+  MembershipSummary,
   PaymentFeeKind,
 } from "@/types/database";
 
@@ -113,6 +115,24 @@ export async function fetchElectoralRoll(recordDate?: string | null) {
     .rpc("membership_electoral_roll", { p_record_date: recordDate ?? null })
     .then(({ data, error }) => ({
       data: (data ?? []) as ElectoralRollRow[],
+      error,
+    }));
+}
+
+// --- Summaries ---------------------------------------------------------------
+
+export async function fetchMyMembershipSummary() {
+  return supabase.rpc("my_membership_summary").then(({ data, error }) => ({
+    data: data as MembershipSummary | null,
+    error,
+  }));
+}
+
+export async function fetchAdminMemberMembership(alumniMemberId: string) {
+  return supabase
+    .rpc("admin_member_membership", { p_alumni_member_id: alumniMemberId })
+    .then(({ data, error }) => ({
+      data: data as AdminMembershipSummary | null,
       error,
     }));
 }

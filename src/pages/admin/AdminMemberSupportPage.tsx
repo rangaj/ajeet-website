@@ -37,6 +37,7 @@ import { invokeFunction } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Alert, Badge, Card } from "@/components/ui/Card";
+import { MemberMembershipPanel } from "@/components/membership/MemberMembershipPanel";
 import { cn } from "@/lib/utils";
 import type {
   AdminMemberSearchRow,
@@ -489,6 +490,8 @@ export function AdminMemberSupportPage() {
                   </Alert>
                 )}
               </Card>
+
+              <MemberMembershipPanel alumniMemberId={snapshot.member.id} />
 
               <Card className="space-y-3">
                 <SectionTitle>Quick Actions</SectionTitle>

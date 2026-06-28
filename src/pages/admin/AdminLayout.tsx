@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { ClipboardList, HandHeart, LifeBuoy, Upload, Users } from "lucide-react";
+import { BadgeIndianRupee, ClipboardList, HandHeart, LifeBuoy, Upload, Users } from "lucide-react";
 import { allowAdminDirectoryView } from "@/lib/admin-navigation";
+import { useMembershipAccess } from "@/hooks/useMembershipAccess";
 import { cn } from "@/lib/utils";
 
 const ADMIN_TABS = [
@@ -41,6 +42,8 @@ function AdminNavChip({
 }
 
 export function AdminLayout() {
+  const { canManage: canManageMembership } = useMembershipAccess();
+
   return (
     <div className="min-w-0 space-y-6">
       <header className="space-y-1">
@@ -56,6 +59,9 @@ export function AdminLayout() {
         {ADMIN_TABS.map((tab) => (
           <AdminNavChip key={tab.to} {...tab} />
         ))}
+        {canManageMembership && (
+          <AdminNavChip to="/admin/membership" label="Membership" icon={BadgeIndianRupee} />
+        )}
         <Link
           to="/directory"
           onClick={allowAdminDirectoryView}
