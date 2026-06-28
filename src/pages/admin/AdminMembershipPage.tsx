@@ -23,7 +23,6 @@ import { formatBatch, formatRollNumber } from "@/lib/alumni-display";
 import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Alert, Badge, Card } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
 
 const STATE_LABELS: Record<MembershipModuleState, { label: string; variant: "default" | "warning" | "success" }> = {
   hidden: { label: "Hidden (dark)", variant: "default" },
